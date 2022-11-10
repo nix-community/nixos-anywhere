@@ -59,8 +59,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ssh wrapper
-ssh_() {
+timeout_ssh_() {
   timeout 10 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+}
+ssh_() {
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
 
 # first check if the remote system is kexec booted
@@ -91,7 +94,7 @@ export TMPDIR=/root/kexec
 setsid /root/kexec/kexec/run
 SSH
   # wait for machine to become unreachable
-  while ssh_ -- exit 0; do sleep 1; done
+  while timeout_ssh_ -- exit 0; do sleep 1; done
 
   # watiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
