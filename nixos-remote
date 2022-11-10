@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+set -eufo pipefail
+set -x
+
+showUsage() {
+  cat <<USAGE
+Usage: $0 [options] ssh-host
+
+Options:
+
+* -f, --flake flake
+  set the flake to install the system from
+* --arg name value
+  pass value to nix-build. can be used to set disk-names for example
+* --argstr name value
+  pass value to nix-build as string
+* --kexec url
+  use another kexec tarball to bootstrap NixOS
+USAGE
+}
+
+abort() {
+  echo "aborted: $*" >&2
+  exit 1
+}
+
+nix_args=()
+kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.05/nixos-kexec-installer-x86_64-linux.tar.gz
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -f | --flake)
+      flake=$2
+      shift
+      ;;
+    --argstr | --arg)
+      nix_args+=("$1" "$2" "$3")
+      shift
+      shift
+      ;;
+    --help)
+      showUsage
+      exit 0
+      ;;
+    --kexec)
+      kexec_url=$2
+      shift
+      ;;
+    *)
+      if [ -z ${ssh_connection+x} ]; then
+        ssh_connection=$1
+      else
+        showUsage
+        exit 1
+      fi
+      ;;
+  esac
+  shift
+done
+
+# ssh wrapper
+timeout_ssh_() {
+  timeout 10 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+}
+ssh_() {
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+}
+
+# first check if the remote system is kexec booted
+if $(ssh_ -- test -e /etc/is-kexec); then
+  is_kexec=y
+fi
+
+
+echo ${is_kexec-n}
+if [ ${is_kexec-n} != "y" ]; then
+  # TODO we probably need an architecture detection here
+  ssh_ << SSH
+set -efux
+os=\$(uname)
+if [[ "\$os" != "Linux" ]]; then
+  echo "This script requires Linux as the operating system, but got \${os}" >&2
+  exit 1
+fi
+fetch(){
+  if command -v curl >/dev/null 2>&1; then
+    curl --fail -Ss -L "\$1"
+  elif command -v wget >/dev/null 2>&1; then
+    wget "\$1" -O-
+  else
+    echo "no downloader (curl or wget) found, bailing out"
+    exit 1
+  fi
+}
+if command -v tar >/dev/null 2>&1; then
+  echo "no tar command found, but required to unpack kexec tarball" >&2
+  exit 1
+fi
+rm -rf /root/kexec
+mkdir -p /root/kexec
+fetch "$kexec_url" | tar -C /root/kexec -xvzf-
+export TMPDIR=/root/kexec
+setsid /root/kexec/kexec/run
+SSH
+  # wait for machine to become unreachable
+  while timeout_ssh_ -- exit 0; do sleep 1; done
+
+  # watiting for machine to become available again
+  until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
+fi
+
+
+ssh_ << SSH
+set -efux
+$(declare -p nix_args)
+nix --extra-experimental-features nix-command --extra-experimental-features flakes \
+  run github:nix-community/disko \
+  --no-write-lock-file -- \
+    --debug -m create "\${nix_args[@]}" --flake "$flake"
+
+nix --extra-experimental-features nix-command --extra-experimental-features flakes \
+  run github:nix-community/disko \
+  --no-write-lock-file -- \
+    --debug -m mount "\${nix_args[@]}" --flake "$flake"
+
+nixos-install --flake "$flake"
+reboot
+SSH
