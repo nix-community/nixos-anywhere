@@ -77,6 +77,11 @@ if [ ${is_kexec-n} != "y" ]; then
   # TODO we probably need an architecture detection here
   ssh_ << SSH
 set -efux
+os=\$(uname)
+if [[ "\$os" != "Linux" ]]; then
+  echo "This script requires Linux as the operating system, but got \${os}" >&2
+  exit 1
+fi
 fetch(){
   if command -v curl >/dev/null 2>&1; then
     curl --fail -Ss -L "\$1"
