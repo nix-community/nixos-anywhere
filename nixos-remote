@@ -60,12 +60,11 @@ done
 
 # ssh wrapper
 ssh_() {
-  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$@"
+  timeout 10 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
 
 # first check if the remote system is kexec booted
-# if $(ssh_ "$ssh_connection" -- test -e /etc/is-kexec); then
-if $(ssh_ "$ssh_connection" -- test -e /etc/NIXOS); then
+if $(ssh_ -- test -e /etc/is-kexec); then
   is_kexec=y
 fi
 
@@ -73,7 +72,7 @@ fi
 echo ${is_kexec-n}
 if [ ${is_kexec-n} != "y" ]; then
   # TODO we probably need an architecture detection here
-  ssh_ "$ssh_connection" << SSH
+  ssh_ << SSH
 set -efux
 fetch(){
   if command -v curl >/dev/null 2>&1; then
@@ -92,14 +91,14 @@ export TMPDIR=/root/kexec
 setsid /root/kexec/kexec/run
 SSH
   # wait for machine to become unreachable
-  while ssh_ "$ssh_connection" -- exit 0; do sleep 1; done
+  while ssh_ -- exit 0; do sleep 1; done
 
   # watiting for machine to become available again
-  until ssh_ -o ConnectTimeout=10 "$ssh_connection" -- exit 0; do sleep 5; done
+  until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
 
 
-ssh_ "$ssh_connection" << SSH
+ssh_ << SSH
 set -efux
 $(declare -p nix_args)
 nix --extra-experimental-features nix-command --extra-experimental-features flakes \
