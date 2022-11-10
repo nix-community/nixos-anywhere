@@ -87,6 +87,10 @@ fetch(){
     exit 1
   fi
 }
+if command -v tar >/dev/null 2>&1; then
+  echo "no tar command found, but required to unpack kexec tarball" >&2
+  exit 1
+fi
 rm -rf /root/kexec
 mkdir -p /root/kexec
 fetch "$kexec_url" | tar -C /root/kexec -xvzf-
