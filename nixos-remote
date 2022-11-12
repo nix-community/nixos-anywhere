@@ -67,10 +67,9 @@ ssh_() {
 }
 
 # first check if the remote system is kexec booted
-if $(ssh_ -- test -e /etc/is-kexec); then
+if $(ssh_ -- test -e /etc/is_kexec); then
   is_kexec=y
 fi
-
 
 echo ${is_kexec-n}
 if [ ${is_kexec-n} != "y" ]; then
