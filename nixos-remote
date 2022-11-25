@@ -101,7 +101,7 @@ fi
 
 # wait for machine to become reachable (possibly forever)
 if [ ${no_ssh_copy-n} != "y" ]; then
-  until ssh-copy-id "$ssh_connection"; do sleep 5; done
+  until ssh-copy-id -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection"; do sleep 5; done
 else
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
