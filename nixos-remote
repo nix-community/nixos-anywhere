@@ -10,6 +10,9 @@ Options:
 
 * -f, --flake flake
   set the flake to install the system from
+* -s, --store-paths
+  set the store paths to the disko-script and nixos-system directly
+  if this is give, flake is not needed
 * --arg name value
   pass value to nix-build. can be used to set disk-names for example
 * --argstr name value
@@ -31,6 +34,12 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -f | --flake)
       flake=$2
+      shift
+      ;;
+    -s | --store-paths)
+      disko_script=$2
+      nixos_system=$3
+      shift
       shift
       ;;
     --argstr | --arg)
@@ -80,7 +89,6 @@ nix_build() {
     "$@"
 }
 
-nixos_system=""
 # parse flake nixos-install style syntax, get the system attr
 if [[ ! -z "${flake+x}" ]]; then
   if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
@@ -94,6 +102,12 @@ if [[ ! -z "${flake+x}" ]]; then
   fi
   disko_script=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.disko")
   nixos_system=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.toplevel")
+elif [[ ! -z "${disko_script+x}" ]] && [[ ! -z "${nixos_system+x}" ]]; then
+  if [[ ! -e "${disko_script}" ]] || [[ ! -e "${nixos_system}" ]]; then
+    echo "${disko_script} and ${nixos_system} must be existing store-paths"
+    exit 1
+  fi
+  :
 else
   abort "flake must be set"
 fi
