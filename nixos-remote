@@ -17,6 +17,8 @@ Options:
   pass value to nix-build. can be used to set disk-names for example
 * --argstr name value
   pass value to nix-build as string
+* --no-ssh-copy
+  skip copying ssh-keys to target system
 * --kexec url
   use another kexec tarball to bootstrap NixOS
 USAGE
