@@ -3,7 +3,7 @@ set -eufo pipefail
 
 showUsage() {
   cat <<USAGE
-Usage: $0 [options] ssh-host
+Usage: nixos-remote [options] ssh-host
 
 Options:
 
