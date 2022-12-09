@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -eufo pipefail
-set -x
 
 showUsage() {
   cat <<USAGE
@@ -21,6 +20,8 @@ Options:
   skip copying ssh-keys to target system
 * --kexec url
   use another kexec tarball to bootstrap NixOS
+* --debug
+  enable debug output
 USAGE
 }
 
@@ -59,6 +60,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-ssh-copy-id)
       no_ssh_copy=y
+      ;;
+    --debug)
+      set -x
       ;;
     *)
       if [ -z ${ssh_connection+x} ]; then
