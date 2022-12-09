@@ -1,0 +1,47 @@
+{
+  "nodes": {
+    "disko": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1670529818,
+        "narHash": "sha256-flPaFV2V4SBtGY+u5CYJzQWJutd1D6zSwomILcSgtCI=",
+        "owner": "nix-community",
+        "repo": "disko",
+        "rev": "66add2cd9edab96f5e87477229772bf2b3ca513a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "master",
+        "repo": "disko",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1670525689,
+        "narHash": "sha256-YIjGzxrRQa5LYO0zlnH/ardcwXsRgsnHe3TkGkvCxbc=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f21f11aa2a02cb78651c6d57546c7d7541f9240c",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "type": "indirect"
+      }
+    },
+    "root": {
+      "inputs": {
+        "disko": "disko",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
