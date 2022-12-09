@@ -62,7 +62,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       if [ -z ${ssh_connection+x} ]; then
-        ssh_connection=$1
+        if [[ "$1" =~ ^ssh:// ]]; then
+          ssh_connection=$1
+        else
+          ssh_connection="ssh://$1"
+        fi
       else
         showUsage
         exit 1
@@ -175,10 +179,10 @@ SSH
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
 
-nixCopy --to "ssh://$ssh_connection" "$disko_script"
+nixCopy --to "$ssh_connection" "$disko_script"
 ssh_ $disko_script
 
-nixCopy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
+nixCopy --to "$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
 ssh_ << SSH
 set -efu
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
