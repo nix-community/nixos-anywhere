@@ -27,6 +27,7 @@ abort() {
 }
 
 kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
+debug=n
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -52,6 +53,7 @@ while [[ $# -gt 0 ]]; do
       no_ssh_copy=y
       ;;
     --debug)
+      debug=y
       set -x
       ;;
     *)
@@ -133,7 +135,10 @@ fi
 if [ ${is_kexec-n} != "y" ]; then
   # TODO we probably need an architecture detection here
   ssh_ << SSH
-set -efux
+set -efu
+if [ "$debug" = "y" ]; then
+  set -x
+fi
 os=\$(uname)
 if [[ "\$os" != "Linux" ]]; then
   echo "This script requires Linux as the operating system, but got \${os}" >&2
@@ -152,6 +157,10 @@ if [[ -e "$kexec_url" ]]; then
   cat "$kexec_url" | ssh_ 'tar -C /root/kexec -xvzf-'
 else
   ssh_ << SSH
+set -eu -o pipefail
+if [ "$debug" = "y" ]; then
+  set -x
+fi
 fetch(){
   if command -v curl >/dev/null 2>&1; then
     curl --fail -Ss -L "\$1"
