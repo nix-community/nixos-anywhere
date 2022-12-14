@@ -157,6 +157,11 @@ fetch(){
     curl --fail -Ss -L "\$1"
   elif command -v wget >/dev/null 2>&1; then
     wget "\$1" -O-
+  elif command -v apt-get >/dev/null 2>&1; then
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y curl
+    curl --fail -Ss -L "\$1"
   else
     echo "no downloader (curl or wget) found, bailing out" >&2
     exit 1
