@@ -158,7 +158,7 @@ fetch(){
   elif command -v wget >/dev/null 2>&1; then
     wget "\$1" -O-
   else
-    echo "no downloader (curl or wget) found, bailing out"
+    echo "no downloader (curl or wget) found, bailing out" >&2
     exit 1
   fi
 }
