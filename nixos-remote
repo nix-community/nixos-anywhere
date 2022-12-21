@@ -57,7 +57,7 @@ while [[ $# -gt 0 ]]; do
       set -x
       ;;
     *)
-      if [ -z ${ssh_connection+x} ]; then
+      if [[ -z ${ssh_connection:-} ]]; then
         if [[ "$1" =~ ^ssh:// ]]; then
           ssh_connection=$1
         else
@@ -92,24 +92,24 @@ nix_build() {
     "$@"
 }
 
-if [ -z ${ssh_connection+x} ]; then
+if [[ -z ${ssh_connection:-} ]]; then
   abort "ssh-host must be set"
 fi
 
 # parse flake nixos-install style syntax, get the system attr
-if [[ -n "${flake+x}" ]]; then
+if [[ -n "${flake:-}" ]]; then
   if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
    flake="${BASH_REMATCH[1]}"
    flakeAttr="${BASH_REMATCH[2]}"
   fi
-  if [[ -z "${flakeAttr+x}" ]]; then
+  if [[ -z "${flakeAttr:-}" ]]; then
     echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri."
     echo "For example, to use the output nixosConfigurations.foo from the flake.nix, append \"#foo\" to the flake-uri."
     exit 1
   fi
   disko_script=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.disko")
   nixos_system=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.toplevel")
-elif [[ -n "${disko_script+x}" ]] && [[ -n "${nixos_system+x}" ]]; then
+elif [[ -n "${disko_script:-}" ]] && [[ -n "${nixos_system:-}" ]]; then
   if [[ ! -e "${disko_script}" ]] || [[ ! -e "${nixos_system}" ]]; then
     echo "${disko_script} and ${nixos_system} must be existing store-paths"
     exit 1
@@ -121,7 +121,7 @@ fi
 
 
 # wait for machine to become reachable (possibly forever)
-if [ ${no_ssh_copy-n} != "y" ]; then
+if [[ ${no_ssh_copy-n} != "y" ]]; then
   until ssh-copy-id -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection"; do sleep 5; done
 else
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
@@ -132,7 +132,7 @@ if ssh_ -- test -e /etc/is_kexec; then
   is_kexec=y
 fi
 
-if [ ${is_kexec-n} != "y" ]; then
+if [[ ${is_kexec-n} != "y" ]]; then
   # TODO we probably need an architecture detection here
   ssh_ << SSH
 set -efu
