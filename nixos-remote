@@ -102,7 +102,7 @@ if [[ ! -z "${flake+x}" ]]; then
    flake="${BASH_REMATCH[1]}"
    flakeAttr="${BASH_REMATCH[2]}"
   fi
-  if [[ -z "$flakeAttr" ]]; then
+  if [[ -z "${flakeAttr+x}" ]]; then
     echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri."
     echo "For example, to use the output nixosConfigurations.foo from the flake.nix, append \"#foo\" to the flake-uri."
     exit 1
