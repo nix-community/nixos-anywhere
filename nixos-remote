@@ -97,7 +97,7 @@ if [ -z ${ssh_connection+x} ]; then
 fi
 
 # parse flake nixos-install style syntax, get the system attr
-if [[ ! -z "${flake+x}" ]]; then
+if [[ -n "${flake+x}" ]]; then
   if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
    flake="${BASH_REMATCH[1]}"
    flakeAttr="${BASH_REMATCH[2]}"
@@ -109,7 +109,7 @@ if [[ ! -z "${flake+x}" ]]; then
   fi
   disko_script=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.disko")
   nixos_system=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.toplevel")
-elif [[ ! -z "${disko_script+x}" ]] && [[ ! -z "${nixos_system+x}" ]]; then
+elif [[ -n "${disko_script+x}" ]] && [[ -n "${nixos_system+x}" ]]; then
   if [[ ! -e "${disko_script}" ]] || [[ ! -e "${nixos_system}" ]]; then
     echo "${disko_script} and ${nixos_system} must be existing store-paths"
     exit 1
@@ -128,7 +128,7 @@ else
 fi
 
 # first check if the remote system is kexec booted
-if $(ssh_ -- test -e /etc/is_kexec); then
+if ssh_ -- test -e /etc/is_kexec; then
   is_kexec=y
 fi
 
@@ -154,7 +154,7 @@ mkdir -p /root/kexec
 SSH
 
 if [[ -e "$kexec_url" ]]; then
-  cat "$kexec_url" | ssh_ 'tar -C /root/kexec -xvzf-'
+  ssh_ 'tar -C /root/kexec -xvzf-' < "$kexec_url"
 else
   ssh_ << SSH
 set -eu -o pipefail
@@ -193,7 +193,7 @@ SSH
 fi
 
 nixCopy --to "$ssh_connection" "$disko_script"
-ssh_ $disko_script
+ssh_ "$disko_script"
 
 nixCopy --to "$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
 ssh_ << SSH
