@@ -1,8 +1,8 @@
-{ stdenvNoCC, makeWrapper, lib, openssh, git, nix, coreutils }:
+{ stdenvNoCC, makeWrapper, lib, openssh, gitMinimal, nix, coreutils }:
 let
   runtimeDeps = [
     openssh
-    git # for git flakes
+    gitMinimal # for git flakes
     nix
     coreutils
   ];
