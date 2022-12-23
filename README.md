@@ -13,9 +13,6 @@ configuration.
 - At least 2.5GB RAM (swap does not count). If you do not have enough RAM you
   will see failures unpacking the initrd), this is because kexec needs to load
   the whole nixos into memory.
-- DHCP: Currently nixos-remote requires that the network of the machine, offers DHCP for
-  dynamic address configuration or else the booted nixos will not have any
-  network set up.
 
 ## Usage
 Needs a repo with your configurations with flakes. For a minimal example checkout https://github.com/Lassulus/flakes-testing.
