@@ -113,6 +113,7 @@ makeTest {
       ssh-add /etc/sshKey
       ${../nixos-remote} \
         --no-ssh-copy-id \
+        --debug \
         --kexec ${kexec-installer}/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz \
         --extra-files /tmp/extra-files \
         --store-paths ${toString evaledSystem.config.system.build.disko} ${toString evaledSystem.config.system.build.toplevel} \
