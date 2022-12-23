@@ -16,6 +16,8 @@ Options:
   skip copying ssh-keys to target system
 * --kexec url
   use another kexec tarball to bootstrap NixOS
+* --extra-files files
+  files to copy into the new nixos installation
 * --debug
   enable debug output
 USAGE
@@ -55,6 +57,10 @@ while [[ $# -gt 0 ]]; do
     --debug)
       debug=y
       set -x
+      ;;
+    --extra-files)
+      extra_files=$2
+      shift
       ;;
     *)
       if [[ -z ${ssh_connection:-} ]]; then
@@ -196,6 +202,12 @@ nixCopy --to "$ssh_connection" "$disko_script"
 ssh_ "$disko_script"
 
 nixCopy --to "$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
+if [[ -n ${extra_files:-} ]]; then
+  if [[ -d "$extra_files" ]]; then
+    extra_files="$extra_files/"
+  fi
+  rsync -vaAXF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection#ssh://}:/mnt/"
+fi
 ssh_ << SSH
 set -efu
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"

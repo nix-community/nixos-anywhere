@@ -106,19 +106,25 @@ makeTest {
 
     start_all()
     installed.wait_for_unit("sshd.service")
+    installer.succeed("mkdir -p /tmp/extra-files/var/lib/secrets")
+    installer.succeed("echo value > /tmp/extra-files/var/lib/secrets/key")
     installer.succeed("""
       eval $(ssh-agent)
       ssh-add /etc/sshKey
       ${../nixos-remote} \
         --no-ssh-copy-id \
         --kexec ${kexec-installer}/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz \
+        --extra-files /tmp/extra-files \
         --store-paths ${toString evaledSystem.config.system.build.disko} ${toString evaledSystem.config.system.build.toplevel} \
         root@installed >&2
     """)
     installed.shutdown()
     new_machine = create_test_machine(oldmachine=installed, args={ "name": "after_install" })
     new_machine.start()
-    assert "nixos-remote" == new_machine.succeed("hostname").strip()
+    hostname = new_machine.succeed("hostname").strip()
+    assert "nixos-remote" == hostname, f"'nixos-remote' != '{hostname}'"
+    content = new_machine.succeed("cat /var/lib/secrets/key").strip()
+    assert "value" == content, f"secret does not have expected value: {content}"
   '';
 } {
   pkgs = pkgs;
