@@ -210,6 +210,9 @@ if [[ -n ${extra_files:-} ]]; then
 fi
 ssh_ << SSH
 set -efu
+if [ "$debug" = "y" ]; then
+  set -x
+fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 reboot
 SSH
