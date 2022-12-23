@@ -4,8 +4,10 @@
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
   inputs.disko.url = "github:nix-community/disko/master";
   inputs.disko.inputs.nixpkgs.follows = "nixpkgs";
+  # used for testing
+  inputs.nixos-images.url = "github:nix-community/nixos-images";
 
-  outputs = { self, disko, nixpkgs, ... }:
+  outputs = { self, disko, nixpkgs, nixos-images, ... }:
     let
       supportedSystems = [
         "x86_64-linux"
@@ -32,6 +34,7 @@
           from-nixos = import ./tests/from-nixos.nix {
             inherit pkgs;
             disko = disko.nixosModules.disko;
+            kexec-installer = nixos-images.packages.${pkgs.system}.kexec-installer-nixos-unstable;
             makeTest = import (pkgs.path + "/nixos/tests/make-test-python.nix");
             eval-config = import (pkgs.path + "/nixos/lib/eval-config.nix");
           };

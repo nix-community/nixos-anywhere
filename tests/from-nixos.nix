@@ -2,12 +2,9 @@
 , makeTest ? import <nixpkgs/nixos/tests/make-test-python.nix>
 , eval-config ? import <nixpkgs/nixos/lib/eval-config.nix>
 , disko ? "${builtins.fetchTarball "https://github.com/nix-community/disko/archive/master.tar.gz"}/module.nix"
+, kexec-installer
 , ... }:
 let
-  kexec_tarball = builtins.fetchurl {
-    url = "https://github.com/nix-community/nixos-images/releases/download/nixos-22.05/nixos-kexec-installer-x86_64-linux.tar.gz";
-    sha256 = "sha256:1ff7rc0n8w1vab7k9sir3029sizfaq8yx7y8r1id94gcqrr2n1sd";
-  };
   systemToInstall = { modulesPath, ... }: {
     imports = [
       disko
@@ -114,7 +111,7 @@ makeTest {
       ssh-add /etc/sshKey
       ${../nixos-remote} \
         --no-ssh-copy-id \
-        --kexec ${kexec_tarball} \
+        --kexec ${kexec-installer}/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz \
         --store-paths ${toString evaledSystem.config.system.build.disko} ${toString evaledSystem.config.system.build.toplevel} \
         root@installed >&2
     """)
