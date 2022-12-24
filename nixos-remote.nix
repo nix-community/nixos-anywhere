@@ -6,11 +6,13 @@
 , nix
 , coreutils
 , shellcheck
+, rsync
 }:
 let
   runtimeDeps = [
     openssh
     gitMinimal # for git flakes
+    rsync
     nix
     coreutils
   ];
