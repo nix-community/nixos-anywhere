@@ -34,7 +34,7 @@
           from-nixos = import ./tests/from-nixos.nix {
             inherit pkgs;
             disko = disko.nixosModules.disko;
-            kexec-installer = nixos-images.packages.${pkgs.system}.kexec-installer-nixos-unstable;
+            kexec-installer = "${nixos-images.packages.${pkgs.system}.kexec-installer-nixos-unstable}/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz";
             makeTest = import (pkgs.path + "/nixos/tests/make-test-python.nix");
             eval-config = import (pkgs.path + "/nixos/lib/eval-config.nix");
           };

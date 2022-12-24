@@ -2,7 +2,7 @@
 , makeTest ? import <nixpkgs/nixos/tests/make-test-python.nix>
 , eval-config ? import <nixpkgs/nixos/lib/eval-config.nix>
 , disko ? "${builtins.fetchTarball "https://github.com/nix-community/disko/archive/master.tar.gz"}/module.nix"
-, kexec-installer
+, kexec-installer ? builtins.fetchurl "https://github.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz"
 , ... }:
 let
   systemToInstall = { modulesPath, ... }: {
@@ -114,7 +114,7 @@ makeTest {
       ${../nixos-remote} \
         --no-ssh-copy-id \
         --debug \
-        --kexec ${kexec-installer}/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz \
+        --kexec ${kexec-installer} \
         --extra-files /tmp/extra-files \
         --store-paths ${toString evaledSystem.config.system.build.disko} ${toString evaledSystem.config.system.build.toplevel} \
         root@installed >&2
