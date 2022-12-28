@@ -22,6 +22,9 @@ Options:
   do not reboot after installation
 * --extra-files files
   files to copy into the new nixos installation
+* --disk-encryption-keys files
+  files to copy into the installer environment, after kexec but before installation. Can be 
+  used for things like disk encryption keys
 * --debug
   enable debug output
 USAGE
@@ -65,6 +68,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --extra-files)
       extra_files=$2
+      shift
+      ;;
+    --disk-encryption-keys)
+      disk_encryption_keys=$2
       shift
       ;;
     --stop-after-disko)
@@ -203,6 +210,13 @@ SSH
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
 
+if [[ -n ${disk_encryption_keys:-} ]]; then
+  if [[ -d "$disk_encryption_keys" ]]; then
+    disk_encryption_keys="$disk_encryption_keys/"
+  fi
+  rsync -vaAXF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$disk_encryption_keys" "${ssh_connection#ssh://}:/tmp/"
+fi
+
 nixCopy --to "ssh://$ssh_connection" "$disko_script"
 ssh_ "$disko_script"
 
@@ -220,6 +234,8 @@ fi
 
 ssh_ <<SSH
 set -efu ${enable_debug}
+# needed for installation if initrd-secrets are used
+mkdir -p /mnt/tmp
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 ${maybereboot}
 SSH
