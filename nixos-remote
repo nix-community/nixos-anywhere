@@ -211,7 +211,7 @@ if [[ -n ${extra_files:-} ]]; then
   if [[ -d "$extra_files" ]]; then
     extra_files="$extra_files/"
   fi
-  rsync -vaAXF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
+  rsync -vrlF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
 fi
 ssh_ << SSH
 set -efu
