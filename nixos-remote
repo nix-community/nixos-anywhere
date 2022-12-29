@@ -14,12 +14,12 @@ Options:
   if this is give, flake is not needed
 * --no-ssh-copy
   skip copying ssh-keys to target system
+* --no-reboot
+  do not reboot after installation, allowing further customization of the target installation.
 * --kexec url
   use another kexec tarball to bootstrap NixOS
 * --stop-after-disko
   exit after disko formating, you can then proceed to install manually or some other way
-* --no-reboot
-  do not reboot after installation
 * --extra-files files
   files to copy into the new nixos installation
 * --disk-encryption-keys files
