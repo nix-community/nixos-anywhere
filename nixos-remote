@@ -214,7 +214,7 @@ if [[ -n ${disk_encryption_keys:-} ]]; then
   if [[ -d "$disk_encryption_keys" ]]; then
     disk_encryption_keys="$disk_encryption_keys/"
   fi
-  rsync -vaAXF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$disk_encryption_keys" "${ssh_connection#ssh://}:/tmp/"
+  rsync -vrlF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$disk_encryption_keys" "${ssh_connection#ssh://}:/tmp/"
 fi
 
 nixCopy --to "ssh://$ssh_connection" "$disko_script"
