@@ -37,6 +37,7 @@
         in
         {
           from-nixos = import ./tests/from-nixos.nix inputs;
+          from-nixos-with-sudo = import ./tests/from-nixos-with-sudo.nix inputs;
         };
     };
 }

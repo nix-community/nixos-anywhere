@@ -134,6 +134,8 @@ fi
 
 # wait for machine to become reachable (possibly forever)
 # TODO we probably need an architecture detection here
+# TODO if we have specified a user here but we are already booted into the
+# installer, than the user might not work anymore
 until facts=$(ssh_ -o ConnectTimeout=10 -- <<SSH
 set -efu ${enable_debug}
 has(){
@@ -178,7 +180,7 @@ set -efu ${enable_debug}
 SSH
 
   if [[ -f "$kexec_url" ]]; then
-    ssh_ 'tar -C /root/kexec -xvzf-' < "$kexec_url"
+    ssh_ "${maybesudo} tar -C /root/kexec -xvzf-" < "$kexec_url"
   elif [[ ${has_curl-n} == "y" ]]; then
     ssh_ "curl --fail -Ss -L '${kexec_url}' | ${maybesudo} tar -C /root/kexec -xvzf-"
   elif [[ ${has_wget-n} == "y" ]]; then
@@ -193,6 +195,9 @@ SSH
 
   # wait for machine to become unreachable
   while timeout_ssh_ -- exit 0; do sleep 1; done
+
+  # After kexec we explicitly set the user to root@
+  ssh_connection="root@${ssh_connection#*@}"
 
   # watiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
