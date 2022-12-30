@@ -29,15 +29,14 @@
       checks.x86_64-linux =
         let
           pkgs = nixpkgs.legacyPackages.x86_64-linux;
+          inputs = {
+            inherit pkgs;
+            inherit (disko.nixosModules) disko;
+            kexec-installer = "${nixos-images.packages.${pkgs.system}.kexec-installer-nixos-unstable}/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz";
+          };
         in
         {
-          from-nixos = import ./tests/from-nixos.nix {
-            inherit pkgs;
-            disko = disko.nixosModules.disko;
-            kexec-installer = "${nixos-images.packages.${pkgs.system}.kexec-installer-nixos-unstable}/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz";
-            makeTest = import (pkgs.path + "/nixos/tests/make-test-python.nix");
-            eval-config = import (pkgs.path + "/nixos/lib/eval-config.nix");
-          };
+          from-nixos = import ./tests/from-nixos.nix inputs;
         };
     };
 }
