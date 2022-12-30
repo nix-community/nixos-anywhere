@@ -43,8 +43,8 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -s | --store-paths)
-      disko_script=$2
-      nixos_system=$3
+      disko_script=$(readlink -f "$2")
+      nixos_system=$(readlink -f "$3")
       shift
       shift
       ;;
