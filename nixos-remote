@@ -18,6 +18,8 @@ Options:
   use another kexec tarball to bootstrap NixOS
 * --stop-after-disko
   exit after disko formating, you can then proceed to install manually or some other way
+* --no-reboot
+  do not reboot after installation
 * --extra-files files
   files to copy into the new nixos installation
 * --debug
@@ -32,6 +34,7 @@ abort() {
 
 kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
 debug=n
+reboot=y
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -66,6 +69,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --stop-after-disko)
       stop_after_disko=y
+      ;;
+    --no-reboot)
+      reboot=n
       ;;
     *)
       if [[ -z ${ssh_connection:-} ]]; then
@@ -212,11 +218,8 @@ if [[ -n ${extra_files:-} ]]; then
   fi
   rsync -vrlF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
 fi
-ssh_ << SSH
-set -efu
-if [ "$debug" = "y" ]; then
-  set -x
+ssh_ nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
+
+if [[ ${reboot} == "y" ]]; then
+  ssh_ reboot
 fi
-nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
-reboot
-SSH
