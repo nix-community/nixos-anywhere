@@ -235,7 +235,7 @@ fi
 ssh_ <<SSH
 set -efu ${enable_debug}
 # needed for installation if initrd-secrets are used
-mkdir -p /mnt/tmp
+mkdir -m777 -p /mnt/tmp
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 ${maybereboot}
 SSH
