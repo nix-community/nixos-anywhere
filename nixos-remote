@@ -126,17 +126,16 @@ else
   abort "flake must be set"
 fi
 
+# first check if the remote system is kexec booted
+if ssh_ -- test -f /etc/is_kexec; then
+  is_kexec=y
+fi
 
 # wait for machine to become reachable (possibly forever)
-if [[ ${no_ssh_copy-n} != "y" ]]; then
+if [[ ${is_kexec-n} != "y" ]] && [[ ${no_ssh_copy-n} != "y" ]]; then
   until ssh-copy-id -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection"; do sleep 5; done
 else
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
-fi
-
-# first check if the remote system is kexec booted
-if ssh_ -- test -e /etc/is_kexec; then
-  is_kexec=y
 fi
 
 if [[ ${is_kexec-n} != "y" ]]; then
