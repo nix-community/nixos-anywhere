@@ -1,5 +1,5 @@
 (import ./lib/test-base.nix) {
-  name = "nixos-remote";
+  name = "from-nixos";
   nodes = {
     installer = ./modules/installer.nix;
     installed = ./modules/installed.nix;
