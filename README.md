@@ -28,3 +28,51 @@ Afterwards you can just run:
 
 The parameter passed to `--flake` should point to your nixos configuration
 exposed in your flake (`nixosConfigurations.your-system` in the example above).
+
+`nixos-remote --help`
+``` shell
+Usage: nixos-remote [options] ssh-host
+
+Options:
+
+* -f, --flake flake
+  set the flake to install the system from
+* -s, --store-paths
+  set the store paths to the disko-script and nixos-system directly
+  if this is give, flake is not needed
+* --no-ssh-copy
+  skip copying ssh-keys to target system
+* --kexec url
+  use another kexec tarball to bootstrap NixOS
+* --stop-after-disko
+  exit after disko formating, you can then proceed to install manually or some other way
+* --no-reboot
+  do not reboot after installation
+* --extra-files files
+  files to copy into the new nixos installation
+* --debug
+  enable debug output
+```
+
+## Using your own kexec image
+
+By default `nixos-remote` will download the kexec image from [here](https://github.com/nix-community/nixos-images#kexec-tarballs).
+It is also possible to provide your own by providing a file to `--kexec`. The image will than uploaded prior to executing.
+
+``` shell
+nixos-remote \
+  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.x86_64-linux.kexec-installer-nixos-unstable)/nixos-kexec-installer-x86_64-linux.tar.gz" \
+  --flake 'github:your-user/your-repo#your-system' \
+  root@yourip
+```
+
+`--kexec` can be useful for example for aarch64-linux, where there is no
+pre-build image. The following example assumes that your local machine can
+build for aarch64-linux either natively or through a remote builder
+
+``` shell
+nixos-remote \
+  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable)/nixos-kexec-installer-aarch64-linux.tar.gz" \
+  --flake 'your-flake#your-system' \
+  root@yourip
+```

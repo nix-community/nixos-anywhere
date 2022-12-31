@@ -7,6 +7,7 @@
 , coreutils
 , shellcheck
 , rsync
+, curl
 }:
 let
   runtimeDeps = [
@@ -15,6 +16,7 @@ let
     rsync
     nix
     coreutils
+    curl # when uploading tarballs
   ];
 in
 stdenvNoCC.mkDerivation {

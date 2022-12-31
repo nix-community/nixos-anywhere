@@ -18,6 +18,8 @@ Options:
   use another kexec tarball to bootstrap NixOS
 * --stop-after-disko
   exit after disko formating, you can then proceed to install manually or some other way
+* --no-reboot
+  do not reboot after installation
 * --extra-files files
   files to copy into the new nixos installation
 * --debug
@@ -31,7 +33,8 @@ abort() {
 }
 
 kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
-debug=n
+enable_debug=""
+maybereboot="reboot"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -40,8 +43,8 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -s | --store-paths)
-      disko_script=$2
-      nixos_system=$3
+      disko_script=$(readlink -f "$2")
+      nixos_system=$(readlink -f "$3")
       shift
       shift
       ;;
@@ -57,7 +60,7 @@ while [[ $# -gt 0 ]]; do
       no_ssh_copy=y
       ;;
     --debug)
-      debug=y
+      enable_debug="-x"
       set -x
       ;;
     --extra-files)
@@ -66,6 +69,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --stop-after-disko)
       stop_after_disko=y
+      ;;
+    --no-reboot)
+      maybereboot=""
       ;;
     *)
       if [[ -z ${ssh_connection:-} ]]; then
@@ -126,74 +132,72 @@ else
   abort "flake must be set"
 fi
 
-
 # wait for machine to become reachable (possibly forever)
-if [[ ${no_ssh_copy-n} != "y" ]]; then
-  until ssh-copy-id -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection"; do sleep 5; done
-else
-  until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
-fi
-
-# first check if the remote system is kexec booted
-if ssh_ -- test -e /etc/is_kexec; then
-  is_kexec=y
-fi
-
-if [[ ${is_kexec-n} != "y" ]]; then
-  # TODO we probably need an architecture detection here
-  ssh_ << SSH
-set -efu
-if [ "$debug" = "y" ]; then
-  set -x
-fi
-os=\$(uname)
-if [[ "\$os" != "Linux" ]]; then
-  echo "This script requires Linux as the operating system, but got \${os}" >&2
-  exit 1
-fi
-if ! command -v tar >/dev/null 2>&1; then
-  echo "no tar command found, but required to unpack kexec tarball" >&2
-  exit 1
-fi
-
-rm -rf /root/kexec
-mkdir -p /root/kexec
-SSH
-
-if [[ -f "$kexec_url" ]]; then
-  ssh_ 'tar -C /root/kexec -xvzf-' < "$kexec_url"
-else
-  ssh_ << SSH
-set -eu -o pipefail
-if [ "$debug" = "y" ]; then
-  set -x
-fi
-fetch(){
-  if command -v curl >/dev/null 2>&1; then
-    curl --fail -Ss -L "\$1"
-  elif command -v wget >/dev/null 2>&1; then
-    wget "\$1" -O-
-  elif command -v apt-get >/dev/null 2>&1; then
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update
-    apt-get install -y curl
-    curl --fail -Ss -L "\$1"
-  else
-    echo "no downloader (curl or wget) found, bailing out" >&2
-    exit 1
-  fi
+# TODO we probably need an architecture detection here
+# TODO if we have specified a user here but we are already booted into the
+# installer, than the user might not work anymore
+until facts=$(ssh_ -o ConnectTimeout=10 -- <<SSH
+set -efu ${enable_debug}
+has(){
+  command -v tar >/dev/null && echo "y" || echo "n"
 }
-fetch "$kexec_url" | tar -C /root/kexec -xvzf-
+cat <<FACTS
+is_os=\$(uname)
+is_kexec=\$(if test -f /etc/is_kexec; then echo "y"; else echo "n"; fi)
+has_tar=\$(has tar)
+has_sudo=\$(has sudo)
+has_wget=\$(has wget)
+has_curl=\$(has curl)
+FACTS
 SSH
+); do
+sleep 5
+done
+# make facts available in script
+# shellcheck disable=SC2046
+export $(echo "$facts" | xargs | grep -E '^(has|is)_[a-z0-9_]+=\S+')
+
+if [[ ${has_tar-n} == "n" ]]; then
+  abort "no tar command found, but required to unpack kexec tarball"
+fi
+maybesudo=""
+if [[ ${has_sudo-n} == "y" ]]; then
+  maybesudo="sudo"
+fi
+if [[ ${is_os-n} != "Linux" ]]; then
+  abort "This script requires Linux as the operating system, but got $is_os"
 fi
 
-ssh_ << SSH
-export TMPDIR=/root/kexec
-setsid /root/kexec/kexec/run
+if [[ ${is_kexec-n} != "y" ]] && [[ ${no_ssh_copy-n} != "y" ]]; then
+  ssh-copy-id -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection"
+fi
+
+if [[ ${is_kexec-n} == "n" ]]; then
+  ssh_ << SSH
+set -efu ${enable_debug}
+"${maybesudo}" rm -rf /root/kexec
+"${maybesudo}" mkdir -p /root/kexec
+SSH
+
+  if [[ -f "$kexec_url" ]]; then
+    ssh_ "${maybesudo} tar -C /root/kexec -xvzf-" < "$kexec_url"
+  elif [[ ${has_curl-n} == "y" ]]; then
+    ssh_ "curl --fail -Ss -L '${kexec_url}' | ${maybesudo} tar -C /root/kexec -xvzf-"
+  elif [[ ${has_wget-n} == "y" ]]; then
+    ssh_ "wget '${kexec_url}' -O- | ${maybesudo} tar -C /root/kexec -xvzf-"
+  else
+    curl --fail -Ss -L "${kexec_url}" | ssh_ "${maybesudo} tar -C /root/kexec -xvzf-"
+  fi
+
+  ssh_ << SSH
+TMPDIR=/root/kexec setsid ${maybesudo} /root/kexec/kexec/run
 SSH
 
   # wait for machine to become unreachable
   while timeout_ssh_ -- exit 0; do sleep 1; done
+
+  # After kexec we explicitly set the user to root@
+  ssh_connection="root@${ssh_connection#*@}"
 
   # watiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
@@ -213,11 +217,9 @@ if [[ -n ${extra_files:-} ]]; then
   fi
   rsync -vrlF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
 fi
-ssh_ << SSH
-set -efu
-if [ "$debug" = "y" ]; then
-  set -x
-fi
+
+ssh_ <<SSH
+set -efu ${enable_debug}
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
-reboot
+${maybereboot}
 SSH
