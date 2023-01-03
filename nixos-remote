@@ -158,11 +158,12 @@ has_curl=\$(has curl)
 FACTS
 SSH
 ); do
-sleep 5
+  sleep 5
 done
+
 # make facts available in script
 # shellcheck disable=SC2046
-export $(echo "$facts" | xargs | grep -E '^(has|is)_[a-z0-9_]+=\S+')
+export $(echo "$facts" | grep -E '^(has|is)_[a-z0-9_]+=\S+' | xargs)
 
 if [[ ${has_tar-n} == "n" ]]; then
   abort "no tar command found, but required to unpack kexec tarball"
