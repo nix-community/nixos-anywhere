@@ -15,10 +15,10 @@ configuration.
   the whole nixos into memory.
 
 ## Usage
-Needs a repo with your configurations with flakes. For a minimal example checkout https://github.com/Lassulus/flakes-testing.
+Needs a repo with your configurations with flakes. For a minimal example checkout https://github.com/numtide/nixos-remote-examples.
 
 Your NixOS configuration will also need a [disko](https://github.com/nix-community/disko) configuration  as we can see in
-our [example](https://github.com/Lassulus/flakes-testing/blob/216b3023c01581359599f5bc9ae48eeee2617627/flake.nix#L13)
+our [example](https://github.com/numtide/nixos-remote-examples/blob/9768e438b1467ec55d42e096860e7199bd1ef43d/flake.nix#L15-L19)
 
 Afterwards you can just run:
 
