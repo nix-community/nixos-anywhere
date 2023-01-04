@@ -8,10 +8,11 @@ let
   ];
 in
 {
-  programs.ssh.startAgent = true;
+  system.activationScripts.rsa-key = ''
+    ${pkgs.coreutils}/bin/install -D -m600 ${./ssh-keys/ssh} /root/.ssh/id_rsa
+  '';
 
   environment.etc = {
-    sshKey = { source = ./ssh-keys/ssh;  mode = "0600"; };
     "nixos-remote/disko".source = system-to-install.config.system.build.disko;
     "nixos-remote/system-to-install".source = system-to-install.config.system.build.toplevel;
     "nixos-remote/kexec-installer".source = kexec-installer;

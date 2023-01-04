@@ -8,8 +8,6 @@
     start_all()
     installer.succeed("echo super-secret > /tmp/disk-encryption-key")
     output = installer.succeed("""
-      eval $(ssh-agent)
-      ssh-add /etc/sshKey
       ${../nixos-remote} \
         --no-ssh-copy-id \
         --debug \
