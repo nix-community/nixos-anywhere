@@ -18,8 +18,6 @@
     installer.succeed("mkdir -p /tmp/extra-files/var/lib/secrets")
     installer.succeed("echo value > /tmp/extra-files/var/lib/secrets/key")
     installer.succeed("""
-      eval $(ssh-agent)
-      ssh-add /etc/sshKey
       ${../nixos-remote} \
         --no-ssh-copy-id \
         --debug \

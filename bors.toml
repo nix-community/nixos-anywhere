@@ -1,0 +1,12 @@
+cut_body_after = "" # don't include text from the PR body in the merge commit message
+status = [
+ # garnix
+ "Evaluate flake.nix",
+ "package docs [x86_64-linux]",
+ "check from-nixos [x86_64-linux]",
+ "package default [x86_64-linux]",
+ "check from-nixos-with-sudo [x86_64-linux]",
+ "package nixos-remote [x86_64-linux]",
+ # github actions
+ "deploy"
+]
