@@ -216,7 +216,7 @@ fi
 for path in "${!disk_encryption_keys[@]}"
 do
   echo "Uploading ${disk_encryption_keys[$path]} to $path"
-  cat "${disk_encryption_keys[$path]}" | ssh_ "cat > $path"
+  ssh_ "cat > $path" < "${disk_encryption_keys[$path]}"
 done
 
 nixCopy --to "ssh://$ssh_connection" "$disko_script"
