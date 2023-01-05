@@ -22,9 +22,9 @@ Options:
   exit after disko formating, you can then proceed to install manually or some other way
 * --extra-files files
   files to copy into the new nixos installation
-* --disk-encryption-keys files
-  files to copy into the installer environment, after kexec but before installation. Can be 
-  used for things like disk encryption keys
+* --disk-encryption-keys remote_path local_path
+  copy the contents of the file or pipe in local_path to remote_path in the installer environment,
+  after kexec but before installation. Can be repeated.
 * --debug
   enable debug output
 USAGE
@@ -38,6 +38,8 @@ abort() {
 kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
 enable_debug=""
 maybereboot="reboot"
+
+declare -A disk_encryption_keys
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -71,7 +73,8 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --disk-encryption-keys)
-      disk_encryption_keys=$2
+      disk_encryption_keys["$2"]="$3"
+      shift
       shift
       ;;
     --stop-after-disko)
@@ -210,13 +213,11 @@ SSH
   # watiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
-
-if [[ -n ${disk_encryption_keys:-} ]]; then
-  if [[ -d "$disk_encryption_keys" ]]; then
-    disk_encryption_keys="$disk_encryption_keys/"
-  fi
-  rsync -vrlF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$disk_encryption_keys" "${ssh_connection#ssh://}:/tmp/"
-fi
+for path in "${!disk_encryption_keys[@]}"
+do
+  echo "Uploading ${disk_encryption_keys[$path]} to $path"
+  ssh_ "umask 077; cat > $path" < "${disk_encryption_keys[$path]}"
+done
 
 nixCopy --to "ssh://$ssh_connection" "$disko_script"
 ssh_ "$disko_script"
