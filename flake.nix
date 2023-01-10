@@ -24,7 +24,7 @@
         {
           default = self.packages.${system}.nixos-remote;
           docs = pkgs.callPackage ./docs { };
-          nixos-remote = pkgs.callPackage ./nixos-remote.nix { };
+          nixos-remote = pkgs.callPackage ./src { };
         });
       checks.x86_64-linux =
         let
@@ -32,6 +32,7 @@
           inputs = {
             inherit pkgs;
             inherit (disko.nixosModules) disko;
+            nixos-remote = self.packages.x86_64-linux.nixos-remote;
             kexec-installer = "${nixos-images.packages.${pkgs.system}.kexec-installer-nixos-unstable}/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz";
           };
         in

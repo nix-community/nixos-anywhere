@@ -8,7 +8,7 @@
     start_all()
     installer.succeed("echo super-secret > /tmp/disk-1.key")
     output = installer.succeed("""
-      ${../nixos-remote} \
+      nixos-remote \
         --no-ssh-copy-id \
         --debug \
         --kexec /etc/nixos-remote/kexec-installer \

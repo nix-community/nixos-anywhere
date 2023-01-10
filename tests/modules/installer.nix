@@ -12,6 +12,8 @@ in
     ${pkgs.coreutils}/bin/install -D -m600 ${./ssh-keys/ssh} /root/.ssh/id_rsa
   '';
 
+  environment.systemPackages = [ inputs.nixos-remote ];
+
   environment.etc = {
     "nixos-remote/disko".source = system-to-install.config.system.build.disko;
     "nixos-remote/system-to-install".source = system-to-install.config.system.build.toplevel;
