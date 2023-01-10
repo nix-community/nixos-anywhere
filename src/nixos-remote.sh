@@ -1,6 +1,3 @@
-#!/usr/bin/env bash
-set -eufo pipefail
-
 showUsage() {
   cat <<USAGE
 Usage: nixos-remote [options] ssh-host
