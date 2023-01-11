@@ -125,19 +125,11 @@ branches:
         # Required. Require branches to be up to date before merging.
         strict: true
         # Required. The list of status checks to require in order to merge into this branch
-        contexts: [
-          "Evaluate flake.nix",
-          "package docs [x86_64-linux]",
-          "check from-nixos [x86_64-linux]",
-          "package default [x86_64-linux]",
-          "check from-nixos-with-sudo [x86_64-linux]",
-          "package nixos-remote [x86_64-linux]",
-          "deploy"
-        ]
+        contexts: [ "bors" ]
       # Required. Enforce all configured restrictions for administrators. Set to true to enforce required status checks for repository administrators. Set to null to disable.
       enforce_admins: false
-      # Prevent merge commits from being pushed to matching branches
-      required_linear_history: true
+      # Disabled for bors to work
+      required_linear_history: false
       # Required. Restrict who can push to this branch. Team and user restrictions are only available for organization-owned repositories. Set to null to disable.
       restrictions:
         apps: [ "bors" ]
