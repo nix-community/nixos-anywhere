@@ -100,15 +100,17 @@ timeout_ssh_() {
 ssh_() {
   ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
-nixCopy() {
-  NIX_SSHOPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' nix copy --extra-experimental-features nix-command "$@"
+nix_copy() {
+  NIX_SSHOPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' nix copy \
+    --extra-experimental-features 'nix-command flakes' \
+    "$@"
 }
 nix_build() {
-  nix \
-    --experimental-features flakes build \
-    --extra-experimental-features nix-command \
+  nix build \
+    --extra-experimental-features 'nix-command flakes' \
     --no-write-lock-file \
     --print-out-paths \
+    --no-link \
     "$@"
 }
 
@@ -216,14 +218,14 @@ do
   ssh_ "umask 077; cat > $path" < "${disk_encryption_keys[$path]}"
 done
 
-nixCopy --to "ssh://$ssh_connection" "$disko_script"
+nix_copy --to "ssh://$ssh_connection" "$disko_script"
 ssh_ "$disko_script"
 
 if [[ ${stop_after_disko-n} == "y" ]]; then
   exit 0
 fi
 
-nixCopy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
+nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
 if [[ -n ${extra_files:-} ]]; then
   if [[ -d "$extra_files" ]]; then
     extra_files="$extra_files/"
