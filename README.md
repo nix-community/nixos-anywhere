@@ -37,19 +37,24 @@ Options:
 
 * -f, --flake flake
   set the flake to install the system from
+* -L, --print-build-logs
+  print full build logs
 * -s, --store-paths
   set the store paths to the disko-script and nixos-system directly
   if this is give, flake is not needed
 * --no-ssh-copy
   skip copying ssh-keys to target system
+* --no-reboot
+  do not reboot after installation, allowing further customization of the target installation.
 * --kexec url
   use another kexec tarball to bootstrap NixOS
 * --stop-after-disko
   exit after disko formating, you can then proceed to install manually or some other way
-* --no-reboot
-  do not reboot after installation
 * --extra-files files
   files to copy into the new nixos installation
+* --disk-encryption-keys remote_path local_path
+  copy the contents of the file or pipe in local_path to remote_path in the installer environment,
+  after kexec but before installation. Can be repeated.
 * --debug
   enable debug output
 ```
