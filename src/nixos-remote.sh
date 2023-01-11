@@ -6,6 +6,8 @@ Options:
 
 * -f, --flake flake
   set the flake to install the system from
+* -L, --print-build-logs
+  print full build logs
 * -s, --store-paths
   set the store paths to the disko-script and nixos-system directly
   if this is give, flake is not needed
@@ -44,6 +46,9 @@ while [[ $# -gt 0 ]]; do
       flake=$2
       shift
       ;;
+    -L | --print-build-logs)
+      print_build_logs=y
+      ;;
     -s | --store-paths)
       disko_script=$(readlink -f "$2")
       nixos_system=$(readlink -f "$3")
@@ -63,6 +68,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --debug)
       enable_debug="-x"
+      print_build_logs=y
       set -x
       ;;
     --extra-files)
@@ -100,15 +106,24 @@ timeout_ssh_() {
 ssh_() {
   ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
+
+nix_options=(
+  --extra-experimental-features 'nix-command flakes'
+  "--no-write-lock-file"
+)
+
+if [[ ${print_build_logs-n} == "y" ]]; then
+  nix_options+=("-L")
+fi
+
 nix_copy() {
   NIX_SSHOPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' nix copy \
-    --extra-experimental-features 'nix-command flakes' \
+    "${nix_options[@]}" \
     "$@"
 }
 nix_build() {
   nix build \
-    --extra-experimental-features 'nix-command flakes' \
-    --no-write-lock-file \
+    "${nix_options[@]}" \
     --print-out-paths \
     --no-link \
     "$@"
