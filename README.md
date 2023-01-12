@@ -81,3 +81,17 @@ nixos-remote \
   --flake 'your-flake#your-system' \
   root@yourip
 ```
+
+## Developer guide
+
+To run `nixos-remote` from the repo:
+
+```console
+nix run . -- --help
+```
+
+To format the code
+
+```console
+nix fmt
+```
