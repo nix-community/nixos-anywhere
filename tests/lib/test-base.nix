@@ -1,8 +1,8 @@
 test:
-{ pkgs ? import <nixpkgs> {}, ... } @ args:
+{ pkgs ? import <nixpkgs> { }, ... } @ args:
 let
   inherit (pkgs) lib;
-  nixos-lib = import (pkgs.path + "/nixos/lib") {};
+  nixos-lib = import (pkgs.path + "/nixos/lib") { };
 in
 (nixos-lib.runTest {
   hostPkgs = pkgs;

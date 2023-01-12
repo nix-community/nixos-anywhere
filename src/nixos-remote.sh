@@ -42,62 +42,61 @@ declare -A disk_encryption_keys
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -f | --flake)
-      flake=$2
-      shift
-      ;;
-    -L | --print-build-logs)
-      print_build_logs=y
-      ;;
-    -s | --store-paths)
-      disko_script=$(readlink -f "$2")
-      nixos_system=$(readlink -f "$3")
-      shift
-      shift
-      ;;
-    --help)
+  -f | --flake)
+    flake=$2
+    shift
+    ;;
+  -L | --print-build-logs)
+    print_build_logs=y
+    ;;
+  -s | --store-paths)
+    disko_script=$(readlink -f "$2")
+    nixos_system=$(readlink -f "$3")
+    shift
+    shift
+    ;;
+  --help)
+    showUsage
+    exit 0
+    ;;
+  --kexec)
+    kexec_url=$2
+    shift
+    ;;
+  --no-ssh-copy-id)
+    no_ssh_copy=y
+    ;;
+  --debug)
+    enable_debug="-x"
+    print_build_logs=y
+    set -x
+    ;;
+  --extra-files)
+    extra_files=$2
+    shift
+    ;;
+  --disk-encryption-keys)
+    disk_encryption_keys["$2"]="$3"
+    shift
+    shift
+    ;;
+  --stop-after-disko)
+    stop_after_disko=y
+    ;;
+  --no-reboot)
+    maybereboot=""
+    ;;
+  *)
+    if [[ -z ${ssh_connection:-} ]]; then
+      ssh_connection="$1"
+    else
       showUsage
-      exit 0
-      ;;
-    --kexec)
-      kexec_url=$2
-      shift
-      ;;
-    --no-ssh-copy-id)
-      no_ssh_copy=y
-      ;;
-    --debug)
-      enable_debug="-x"
-      print_build_logs=y
-      set -x
-      ;;
-    --extra-files)
-      extra_files=$2
-      shift
-      ;;
-    --disk-encryption-keys)
-      disk_encryption_keys["$2"]="$3"
-      shift
-      shift
-      ;;
-    --stop-after-disko)
-      stop_after_disko=y
-      ;;
-    --no-reboot)
-      maybereboot=""
-      ;;
-    *)
-      if [[ -z ${ssh_connection:-} ]]; then
-        ssh_connection="$1"
-      else
-        showUsage
-        exit 1
-      fi
-      ;;
+      exit 1
+    fi
+    ;;
   esac
   shift
 done
-
 
 # ssh wrapper
 timeout_ssh_() {
@@ -134,20 +133,20 @@ if [[ -z ${ssh_connection:-} ]]; then
 fi
 
 # parse flake nixos-install style syntax, get the system attr
-if [[ -n "${flake:-}" ]]; then
+if [[ -n ${flake:-} ]]; then
   if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
-   flake="${BASH_REMATCH[1]}"
-   flakeAttr="${BASH_REMATCH[2]}"
+    flake="${BASH_REMATCH[1]}"
+    flakeAttr="${BASH_REMATCH[2]}"
   fi
-  if [[ -z "${flakeAttr:-}" ]]; then
+  if [[ -z ${flakeAttr:-} ]]; then
     echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri."
-    echo "For example, to use the output nixosConfigurations.foo from the flake.nix, append \"#foo\" to the flake-uri."
+    echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.'
     exit 1
   fi
   disko_script=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.disko")
   nixos_system=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.toplevel")
-elif [[ -n "${disko_script:-}" ]] && [[ -n "${nixos_system:-}" ]]; then
-  if [[ ! -e "${disko_script}" ]] || [[ ! -e "${nixos_system}" ]]; then
+elif [[ -n ${disko_script:-} ]] && [[ -n ${nixos_system:-} ]]; then
+  if [[ ! -e ${disko_script} ]] || [[ ! -e ${nixos_system} ]]; then
     echo "${disko_script} and ${nixos_system} must be existing store-paths"
     exit 1
   fi
@@ -160,7 +159,8 @@ fi
 # TODO we probably need an architecture detection here
 # TODO if we have specified a user here but we are already booted into the
 # installer, than the user might not work anymore
-until facts=$(ssh_ -o ConnectTimeout=10 -- <<SSH
+until facts=$(
+  ssh_ -o ConnectTimeout=10 -- <<SSH
 set -efu ${enable_debug}
 has(){
   command -v tar >/dev/null && echo "y" || echo "n"
@@ -198,14 +198,14 @@ if [[ ${is_kexec-n} != "y" ]] && [[ ${no_ssh_copy-n} != "y" ]]; then
 fi
 
 if [[ ${is_kexec-n} == "n" ]]; then
-  ssh_ << SSH
+  ssh_ <<SSH
 set -efu ${enable_debug}
 "${maybesudo}" rm -rf /root/kexec
 "${maybesudo}" mkdir -p /root/kexec
 SSH
 
-  if [[ -f "$kexec_url" ]]; then
-    ssh_ "${maybesudo} tar -C /root/kexec -xvzf-" < "$kexec_url"
+  if [[ -f $kexec_url ]]; then
+    ssh_ "${maybesudo} tar -C /root/kexec -xvzf-" <"$kexec_url"
   elif [[ ${has_curl-n} == "y" ]]; then
     ssh_ "curl --fail -Ss -L '${kexec_url}' | ${maybesudo} tar -C /root/kexec -xvzf-"
   elif [[ ${has_wget-n} == "y" ]]; then
@@ -214,7 +214,7 @@ SSH
     curl --fail -Ss -L "${kexec_url}" | ssh_ "${maybesudo} tar -C /root/kexec -xvzf-"
   fi
 
-  ssh_ << SSH
+  ssh_ <<SSH
 TMPDIR=/root/kexec setsid ${maybesudo} /root/kexec/kexec/run
 SSH
 
@@ -227,10 +227,9 @@ SSH
   # watiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
-for path in "${!disk_encryption_keys[@]}"
-do
+for path in "${!disk_encryption_keys[@]}"; do
   echo "Uploading ${disk_encryption_keys[$path]} to $path"
-  ssh_ "umask 077; cat > $path" < "${disk_encryption_keys[$path]}"
+  ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
 done
 
 nix_copy --to "ssh://$ssh_connection" "$disko_script"
@@ -242,7 +241,7 @@ fi
 
 nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
 if [[ -n ${extra_files:-} ]]; then
-  if [[ -d "$extra_files" ]]; then
+  if [[ -d $extra_files ]]; then
     extra_files="$extra_files/"
   fi
   rsync -vrlF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
