@@ -163,7 +163,7 @@ until facts=$(
   ssh_ -o ConnectTimeout=10 -- <<SSH
 set -efu ${enable_debug}
 has(){
-  command -v tar >/dev/null && echo "y" || echo "n"
+  command -v "\$1" >/dev/null && echo "y" || echo "n"
 }
 cat <<FACTS
 is_os=\$(uname)
