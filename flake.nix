@@ -7,6 +7,8 @@
     disko = { url = "github:nix-community/disko/master"; inputs.nixpkgs.follows = "nixpkgs"; };
     # used for testing
     nixos-images.url = "github:nix-community/nixos-images";
+    # used for development
+    treefmt-nix.url = "github:numtide/treefmt-nix";
   };
 
 
@@ -17,6 +19,18 @@
         ./src/flake-module.nix
         ./tests/flake-module.nix
         ./docs/flake-module.nix
+        inputs.treefmt-nix.flakeModule
       ];
+
+      perSystem = { config, ... }: {
+        treefmt = {
+          projectRootFile = "flake.nix";
+          programs.nixpkgs-fmt.enable = true;
+          programs.shellcheck.enable = true;
+          programs.shfmt.enable = true;
+          settings.formatter.shellcheck.options = [ "-s" "bash" ];
+        };
+        formatter = config.treefmt.build.wrapper;
+      };
     };
 }

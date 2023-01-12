@@ -1,4 +1,4 @@
-{modulesPath, self, ...}: {
+{ modulesPath, self, ... }: {
   imports = [
     (modulesPath + "/testing/test-instrumentation.nix")
     (modulesPath + "/profiles/qemu-guest.nix")
@@ -9,7 +9,7 @@
   hardware.enableAllFirmware = false;
   networking.hostId = "8425e349"; # from profiles/base.nix, needed for zfs
   boot.zfs.devNodes = "/dev/disk/by-uuid"; # needed because /dev/disk/by-id is empty in qemu-vms
-  boot.loader.grub.devices = ["/dev/vda"];
+  boot.loader.grub.devices = [ "/dev/vda" ];
   disko.devices = {
     disk = {
       vda = {
@@ -25,7 +25,7 @@
               start = "0";
               end = "1M";
               part-type = "primary";
-              flags = ["bios_grub"];
+              flags = [ "bios_grub" ];
             }
             {
               type = "partition";
