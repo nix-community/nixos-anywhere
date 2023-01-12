@@ -42,8 +42,6 @@ Options:
 * -s, --store-paths
   set the store paths to the disko-script and nixos-system directly
   if this is give, flake is not needed
-* --no-ssh-copy
-  skip copying ssh-keys to target system
 * --no-reboot
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec url

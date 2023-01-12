@@ -2,7 +2,12 @@
   name = "from-nixos";
   nodes = {
     installer = ./modules/installer.nix;
-    installed = ./modules/installed.nix;
+    installed = {
+      services.openssh.enable = true;
+      virtualisation.memorySize = 4096;
+
+      users.users.root.openssh.authorizedKeys.keyFiles = [ ./modules/ssh-keys/ssh.pub ];
+    };
   };
   testScript = ''
     def create_test_machine(oldmachine=None, args={}): # taken from <nixpkgs/nixos/tests/installer.nix>
@@ -19,7 +24,6 @@
     installer.succeed("echo value > /tmp/extra-files/var/lib/secrets/key")
     installer.succeed("""
       nixos-remote \
-        --no-ssh-copy-id \
         --debug \
         --kexec /etc/nixos-remote/kexec-installer \
         --extra-files /tmp/extra-files \

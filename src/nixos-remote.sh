@@ -11,8 +11,6 @@ Options:
 * -s, --store-paths
   set the store paths to the disko-script and nixos-system directly
   if this is give, flake is not needed
-* --no-ssh-copy
-  skip copying ssh-keys to target system
 * --no-reboot
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec url
@@ -49,9 +47,10 @@ nix_options=(
   "--no-write-lock-file"
 )
 substitute_on_destination=y
-nix_copy_options=()
 
 declare -A disk_encryption_keys
+declare -a nix_copy_options
+declare -a ssh_copy_id_args
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -75,9 +74,6 @@ while [[ $# -gt 0 ]]; do
   --kexec)
     kexec_url=$2
     shift
-    ;;
-  --no-ssh-copy-id)
-    no_ssh_copy=y
     ;;
   --debug)
     enable_debug="-x"
@@ -126,14 +122,6 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-# ssh wrapper
-timeout_ssh_() {
-  timeout 10 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
-}
-ssh_() {
-  ssh -T -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
-}
-
 if [[ ${print_build_logs-n} == "y" ]]; then
   nix_options+=("-L")
 fi
@@ -142,8 +130,16 @@ if [[ ${substitute_on_destination-n} == "y" ]]; then
   nix_copy_options+=("--substitute-on-destination")
 fi
 
+# ssh wrapper
+timeout_ssh_() {
+  timeout 10 ssh -i "$ssh_key_dir"/nixos-remote -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+}
+ssh_() {
+  ssh -T -i "$ssh_key_dir"/nixos-remote -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+}
+
 nix_copy() {
-  NIX_SSHOPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' nix copy \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-remote" nix copy \
     "${nix_options[@]}" \
     "${nix_copy_options[@]}" \
     "$@"
@@ -159,6 +155,12 @@ nix_build() {
 if [[ -z ${ssh_connection-} ]]; then
   abort "ssh-host must be set"
 fi
+
+# we generate a temporary ssh keypair that we can use during nixos-remote
+ssh_key_dir=$(mktemp -d)
+trap 'rm -rf "$ssh_key_dir"' EXIT
+mkdir -p "$ssh_key_dir"
+ssh-keygen -t ed25519 -f "$ssh_key_dir"/nixos-remote -P "" -C "nixos-remote" >/dev/null
 
 # parse flake nixos-install style syntax, get the system attr
 if [[ -n ${flake-} ]]; then
@@ -183,6 +185,30 @@ else
   abort "flake must be set"
 fi
 
+if [[ -n ${SSH_PRIVATE_KEY-} ]]; then
+  sshPrivateKeyFile=$(mktemp)
+  trap 'rm "$sshPrivateKeyFile"' EXIT
+  (
+    umask 077
+    printf '%s' "$SSH_PRIVATE_KEY" >"$sshPrivateKeyFile"
+  )
+  unset SSH_AUTH_SOCK # don't use system agent if key was supplied
+  ssh_copy_id_args+=(-o "IdentityFile=${sshPrivateKeyFile}")
+  ssh_copy_id_args+=(-f)
+fi
+
+until
+  ssh-copy-id \
+    -i "$ssh_key_dir"/nixos-remote.pub \
+    -o ConnectTimeout=10 \
+    -o UserKnownHostsFile=/dev/null \
+    -o StrictHostKeyChecking=no \
+    "${ssh_copy_id_args[@]}" \
+    "$ssh_connection"
+do
+  sleep 3
+done
+
 import_facts() {
   local facts filtered_facts
   if ! facts=$(
@@ -205,7 +231,7 @@ has_curl=\$(has curl)
 FACTS
 SSH
   ); then
-    return 1
+    exit 1
   fi
   filtered_facts=$(echo "$facts" | grep -E '^(has|is)_[a-z0-9_]+=\S+')
   if [[ -z $filtered_facts ]]; then
@@ -216,10 +242,7 @@ SSH
   export $(echo "$filtered_facts" | xargs)
 }
 
-# wait for machine to become reachable (possibly forever)
-until import_facts; do
-  sleep 5
-done
+import_facts
 
 if [[ ${has_tar-n} == "n" ]]; then
   abort "no tar command found, but required to unpack kexec tarball"
@@ -234,10 +257,6 @@ fi
 
 if [[ ${is_arch-n} != "x86_64" ]] && [[ $kexec_url == "$default_kexec_url" ]]; then
   abort "The default kexec image only support x86_64 cpus. Checkout https://github.com/numtide/nixos-remote/#using-your-own-kexec-image for more information."
-fi
-
-if [[ ${is_kexec-n} != "y" ]] && [[ ${no_ssh_copy-n} != "y" ]]; then
-  ssh-copy-id -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection"
 fi
 
 if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
@@ -279,6 +298,9 @@ nix_copy --to "ssh://$ssh_connection" "$disko_script"
 ssh_ "$disko_script"
 
 if [[ ${stop_after_disko-n} == "y" ]]; then
+  # Should we also do this for `--no-reboot`?
+  echo "WARNING: leaving temporary ssh key at '$ssh_key_dir/nixos-remote' to login to the machine" >&2
+  trap - EXIT
   exit 0
 fi
 
