@@ -24,6 +24,8 @@ Options:
 * --disk-encryption-keys remote_path local_path
   copy the contents of the file or pipe in local_path to remote_path in the installer environment,
   after kexec but before installation. Can be repeated.
+* --no-substitute-on-destination
+  disable passing --substitute-on-destination to nix-copy
 * --debug
   enable debug output
 USAGE
@@ -37,6 +39,7 @@ abort() {
 kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
 enable_debug=""
 maybereboot="sleep 6 && reboot"
+substitute_on_destination="--substitute-on-destination"
 
 declare -A disk_encryption_keys
 
@@ -86,6 +89,10 @@ while [[ $# -gt 0 ]]; do
   --no-reboot)
     maybereboot=""
     ;;
+  --no-substitute-on-destination)
+    substitute_on_destination=""
+    ;;
+
   *)
     if [[ -z ${ssh_connection:-} ]]; then
       ssh_connection="$1"
@@ -117,7 +124,7 @@ fi
 
 nix_copy() {
   NIX_SSHOPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' nix copy \
-    "${nix_options[@]}" \
+    "${nix_options[@]}" "${substitute_on_destination}" \
     "$@"
 }
 nix_build() {
