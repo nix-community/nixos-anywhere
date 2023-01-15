@@ -207,8 +207,8 @@ fi
 if [[ ${is_kexec-n} == "n" ]]; then
   ssh_ <<SSH
 set -efu ${enable_debug}
-"${maybesudo}" rm -rf /root/kexec
-"${maybesudo}" mkdir -p /root/kexec
+$maybesudo rm -rf /root/kexec
+$maybesudo mkdir -p /root/kexec
 SSH
 
   if [[ -f $kexec_url ]]; then
