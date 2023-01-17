@@ -36,7 +36,8 @@ abort() {
   exit 1
 }
 
-kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
+default_kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
+kexec_url="$default_kexec_url"
 enable_debug=""
 maybereboot="sleep 6 && reboot"
 substitute_on_destination="--substitute-on-destination"
@@ -174,6 +175,7 @@ has(){
 }
 cat <<FACTS
 is_os=\$(uname)
+is_arch=\$(uname -m)
 is_kexec=\$(if test -f /etc/is_kexec; then echo "y"; else echo "n"; fi)
 has_tar=\$(has tar)
 has_sudo=\$(has sudo)
@@ -198,6 +200,10 @@ if [[ ${has_sudo-n} == "y" ]]; then
 fi
 if [[ ${is_os-n} != "Linux" ]]; then
   abort "This script requires Linux as the operating system, but got $is_os"
+fi
+
+if [[ ${is_arch-n} != "x86_64" ]] && [[ $kexec_url == "$default_kexec_url" ]]; then
+  abort "The default kexec image only support x86_64 cpus. Checkout https://github.com/numtide/nixos-remote/#using-your-own-kexec-image for more information."
 fi
 
 if [[ ${is_kexec-n} != "y" ]] && [[ ${no_ssh_copy-n} != "y" ]]; then
