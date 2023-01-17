@@ -55,8 +55,14 @@ Options:
 * --disk-encryption-keys remote_path local_path
   copy the contents of the file or pipe in local_path to remote_path in the installer environment,
   after kexec but before installation. Can be repeated.
+* --no-substitute-on-destination
+  disable passing --substitute-on-destination to nix-copy
 * --debug
   enable debug output
+* --option KEY VALUE
+  nix option to pass to every nix related command
+* --from store-uri
+  URL of the source Nix store to copy the nixos and disko closure from
 ```
 
 ## Using your own kexec image

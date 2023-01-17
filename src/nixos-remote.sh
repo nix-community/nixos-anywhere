@@ -30,6 +30,8 @@ Options:
   enable debug output
 * --option KEY VALUE
   nix option to pass to every nix related command
+* --from store-uri
+  URL of the source Nix store to copy the nixos and disko closure from
 USAGE
 }
 
@@ -42,11 +44,12 @@ default_kexec_url=https://github.com/nix-community/nixos-images/releases/downloa
 kexec_url="$default_kexec_url"
 enable_debug=""
 maybe_reboot="sleep 6 && reboot"
-substitute_on_destination="--substitute-on-destination"
 nix_options=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
 )
+substitute_on_destination=y
+nix_copy_options=()
 
 declare -A disk_encryption_keys
 
@@ -96,6 +99,10 @@ while [[ $# -gt 0 ]]; do
   --no-reboot)
     maybe_reboot=""
     ;;
+  --from)
+    nix_copy_options+=("--from" "$2")
+    shift
+    ;;
   --option)
     key=$2
     shift
@@ -104,7 +111,7 @@ while [[ $# -gt 0 ]]; do
     nix_options+=("--option" "$key" "$value")
     ;;
   --no-substitute-on-destination)
-    substitute_on_destination=""
+    substitute_on_destination=n
     ;;
 
   *)
@@ -131,9 +138,14 @@ if [[ ${print_build_logs-n} == "y" ]]; then
   nix_options+=("-L")
 fi
 
+if [[ ${substitute_on_destination-n} == "y" ]]; then
+  nix_copy_options+=("--substitute-on-destination")
+fi
+
 nix_copy() {
   NIX_SSHOPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' nix copy \
-    "${substitute_on_destination}" "${nix_options[@]}" \
+    "${nix_options[@]}" \
+    "${nix_copy_options[@]}" \
     "$@"
 }
 nix_build() {
