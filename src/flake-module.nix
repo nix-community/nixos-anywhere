@@ -1,8 +1,11 @@
 {
-  perSystem = { pkgs, ... }: {
-    packages = rec {
+  perSystem = { config, pkgs, ... }: {
+    packages = {
       nixos-remote = pkgs.callPackage ./. { };
-      default = nixos-remote;
+      default = config.packages.nixos-remote;
+    };
+    devShells.default = pkgs.mkShellNoCC {
+      packages = config.packages.nixos-remote.runtimeInputs;
     };
   };
 }
