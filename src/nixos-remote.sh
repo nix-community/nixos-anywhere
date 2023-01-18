@@ -133,6 +133,7 @@ nix_build() {
     "${nix_options[@]}" \
     --print-out-paths \
     --no-link \
+    --accept-flake-config \
     "$@"
 }
 
