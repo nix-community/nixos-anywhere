@@ -5,6 +5,9 @@
 , nix
 , coreutils
 , curl
+, gnugrep
+, findutils
+, gnused
 }:
 let
   runtimeInputs = [
@@ -14,6 +17,9 @@ let
     nix
     coreutils
     curl # when uploading tarballs
+    gnugrep
+    findutils
+    gnused # needed by ssh-copy-id
   ];
 in
 (writeShellApplication {
