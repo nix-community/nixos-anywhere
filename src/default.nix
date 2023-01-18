@@ -5,6 +5,9 @@
 , nix
 , coreutils
 , curl
+, gnugrep
+, findutils
+, gnused
 }:
 writeShellApplication {
   name = "nixos-remote";
@@ -16,5 +19,8 @@ writeShellApplication {
     nix
     coreutils
     curl # when uploading tarballs
+    gnugrep
+    findutils
+    gnused # needed by ssh-copy-id
   ];
 }
