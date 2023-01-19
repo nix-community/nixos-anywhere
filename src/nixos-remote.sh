@@ -181,10 +181,13 @@ set -efu ${enable_debug}
 has(){
   command -v "\$1" >/dev/null && echo "y" || echo "n"
 }
+is_nixos=\$(if test -f /etc/os-release && grep -q ID=nixos /etc/os-release; then echo "y"; else echo "n"; fi)
 cat <<FACTS
 is_os=\$(uname)
 is_arch=\$(uname -m)
 is_kexec=\$(if test -f /etc/is_kexec; then echo "y"; else echo "n"; fi)
+is_nixos=\$is_nixos
+is_installer=\$(if [[ "\$is_nixos" == "y" ]] && grep -q VARIANT_ID=installer /etc/os-release; then echo "y"; else echo "n"; fi)
 has_tar=\$(has tar)
 has_sudo=\$(has sudo)
 has_wget=\$(has wget)
@@ -218,7 +221,7 @@ if [[ ${is_kexec-n} != "y" ]] && [[ ${no_ssh_copy-n} != "y" ]]; then
   ssh-copy-id -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection"
 fi
 
-if [[ ${is_kexec-n} == "n" ]]; then
+if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
   ssh_ <<SSH
 set -efu ${enable_debug}
 $maybesudo rm -rf /root/kexec
