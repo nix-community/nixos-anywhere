@@ -28,6 +28,8 @@ Options:
   disable passing --substitute-on-destination to nix-copy
 * --debug
   enable debug output
+* --option KEY VALUE
+  nix option to pass to every nix related command
 USAGE
 }
 
@@ -41,6 +43,10 @@ kexec_url="$default_kexec_url"
 enable_debug=""
 maybereboot="sleep 6 && reboot"
 substitute_on_destination="--substitute-on-destination"
+nix_options=(
+  --extra-experimental-features 'nix-command flakes'
+  "--no-write-lock-file"
+)
 
 declare -A disk_encryption_keys
 
@@ -90,6 +96,13 @@ while [[ $# -gt 0 ]]; do
   --no-reboot)
     maybereboot=""
     ;;
+  --option)
+    key=$2
+    shift
+    value=$2
+    shift
+    nix_options+=("--option" "$key" "$value")
+    ;;
   --no-substitute-on-destination)
     substitute_on_destination=""
     ;;
@@ -114,25 +127,20 @@ ssh_() {
   ssh -T -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
 
-nix_options=(
-  --extra-experimental-features 'nix-command flakes'
-  "--no-write-lock-file"
-)
-
 if [[ ${print_build_logs-n} == "y" ]]; then
   nix_options+=("-L")
 fi
 
 nix_copy() {
   NIX_SSHOPTS='-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' nix copy \
-    "${nix_options[@]}" "${substitute_on_destination}" \
+    "${substitute_on_destination}" "${nix_options[@]}" \
     "$@"
 }
 nix_build() {
   nix build \
-    "${nix_options[@]}" \
     --print-out-paths \
     --no-link \
+    "${nix_options[@]}" \
     "$@"
 }
 
