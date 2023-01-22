@@ -171,12 +171,10 @@ else
   abort "flake must be set"
 fi
 
-# wait for machine to become reachable (possibly forever)
-# TODO we probably need an architecture detection here
-# TODO if we have specified a user here but we are already booted into the
-# installer, than the user might not work anymore
-until facts=$(
-  ssh_ -o ConnectTimeout=10 -- <<SSH
+import_facts() {
+  local facts filtered_facts
+  if ! facts=$(
+    ssh_ -o ConnectTimeout=10 -- <<SSH
 set -efu ${enable_debug}
 has(){
   command -v "\$1" >/dev/null && echo "y" || echo "n"
@@ -194,13 +192,23 @@ has_wget=\$(has wget)
 has_curl=\$(has curl)
 FACTS
 SSH
-); do
+  ); then
+    return 1
+  fi
+  filtered_facts=$(echo "$facts" | grep -E '^(has|is)_[a-z0-9_]+=\S+')
+  if [[ -z "$filtered_facts" ]]; then
+    abort "Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already"
+  fi
+  # make facts available in script
+  # shellcheck disable=SC2046
+  export $(echo "$filtered_facts" | xargs)
+}
+
+# wait for machine to become reachable (possibly forever)
+until import_facts; do
   sleep 5
 done
 
-# make facts available in script
-# shellcheck disable=SC2046
-export $(echo "$facts" | grep -E '^(has|is)_[a-z0-9_]+=\S+' | xargs)
 
 if [[ ${has_tar-n} == "n" ]]; then
   abort "no tar command found, but required to unpack kexec tarball"
