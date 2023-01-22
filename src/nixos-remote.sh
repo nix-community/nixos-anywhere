@@ -108,7 +108,7 @@ while [[ $# -gt 0 ]]; do
     ;;
 
   *)
-    if [[ -z ${ssh_connection:-} ]]; then
+    if [[ -z ${ssh_connection-} ]]; then
       ssh_connection="$1"
     else
       showUsage
@@ -144,24 +144,24 @@ nix_build() {
     "$@"
 }
 
-if [[ -z ${ssh_connection:-} ]]; then
+if [[ -z ${ssh_connection-} ]]; then
   abort "ssh-host must be set"
 fi
 
 # parse flake nixos-install style syntax, get the system attr
-if [[ -n ${flake:-} ]]; then
+if [[ -n ${flake-} ]]; then
   if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
     flake="${BASH_REMATCH[1]}"
     flakeAttr="${BASH_REMATCH[2]}"
   fi
-  if [[ -z ${flakeAttr:-} ]]; then
+  if [[ -z ${flakeAttr-} ]]; then
     echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri."
     echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.'
     exit 1
   fi
   disko_script=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.disko")
   nixos_system=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.toplevel")
-elif [[ -n ${disko_script:-} ]] && [[ -n ${nixos_system:-} ]]; then
+elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
   if [[ ! -e ${disko_script} ]] || [[ ! -e ${nixos_system} ]]; then
     echo "${disko_script} and ${nixos_system} must be existing store-paths"
     exit 1
@@ -196,7 +196,7 @@ SSH
     return 1
   fi
   filtered_facts=$(echo "$facts" | grep -E '^(has|is)_[a-z0-9_]+=\S+')
-  if [[ -z "$filtered_facts" ]]; then
+  if [[ -z $filtered_facts ]]; then
     abort "Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already"
   fi
   # make facts available in script
@@ -208,7 +208,6 @@ SSH
 until import_facts; do
   sleep 5
 done
-
 
 if [[ ${has_tar-n} == "n" ]]; then
   abort "no tar command found, but required to unpack kexec tarball"
@@ -272,7 +271,7 @@ if [[ ${stop_after_disko-n} == "y" ]]; then
 fi
 
 nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
-if [[ -n ${extra_files:-} ]]; then
+if [[ -n ${extra_files-} ]]; then
   if [[ -d $extra_files ]]; then
     extra_files="$extra_files/"
   fi
