@@ -41,7 +41,7 @@ abort() {
 default_kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
 kexec_url="$default_kexec_url"
 enable_debug=""
-maybereboot="sleep 6 && reboot"
+maybe_reboot="sleep 6 && reboot"
 substitute_on_destination="--substitute-on-destination"
 nix_options=(
   --extra-experimental-features 'nix-command flakes'
@@ -94,7 +94,7 @@ while [[ $# -gt 0 ]]; do
     stop_after_disko=y
     ;;
   --no-reboot)
-    maybereboot=""
+    maybe_reboot=""
     ;;
   --option)
     key=$2
@@ -205,9 +205,9 @@ export $(echo "$facts" | grep -E '^(has|is)_[a-z0-9_]+=\S+' | xargs)
 if [[ ${has_tar-n} == "n" ]]; then
   abort "no tar command found, but required to unpack kexec tarball"
 fi
-maybesudo=""
+maybe_sudo=""
 if [[ ${has_sudo-n} == "y" ]]; then
-  maybesudo="sudo"
+  maybe_sudo="sudo"
 fi
 if [[ ${is_os-n} != "Linux" ]]; then
   abort "This script requires Linux as the operating system, but got $is_os"
@@ -224,22 +224,22 @@ fi
 if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
   ssh_ <<SSH
 set -efu ${enable_debug}
-$maybesudo rm -rf /root/kexec
-$maybesudo mkdir -p /root/kexec
+$maybe_sudo rm -rf /root/kexec
+$maybe_sudo mkdir -p /root/kexec
 SSH
 
   if [[ -f $kexec_url ]]; then
-    ssh_ "${maybesudo} tar -C /root/kexec -xvzf-" <"$kexec_url"
+    ssh_ "${maybe_sudo} tar -C /root/kexec -xvzf-" <"$kexec_url"
   elif [[ ${has_curl-n} == "y" ]]; then
-    ssh_ "curl --fail -Ss -L '${kexec_url}' | ${maybesudo} tar -C /root/kexec -xvzf-"
+    ssh_ "curl --fail -Ss -L '${kexec_url}' | ${maybe_sudo} tar -C /root/kexec -xvzf-"
   elif [[ ${has_wget-n} == "y" ]]; then
-    ssh_ "wget '${kexec_url}' -O- | ${maybesudo} tar -C /root/kexec -xvzf-"
+    ssh_ "wget '${kexec_url}' -O- | ${maybe_sudo} tar -C /root/kexec -xvzf-"
   else
-    curl --fail -Ss -L "${kexec_url}" | ssh_ "${maybesudo} tar -C /root/kexec -xvzf-"
+    curl --fail -Ss -L "${kexec_url}" | ssh_ "${maybe_sudo} tar -C /root/kexec -xvzf-"
   fi
 
   ssh_ <<SSH
-TMPDIR=/root/kexec setsid ${maybesudo} /root/kexec/kexec/run
+TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run
 SSH
 
   # wait for machine to become unreachable
@@ -278,5 +278,5 @@ mkdir -m777 -p /mnt/tmp
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 # We will reboot in background so we can cleanly finish the script before the hosts go down.
 # This makes integration into scripts easier
-nohup bash -c '${maybereboot}' >/dev/null &
+nohup bash -c '${maybe_reboot}' >/dev/null &
 SSH
