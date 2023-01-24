@@ -169,16 +169,15 @@ if [[ -n ${flake-} ]]; then
     flakeAttr="${BASH_REMATCH[2]}"
   fi
   if [[ -z ${flakeAttr-} ]]; then
-    echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri."
-    echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.'
+    echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri." >&2
+    echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
     exit 1
   fi
   disko_script=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.disko")
   nixos_system=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.toplevel")
 elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
   if [[ ! -e ${disko_script} ]] || [[ ! -e ${nixos_system} ]]; then
-    echo "${disko_script} and ${nixos_system} must be existing store-paths"
-    exit 1
+    abort "${disko_script} and ${nixos_system} must be existing store-paths"
   fi
   :
 else
