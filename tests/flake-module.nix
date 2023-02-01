@@ -6,7 +6,7 @@
       testInputs = {
         inherit pkgs;
         inherit (inputs.disko.nixosModules) disko;
-        nixos-remote = config.packages.nixos-remote;
+        nixos-anywhere = config.packages.nixos-anywhere;
         kexec-installer = "${inputs'.nixos-images.packages.kexec-installer-nixos-unstable}/nixos-kexec-installer-${system}.tar.gz";
       };
     in

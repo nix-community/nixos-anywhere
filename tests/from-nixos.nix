@@ -23,18 +23,18 @@
     installer.succeed("mkdir -p /tmp/extra-files/var/lib/secrets")
     installer.succeed("echo value > /tmp/extra-files/var/lib/secrets/key")
     installer.succeed("""
-      nixos-remote \
+      nixos-anywhere \
         --debug \
-        --kexec /etc/nixos-remote/kexec-installer \
+        --kexec /etc/nixos-anywhere/kexec-installer \
         --extra-files /tmp/extra-files \
-        --store-paths /etc/nixos-remote/disko /etc/nixos-remote/system-to-install \
+        --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
         root@installed >&2
     """)
     installed.shutdown()
     new_machine = create_test_machine(oldmachine=installed, args={ "name": "after_install" })
     new_machine.start()
     hostname = new_machine.succeed("hostname").strip()
-    assert "nixos-remote" == hostname, f"'nixos-remote' != '{hostname}'"
+    assert "nixos-anywhere" == hostname, f"'nixos-anywhere' != '{hostname}'"
     content = new_machine.succeed("cat /var/lib/secrets/key").strip()
     assert "value" == content, f"secret does not have expected value: {content}"
   '';

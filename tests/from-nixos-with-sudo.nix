@@ -19,13 +19,13 @@
     start_all()
     installer.succeed("echo super-secret > /tmp/disk-1.key")
     output = installer.succeed("""
-      nixos-remote \
+      nixos-anywhere \
         --debug \
-        --kexec /etc/nixos-remote/kexec-installer \
+        --kexec /etc/nixos-anywhere/kexec-installer \
         --stop-after-disko \
         --disk-encryption-keys /tmp/disk-1.key /tmp/disk-1.key \
         --disk-encryption-keys /tmp/disk-2.key <(echo another-secret) \
-        --store-paths /etc/nixos-remote/disko /etc/nixos-remote/system-to-install \
+        --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
         nixos@installed >&2
       echo "disk-1.key: '$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
         root@installed cat /tmp/disk-1.key)'"

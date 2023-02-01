@@ -1,6 +1,6 @@
 showUsage() {
   cat <<USAGE
-Usage: nixos-remote [options] ssh-host
+Usage: nixos-anywhere [options] ssh-host
 
 Options:
 
@@ -132,14 +132,14 @@ fi
 
 # ssh wrapper
 timeout_ssh_() {
-  timeout 10 ssh -i "$ssh_key_dir"/nixos-remote -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
 ssh_() {
-  ssh -T -i "$ssh_key_dir"/nixos-remote -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+  ssh -T -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
 
 nix_copy() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-remote" nix copy \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere" nix copy \
     "${nix_options[@]}" \
     "${nix_copy_options[@]}" \
     "$@"
@@ -156,11 +156,11 @@ if [[ -z ${ssh_connection-} ]]; then
   abort "ssh-host must be set"
 fi
 
-# we generate a temporary ssh keypair that we can use during nixos-remote
+# we generate a temporary ssh keypair that we can use during nixos-anywhere
 ssh_key_dir=$(mktemp -d)
 trap 'rm -rf "$ssh_key_dir"' EXIT
 mkdir -p "$ssh_key_dir"
-ssh-keygen -t ed25519 -f "$ssh_key_dir"/nixos-remote -P "" -C "nixos-remote" >/dev/null
+ssh-keygen -t ed25519 -f "$ssh_key_dir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
 
 # parse flake nixos-install style syntax, get the system attr
 if [[ -n ${flake-} ]]; then
@@ -198,7 +198,7 @@ fi
 
 until
   ssh-copy-id \
-    -i "$ssh_key_dir"/nixos-remote.pub \
+    -i "$ssh_key_dir"/nixos-anywhere.pub \
     -o ConnectTimeout=10 \
     -o UserKnownHostsFile=/dev/null \
     -o StrictHostKeyChecking=no \
@@ -255,7 +255,7 @@ if [[ ${is_os-n} != "Linux" ]]; then
 fi
 
 if [[ ${is_arch-n} != "x86_64" ]] && [[ $kexec_url == "$default_kexec_url" ]]; then
-  abort "The default kexec image only support x86_64 cpus. Checkout https://github.com/numtide/nixos-remote/#using-your-own-kexec-image for more information."
+  abort "The default kexec image only support x86_64 cpus. Checkout https://github.com/numtide/nixos-anywhere/#using-your-own-kexec-image for more information."
 fi
 
 if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
@@ -298,7 +298,7 @@ ssh_ "$disko_script"
 
 if [[ ${stop_after_disko-n} == "y" ]]; then
   # Should we also do this for `--no-reboot`?
-  echo "WARNING: leaving temporary ssh key at '$ssh_key_dir/nixos-remote' to login to the machine" >&2
+  echo "WARNING: leaving temporary ssh key at '$ssh_key_dir/nixos-anywhere' to login to the machine" >&2
   trap - EXIT
   exit 0
 fi

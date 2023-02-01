@@ -1,7 +1,7 @@
 # Table of Content
 
 - [Introduction](./introduction.md)
-  - [What is nixos-remote?](#)
+  - [What is nixos-anywhere?](#)
   - [Quickstart](#)
   - [Getting Started](#)
   - [System Requirements](#)

@@ -1,7 +1,7 @@
 # CLI
 
 ```
-Usage: nixos-remote [options] ssh-host
+Usage: nixos-anywhere [options] ssh-host
 
 Options:
 

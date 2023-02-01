@@ -8,5 +8,5 @@ status = [
   "devShell default [x86_64-linux]",
   "package default [x86_64-linux]",
   "package docs [x86_64-linux]",
-  "package nixos-remote [x86_64-linux]"
+  "package nixos-anywhere [x86_64-linux]"
 ]

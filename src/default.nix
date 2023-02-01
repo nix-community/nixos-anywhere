@@ -23,8 +23,8 @@ let
   ];
 in
 (writeShellApplication {
-  name = "nixos-remote";
-  text = builtins.readFile ./nixos-remote.sh;
+  name = "nixos-anywhere";
+  text = builtins.readFile ./nixos-anywhere.sh;
   inherit runtimeInputs;
 }) // {
   # also expose this attribute to other derivations

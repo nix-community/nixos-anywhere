@@ -4,7 +4,7 @@
     (modulesPath + "/profiles/qemu-guest.nix")
     (modulesPath + "/profiles/minimal.nix")
   ];
-  networking.hostName = "nixos-remote";
+  networking.hostName = "nixos-anywhere";
   documentation.enable = false;
   hardware.enableAllFirmware = false;
   networking.hostId = "8425e349"; # from profiles/base.nix, needed for zfs

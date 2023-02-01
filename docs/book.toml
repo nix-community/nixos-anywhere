@@ -3,4 +3,4 @@ authors = [ ]
 language = "en"
 multilingual = false
 src = "."
-title = "nixos-remote - install NixOS everywhere"
+title = "nixos-anywhere - install NixOS everywhere"

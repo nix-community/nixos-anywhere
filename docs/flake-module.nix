@@ -1,6 +1,6 @@
 {
   perSystem = { pkgs, lib, ... }: {
-    packages.docs = pkgs.runCommand "nixos-remote-docs"
+    packages.docs = pkgs.runCommand "nixos-anywhere-docs"
       {
         passthru.serve = pkgs.writeShellScriptBin "serve" ''
           cd docs

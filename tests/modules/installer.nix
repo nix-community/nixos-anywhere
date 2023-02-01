@@ -12,11 +12,11 @@ in
     ${pkgs.coreutils}/bin/install -D -m600 ${./ssh-keys/ssh} /root/.ssh/id_rsa
   '';
 
-  environment.systemPackages = [ inputs.nixos-remote ];
+  environment.systemPackages = [ inputs.nixos-anywhere ];
 
   environment.etc = {
-    "nixos-remote/disko".source = system-to-install.config.system.build.disko;
-    "nixos-remote/system-to-install".source = system-to-install.config.system.build.toplevel;
-    "nixos-remote/kexec-installer".source = kexec-installer;
+    "nixos-anywhere/disko".source = system-to-install.config.system.build.disko;
+    "nixos-anywhere/system-to-install".source = system-to-install.config.system.build.toplevel;
+    "nixos-anywhere/kexec-installer".source = kexec-installer;
   };
 }

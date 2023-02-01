@@ -1,11 +1,11 @@
 {
   perSystem = { config, pkgs, ... }: {
     packages = {
-      nixos-remote = pkgs.callPackage ./. { };
-      default = config.packages.nixos-remote;
+      nixos-anywhere = pkgs.callPackage ./. { };
+      default = config.packages.nixos-anywhere;
     };
     devShells.default = pkgs.mkShellNoCC {
-      packages = config.packages.nixos-remote.runtimeInputs;
+      packages = config.packages.nixos-anywhere.runtimeInputs;
     };
   };
 }
