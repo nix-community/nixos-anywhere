@@ -1,6 +1,6 @@
 # Introduction
 
-- [What is nixos-remote?](#)
+- [What is nixos-anywhere?](#)
 - [Quickstart](#)
 - [Getting Started](#)
 - [System Requirements](#)

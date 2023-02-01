@@ -1,6 +1,6 @@
-# nixos-remote - install nixos everywhere via ssh
+# nixos-anywhere - install nixos everywhere via ssh
 
-nixos-remote makes it possible to install nixos from Linux machines reachable via ssh.
+nixos-anywhere (formally known as nixos-remote) makes it possible to install nixos from Linux machines reachable via ssh.
 Under the hood uses a [kexec image](https://github.com/nix-community/nixos-images#kexec-tarballs) to boot
 into a NixOS installer from a running Linux system.
 It then uses [disko](https://github.com/nix-community/disko) to partition and
@@ -15,23 +15,23 @@ configuration.
   the whole nixos into memory.
 
 ## Usage
-Needs a repo with your configurations with flakes. For a minimal example checkout https://github.com/numtide/nixos-remote-examples.
+Needs a repo with your configurations with flakes. For a minimal example checkout https://github.com/numtide/nixos-anywhere-examples.
 
 Your NixOS configuration will also need a [disko](https://github.com/nix-community/disko) configuration  as we can see in
-our [example](https://github.com/numtide/nixos-remote-examples/blob/9768e438b1467ec55d42e096860e7199bd1ef43d/flake.nix#L15-L19)
+our [example](https://github.com/numtide/nixos-anywhere-examples/blob/9768e438b1467ec55d42e096860e7199bd1ef43d/flake.nix#L15-L19)
 
 Afterwards you can just run:
 
 ```
-nix run github:numtide/nixos-remote -- root@yourip --flake github:your-user/your-repo#your-system
+nix run github:numtide/nixos-anywhere -- root@yourip --flake github:your-user/your-repo#your-system
 ```
 
 The parameter passed to `--flake` should point to your nixos configuration
 exposed in your flake (`nixosConfigurations.your-system` in the example above).
 
-`nixos-remote --help`
+`nixos-anywhere --help`
 ``` shell
-Usage: nixos-remote [options] ssh-host
+Usage: nixos-anywhere [options] ssh-host
 
 Options:
 
@@ -65,11 +65,11 @@ Options:
 
 ## Using your own kexec image
 
-By default `nixos-remote` will download the kexec image from [here](https://github.com/nix-community/nixos-images#kexec-tarballs).
+By default `nixos-anywhere` will download the kexec image from [here](https://github.com/nix-community/nixos-images#kexec-tarballs).
 It is also possible to provide your own by providing a file to `--kexec`. The image will than uploaded prior to executing.
 
 ``` shell
-nixos-remote \
+nixos-anywhere \
   --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.x86_64-linux.kexec-installer-nixos-unstable)/nixos-kexec-installer-x86_64-linux.tar.gz" \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip
@@ -80,7 +80,7 @@ pre-build image. The following example assumes that your local machine can
 build for aarch64-linux either natively or through a remote builder
 
 ``` shell
-nixos-remote \
+nixos-anywhere \
   --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable)/nixos-kexec-installer-aarch64-linux.tar.gz" \
   --flake 'your-flake#your-system' \
   root@yourip
@@ -88,7 +88,7 @@ nixos-remote \
 
 ## Developer guide
 
-To run `nixos-remote` from the repo:
+To run `nixos-anywhere` from the repo:
 
 ```console
 nix run . -- --help
