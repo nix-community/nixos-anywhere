@@ -1,5 +1,7 @@
 # nixos-anywhere - install nixos everywhere via ssh
 
+<img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/5bdd3f3c442b923813e301b319290305353a3e7a/docs/logo.png" width="256" height="256">
+
 nixos-anywhere (formally known as nixos-remote) makes it possible to install nixos from Linux machines reachable via ssh.
 Under the hood uses a [kexec image](https://github.com/nix-community/nixos-images#kexec-tarballs) to boot
 into a NixOS installer from a running Linux system.
