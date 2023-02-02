@@ -315,7 +315,8 @@ ssh_ <<SSH
 set -efu ${enable_debug}
 # needed for installation if initrd-secrets are used
 mkdir -m777 -p /mnt/tmp
-nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
+nixos-install --no-root-passwd --no-channel-copy --no-bootloader --system "$nixos_system"
+nixos-enter --root /mnt -- /nix/var/nix/profiles/system/bin/switch-to-configuration boot --install-bootloader
 # We will reboot in background so we can cleanly finish the script before the hosts go down.
 # This makes integration into scripts easier
 nohup bash -c '${maybe_reboot}' >/dev/null &
