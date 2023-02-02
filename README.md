@@ -11,7 +11,16 @@ configuration.
 
 ## Requirements
 
-- x86_64 Linux system with kexec support (most x86_64 machine do have kexec support)
+`nixos-remote` can detect nixos installer if those contain the identifier
+`VARIANT=installer` in their `/etc/os-release` file. This is the case for the
+nixos-unstable installer and will be also part of nixos 23.05. If installer is
+detected `nixos-remote` will not try to kexec into its own image.
+
+If your system is not booted into a nixos installer than the following
+requirements apply for kexec to succeed:
+
+- x86_64 Linux system with kexec support (most x86_64 machine do have kexec
+  support) or you have to provide your own [image](https://github.com/numtide/nixos-anywhere#using-your-own-kexec-image)
 - At least 2.5GB RAM (swap does not count). If you do not have enough RAM you
   will see failures unpacking the initrd), this is because kexec needs to load
   the whole nixos into memory.
