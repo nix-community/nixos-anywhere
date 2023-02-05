@@ -2,7 +2,7 @@ repository:
   # See https://developer.github.com/v3/repos/#edit for all available settings.
 
   # The name of the repository. Changing this will rename the repository
-  name: nixos-remote
+  name: nixos-anywhere
 
   # A short description of the repository that will show up on GitHub
   description: install nixos everywhere via ssh
