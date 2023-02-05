@@ -10,8 +10,7 @@
         kexec-installer = builtins.fetchurl {
           url = "https://github.com/dep-sys/nix-dabei/releases/download/v0.9.2/nixos-kexec-installer-x86_64-linux.tar.gz";
           sha256 = "sha256:18b0mb714jzfrpvg19bw77h16s78ig8l24mqnrx4z73gzlfvrz7g";
-          break it
-        };
+       };
       };
     in
     {
