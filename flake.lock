@@ -112,7 +112,6 @@
       "inputs": {
         "disko": "disko",
         "flake-parts": "flake-parts",
-        "nixos-images": "nixos-images",
         "nixpkgs": "nixpkgs",
         "treefmt-nix": "treefmt-nix"
       }

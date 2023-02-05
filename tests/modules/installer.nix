@@ -1,7 +1,10 @@
 { config, lib, pkgs, inputs, ... }:
 let
   disko = inputs.disko; #or "${builtins.fetchTarball "https://github.com/nix-community/disko/archive/master.tar.gz"}/module.nix";
-  kexec-installer = inputs.kexec-installer; # or builtins.fetchurl "https://github.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-kexec-installer-${pkgs.stdenv.hostPlatform.system}.tar.gz";
+  kexec-installer = builtins.fetchurl {
+    url = "https://github.com/dep-sys/nix-dabei/releases/download/v0.5/nixos-kexec-installer-x86_64-linux.tar.gz";
+    sha256 = "sha256:18b0mb714jzfrpvg19bw77h16s78ig8l24mqnrx4z73gzlfvrz7g";
+  };
   system-to-install = pkgs.nixos [
     ./system-to-install.nix
     disko

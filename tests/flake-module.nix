@@ -4,10 +4,13 @@
   flake.checks.x86_64-linux = withSystem "x86_64-linux" ({ pkgs, system, inputs', config, ... }:
     let
       testInputs = {
-        inherit pkgs;
+        inherit pkgs system;
         inherit (inputs.disko.nixosModules) disko;
-        nixos-anywhere = config.packages.nixos-anywhere;
-        kexec-installer = "${inputs'.nixos-images.packages.kexec-installer-nixos-unstable}/nixos-kexec-installer-${system}.tar.gz";
+        nixos-remote = config.packages.nixos-remote;
+        kexec-installer = builtins.fetchurl {
+          url = "https://github.com/dep-sys/nix-dabei/releases/download/v0.5/nixos-kexec-installer-x86_64-linux.tar.gz";
+          sha256 = "sha256:18b0mb714jzfrpvg19bw77h16s78ig8l24mqnrx4z73gzlfvrz7g";
+        };
       };
     in
     {

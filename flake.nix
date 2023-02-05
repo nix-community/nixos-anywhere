@@ -5,8 +5,6 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable-small";
     flake-parts = { url = "github:hercules-ci/flake-parts"; inputs.nixpkgs-lib.follows = "nixpkgs"; };
     disko = { url = "github:nix-community/disko/master"; inputs.nixpkgs.follows = "nixpkgs"; };
-    # used for testing
-    nixos-images.url = "github:nix-community/nixos-images";
     # used for development
     treefmt-nix.url = "github:numtide/treefmt-nix";
   };

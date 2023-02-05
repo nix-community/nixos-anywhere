@@ -38,7 +38,7 @@ abort() {
   exit 1
 }
 
-default_kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
+default_kexec_url="https://github.com/dep-sys/nix-dabei/releases/download/v0.5/nixos-kexec-installer-x86_64-linux.tar.gz"
 kexec_url="$default_kexec_url"
 enable_debug=""
 maybe_reboot="sleep 6 && reboot"
