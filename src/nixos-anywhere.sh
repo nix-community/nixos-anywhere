@@ -15,6 +15,8 @@ Options:
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec url
   use another kexec tarball to bootstrap NixOS
+* --skip-disko
+  dont format disks with disko
 * --stop-after-disko
   exit after disko formating, you can then proceed to install manually or some other way
 * --extra-files files
@@ -88,6 +90,9 @@ while [[ $# -gt 0 ]]; do
     disk_encryption_keys["$2"]="$3"
     shift
     shift
+    ;;
+  --skip-disko)
+    skip_disko=y
     ;;
   --stop-after-disko)
     stop_after_disko=y
@@ -293,8 +298,12 @@ for path in "${!disk_encryption_keys[@]}"; do
   ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
 done
 
-nix_copy --to "ssh://$ssh_connection" "$disko_script"
-ssh_ "$disko_script"
+if [[ ${skip_disko} == "y" ]]; then
+  echo "Skipping disko (partitioning)."
+else
+  nix_copy --to "ssh://$ssh_connection" "$disko_script"
+  ssh_ "$disko_script"
+fi
 
 if [[ ${stop_after_disko-n} == "y" ]]; then
   # Should we also do this for `--no-reboot`?
