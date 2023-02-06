@@ -12,10 +12,10 @@ configuration.
 
 ## Requirements
 
-`nixos-remote` can detect nixos installer if those contain the identifier
+`nixos-anywhere` can detect nixos installer if those contain the identifier
 `VARIANT=installer` in their `/etc/os-release` file. This is the case for the
 nixos-unstable installer and will be also part of nixos 23.05. If installer is
-detected `nixos-remote` will not try to kexec into its own image.
+detected `nixos-anywhere` will not try to kexec into its own image.
 
 If your system is not booted into a nixos installer than the following
 requirements apply for kexec to succeed:
