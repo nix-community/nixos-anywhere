@@ -308,7 +308,7 @@ if [[ -n ${extra_files-} ]]; then
   if [[ -d $extra_files ]]; then
     extra_files="$extra_files/"
   fi
-  rsync -rlpv -FF -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
+  rsync -rlpv -FF -e "ssh -i \"$ssh_key_dir\"/nixos-remote -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
 fi
 
 ssh_ <<SSH
