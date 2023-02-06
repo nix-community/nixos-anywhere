@@ -8,7 +8,7 @@ repository:
   description: install nixos everywhere via ssh
 
   # A URL with more information about the repository
-  homepage: https://numtide.github.io/nixos-remote
+  homepage: https://numtide.github.io/nixos-anywhere
 
   # A comma-separated list of topics to set on the repository
   topics: ""
