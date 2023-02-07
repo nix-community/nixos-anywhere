@@ -8,10 +8,11 @@
 , gnugrep
 , findutils
 , gnused
+, lib
+, mkShellNoCC
 }:
 let
   runtimeInputs = [
-    openssh
     gitMinimal # for git flakes
     rsync
     nix
@@ -24,9 +25,16 @@ let
 in
 (writeShellApplication {
   name = "nixos-anywhere";
-  text = builtins.readFile ./nixos-anywhere.sh;
+  # We prefer the system's openssh over our own, since it might come with features not present in ours:
+  # https://github.com/numtide/nixos-anywhere/issues/62
+  text = ''
+    export PATH=$PATH:${lib.getBin openssh}
+    ${builtins.readFile ./nixos-anywhere.sh}
+  '';
   inherit runtimeInputs;
 }) // {
-  # also expose this attribute to other derivations
-  inherit runtimeInputs;
+  # Dependencies for our devshell
+  devShell = mkShellNoCC {
+    packages = runtimeInputs ++ [ openssh ];
+  };
 }
