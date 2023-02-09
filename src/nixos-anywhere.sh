@@ -314,7 +314,8 @@ fi
 ssh_ <<SSH
 set -efu ${enable_debug}
 # needed for installation if initrd-secrets are used
-mkdir -m777 -p /mnt/tmp
+mkdir -p /mnt/tmp
+chmod 777 /mnt/tmp
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 # We will reboot in background so we can cleanly finish the script before the hosts go down.
 # This makes integration into scripts easier
