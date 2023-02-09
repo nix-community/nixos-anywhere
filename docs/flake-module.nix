@@ -3,8 +3,11 @@
     packages.docs = pkgs.runCommand "nixos-anywhere-docs"
       {
         passthru.serve = pkgs.writeShellScriptBin "serve" ''
+          set -euo pipefail
           cd docs
-          ${lib.getExe pkgs.mdbook} serve --dest-dir $(${pkgs.coreutils}/bin/mktemp -d)
+          workdir=$(${pkgs.coreutils}/bin/mktemp -d)
+          trap 'rm -rf "$workdir"' EXIT
+          ${lib.getExe pkgs.mdbook} serve --dest-dir "$workdir"
         '';
       }
       ''
