@@ -189,7 +189,7 @@ if [[ -n ${SSH_PRIVATE_KEY-} ]]; then
   trap 'rm "$sshPrivateKeyFile"' EXIT
   (
     umask 077
-    printf '%s' "$SSH_PRIVATE_KEY" >"$sshPrivateKeyFile"
+    printf '%s\n' "$SSH_PRIVATE_KEY" >"$sshPrivateKeyFile"
   )
   unset SSH_AUTH_SOCK # don't use system agent if key was supplied
   ssh_copy_id_args+=(-o "IdentityFile=${sshPrivateKeyFile}")
