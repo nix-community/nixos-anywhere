@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S nix --extra-experimental-features 'nix-command flakes' shell --inputs-from path:../../ nixpkgs#jq nixpkgs#nix nixpkgs#coreutils nixpkgs#runtimeShellPackage -c bash
 set -efu
 
 declare file attribute

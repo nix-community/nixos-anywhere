@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S nix --extra-experimental-features 'nix-command flakes' shell --inputs-from path:../../ nixpkgs#nix nixpkgs#coreutils nixpkgs#runtimeShellPackage -c bash
 
 set -uex -o pipefail
 
@@ -29,7 +29,7 @@ if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
 fi
 
 try=1
-until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --experimental-features nix-command --to "ssh://$TARGET_HOST" "$NIXOS_SYSTEM"; do
+until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --extra-experimental-features 'nix-command flakes' --to "ssh://$TARGET_HOST" "$NIXOS_SYSTEM"; do
   if [[ $try -gt 10 ]]; then
     echo "retries exhausted" >&2
     exit 1
