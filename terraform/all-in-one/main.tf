@@ -20,6 +20,7 @@ module "install" {
   nixos_system           = module.system-build.result.out
   ssh_private_key        = var.ssh_private_key
   debug_logging          = var.debug_logging
+  instance_id            = var.instance_id
 }
 
 module "nixos-rebuild" {

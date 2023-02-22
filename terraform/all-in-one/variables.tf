@@ -39,6 +39,12 @@ variable "target_port" {
   default     = 22
 }
 
+variable "instance_id" {
+  type        = string
+  description = "The instance id of the target_host, used to track when to reinstall the machine"
+  default     = null
+}
+
 variable "ssh_private_key" {
   type        = string
   description = "Content of private key used to connect to the target_host"
