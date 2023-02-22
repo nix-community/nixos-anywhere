@@ -38,3 +38,9 @@ variable "ssh_private_key" {
   description = "Content of private key used to connect to the target_host"
   default     = ""
 }
+
+variable "debug_logging" {
+  type        = bool
+  description = "Enable debug logging"
+  default     = false
+}

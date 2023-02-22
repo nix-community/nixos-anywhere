@@ -19,6 +19,7 @@ module "install" {
   nixos_partitioner      = module.partitioner-build.result.out
   nixos_system           = module.system-build.result.out
   ssh_private_key        = var.ssh_private_key
+  debug_logging          = var.debug_logging
 }
 
 module "nixos-rebuild" {
