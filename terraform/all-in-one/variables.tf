@@ -7,18 +7,18 @@ variable "kexec_tarball_url" {
 # To make this re-usuable we maybe should accept a store path here?
 variable "nixos_partitioner_attr" {
   type        = string
-  description = "nixos partitioner and mount script"
+  description = "Nixos partitioner and mount script i.e. your-flake#nixosConfigurations.your-evaluated-nixos.config.system.build.diskoNoDeps or just your-evaluated.config.system.build.diskNoDeps. `config.system.build.diskNoDeps` is provided by the disko nixos module"
 }
 
 # To make this re-usuable we maybe should accept a store path here?
 variable "nixos_system_attr" {
   type        = string
-  description = "The nixos system to deploy"
+  description = "The nixos system to deploy i.e. your-flake#nixosConfigurations.your-evaluated-nixos.config.system.build.toplevel or just your-evaluated-nixos.config.system.build.toplevel if you are not using flakes"
 }
 
 variable "file" {
   type        = string
-  description = "file to get the nixos_system_attr and nixos_partitioner_attr from if they are not flakes."
+  description = "Nix file containing the nixos_system_attr and nixos_partitioner_attr. Use this if you are not using flake"
   default     = null
 }
 
