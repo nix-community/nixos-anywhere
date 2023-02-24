@@ -28,7 +28,15 @@ if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
   sshOpts+=(-o "IdentityFile=${sshPrivateKeyFile}")
 fi
 
-NIX_SSHOPTS="${sshOpts[*]}" retry -t 10 -d 10 -- nix copy -s --experimental-features nix-command --to "ssh://$TARGET_HOST" "$NIXOS_SYSTEM"
+try=1
+until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --experimental-features nix-command --to "ssh://$TARGET_HOST" "$NIXOS_SYSTEM"; do
+  if [[ $try -gt 10 ]]; then
+    echo "retries exhausted" >&2
+    exit 1
+  fi
+  sleep 10
+  try=$((try + 1))
+done
 
 # shellcheck disable=SC2029
 ssh "${sshOpts[@]}" "$TARGET_HOST" "nix-env -p /nix/var/nix/profiles/system --set $(printf "%q" "$NIXOS_SYSTEM"); /nix/var/nix/profiles/system/bin/switch-to-configuration switch" || :

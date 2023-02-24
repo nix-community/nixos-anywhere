@@ -38,3 +38,15 @@ variable "ssh_private_key" {
   description = "Content of private key used to connect to the target_host"
   default     = ""
 }
+
+variable "instance_id" {
+  type        = string
+  description = "The instance id of the target_host, used to track when to reinstall the machine"
+  default     = null
+}
+
+variable "debug_logging" {
+  type        = bool
+  description = "Enable debug logging"
+  default     = false
+}
