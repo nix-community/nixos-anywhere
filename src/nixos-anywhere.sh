@@ -173,8 +173,8 @@ if [[ -n ${flake-} ]]; then
     echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
     exit 1
   fi
-  disko_script=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.disko")
-  nixos_system=$(nix_build "${flake}#nixosConfigurations.${flakeAttr}.config.system.build.toplevel")
+  disko_script=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.disko")
+  nixos_system=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
 elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
   if [[ ! -e ${disko_script} ]] || [[ ! -e ${nixos_system} ]]; then
     abort "${disko_script} and ${nixos_system} must be existing store-paths"
