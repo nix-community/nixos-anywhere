@@ -10,10 +10,14 @@ module "partitioner-build" {
   file = var.file
 }
 
+locals {
+  install_user = var.install_user == null ? var.target_user : var.install_user
+}
+
 module "install" {
   source                 = "../install"
   kexec_tarball_url      = var.kexec_tarball_url
-  target_user            = var.target_user
+  target_user            = local.install_user
   target_host            = var.target_host
   target_port            = var.target_port
   nixos_partitioner      = module.partitioner-build.result.out
@@ -30,4 +34,5 @@ module "nixos-rebuild" {
   source = "../nixos-rebuild"
   nixos_system = module.system-build.result.out
   target_host = var.target_host
+  target_user = var.target_user
 }
