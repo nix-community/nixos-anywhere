@@ -27,9 +27,15 @@ variable "target_host" {
   description = "DNS host to deploy to"
 }
 
+variable "install_user" {
+  type        = string
+  description = "SSH user used to connect to the target_host, before installing NixOS. If null than the value of `target_host` is used"
+  default     = null
+}
+
 variable "target_user" {
   type        = string
-  description = "SSH user used to connect to the target_host, before installing NixOS"
+  description = "SSH user used to connect to the target_host after installing NixOS. If install_user is not set than this user is also used before installing."
   default     = "root"
 }
 
