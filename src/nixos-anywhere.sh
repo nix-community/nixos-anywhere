@@ -321,3 +321,8 @@ nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 # This makes integration into scripts easier
 nohup bash -c '${maybe_reboot}' >/dev/null &
 SSH
+
+# wait for machine to become unreachable due to reboot
+if [[ -n ${maybe_reboot} ]]; then
+  while timeout_ssh_ -- exit 0; do sleep 1; done
+fi
