@@ -22,7 +22,7 @@ module "install" {
   target_port            = var.target_port
   nixos_partitioner      = module.partitioner-build.result.out
   nixos_system           = module.system-build.result.out
-  ssh_private_key        = var.ssh_private_key
+  ssh_private_key        = var.install_ssh_key
   debug_logging          = var.debug_logging
   instance_id            = var.instance_id
 }
@@ -33,6 +33,7 @@ module "nixos-rebuild" {
   ]
   source = "../nixos-rebuild"
   nixos_system = module.system-build.result.out
+  ssh_private_key = var.deployment_ssh_key
   target_host = var.target_host
   target_user = var.target_user
 }
