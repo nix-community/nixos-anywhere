@@ -22,8 +22,11 @@ sshOpts+=(-o StrictHostKeyChecking=no)
 if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
   sshPrivateKeyFile="$workDir/ssh_key"
   trap 'rm "$sshPrivateKeyFile"' EXIT
-  echo "$SSH_KEY" >"$sshPrivateKeyFile"
-  chmod 0700 "$sshPrivateKeyFile"
+  # Create the file with 0700 - umask calculation: 777 - 700 = 077
+  (
+    umask 077
+    echo "$SSH_KEY" >"$sshPrivateKeyFile"
+  )
   unset SSH_AUTH_SOCK # don't use system agent if key was supplied
   sshOpts+=(-o "IdentityFile=${sshPrivateKeyFile}")
 fi
