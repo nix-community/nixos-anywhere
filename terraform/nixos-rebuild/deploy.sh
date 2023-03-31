@@ -2,15 +2,18 @@
 
 set -uex -o pipefail
 
-if [ "$#" -ne 3 ]; then
-  echo "USAGE: $0 NIXOS_SYSTEM TARGET_HOST TARGET_PORT" >&2
+if [ "$#" -ne 4 ]; then
+  echo "USAGE: $0 NIXOS_SYSTEM TARGET_USER TARGET_HOST TARGET_PORT" >&2
   exit 1
 fi
 
 NIXOS_SYSTEM=$1
-TARGET_HOST=$2
-TARGET_PORT=$3
+TARGET_USER=$2
+TARGET_HOST=$3
+TARGET_PORT=$4
 shift 3
+
+TARGET="${TARGET_USER}@${TARGET_HOST}"
 
 workDir=$(mktemp -d)
 trap 'rm -rf "$workDir"' EXIT
@@ -31,7 +34,7 @@ if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
 fi
 
 try=1
-until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --experimental-features nix-command --to "ssh://$TARGET_HOST" "$NIXOS_SYSTEM"; do
+until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --experimental-features nix-command --to "ssh://$TARGET" "$NIXOS_SYSTEM"; do
   if [[ $try -gt 10 ]]; then
     echo "retries exhausted" >&2
     exit 1
@@ -40,5 +43,9 @@ until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --experimental-features nix-comman
   try=$((try + 1))
 done
 
+switchCommand="nix-env -p /nix/var/nix/profiles/system --set $(printf "%q" "$NIXOS_SYSTEM"); /nix/var/nix/profiles/system/bin/switch-to-configuration switch"
+if [[ $TARGET_USER != "root" ]]; then
+  switchCommand="sudo bash -c '$switchCommand'"
+fi
 # shellcheck disable=SC2029
-ssh "${sshOpts[@]}" "$TARGET_HOST" "nix-env -p /nix/var/nix/profiles/system --set $(printf "%q" "$NIXOS_SYSTEM"); /nix/var/nix/profiles/system/bin/switch-to-configuration switch" || :
+ssh "${sshOpts[@]}" "$TARGET" "$switchCommand"

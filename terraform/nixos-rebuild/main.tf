@@ -7,6 +7,6 @@ resource "null_resource" "nixos-rebuild" {
       SSH_KEY = var.ssh_private_key
     }
 
-    command = "${path.module}/deploy.sh ${var.nixos_system} ${var.target_user}@${var.target_host} ${var.target_port}"
+    command = "${path.module}/deploy.sh ${var.nixos_system} ${var.target_user} ${var.target_host} ${var.target_port}"
   }
 }
