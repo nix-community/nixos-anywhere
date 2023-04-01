@@ -1,0 +1,12 @@
+#cloud-config
+ssh_pwauth: false
+
+users:
+- name: nix
+  gecos: nix User
+  groups: users,admin,wheel
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  shell: /bin/bash
+  lock_passwd: true
+  ssh_authorized_keys:
+    - "${ssh_public_key}"
