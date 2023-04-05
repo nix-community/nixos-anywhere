@@ -2,8 +2,8 @@
 
 set -uex -o pipefail
 
-if [ "$#" -ne 4 ]; then
-  echo "USAGE: $0 NIXOS_SYSTEM TARGET_USER TARGET_HOST TARGET_PORT" >&2
+if [ "$#" -ne 5 ]; then
+  echo "USAGE: $0 NIXOS_SYSTEM TARGET_USER TARGET_HOST TARGET_PORT IGNORE_SYSTEMD_ERRORS" >&2
   exit 1
 fi
 
@@ -11,6 +11,7 @@ NIXOS_SYSTEM=$1
 TARGET_USER=$2
 TARGET_HOST=$3
 TARGET_PORT=$4
+IGNORE_SYSTEMD_ERRORS=$5
 shift 3
 
 TARGET="${TARGET_USER}@${TARGET_HOST}"
@@ -47,5 +48,10 @@ switchCommand="nix-env -p /nix/var/nix/profiles/system --set $(printf "%q" "$NIX
 if [[ $TARGET_USER != "root" ]]; then
   switchCommand="sudo bash -c '$switchCommand'"
 fi
+deploy_status=0
 # shellcheck disable=SC2029
-ssh "${sshOpts[@]}" "$TARGET" "$switchCommand"
+ssh "${sshOpts[@]}" "$TARGET" "$switchCommand" || deploy_status="$?"
+if [[ $IGNORE_SYSTEMD_ERRORS == "true" && $deploy_status == "4" ]]; then
+  exit 0
+fi
+exit "$deploy_status"
