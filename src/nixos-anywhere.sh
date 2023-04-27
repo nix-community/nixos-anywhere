@@ -302,7 +302,7 @@ done
 
 pubkey=$(ssh-keyscan -t ed25519 "${ssh_connection//*@/}" 2>/dev/null | sed -e 's/^[^ ]* //' | base64 -w0)
 
-if [[ -n ${disko_script-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
+if [[ -z ${disko_script-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
   disko_script=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.disko" \
       --builders "ssh://$ssh_connection?base64-ssh-public-host-key=$pubkey&ssh-key=$ssh_key_dir/nixos-anywhere $is_arch-linux"
@@ -318,7 +318,7 @@ if [[ ${stop_after_disko-n} == "y" ]]; then
   exit 0
 fi
 
-if [[ -n ${nixos_system-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
+if [[ -z ${nixos_system-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
   nixos_system=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
       --builders "ssh://$ssh_connection?remote-store=local?root=/mnt&base64-ssh-public-host-key=$pubkey&ssh-key=$ssh_key_dir/nixos-anywhere $is_arch-linux"
