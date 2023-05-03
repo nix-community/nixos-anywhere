@@ -234,6 +234,8 @@ has_tar=\$(has tar)
 has_sudo=\$(has sudo)
 has_wget=\$(has wget)
 has_curl=\$(has curl)
+has_setsid=\$(has setsid)
+has_bash=\$(has bash)
 FACTS
 SSH
   ); then
@@ -253,10 +255,20 @@ import_facts
 if [[ ${has_tar-n} == "n" ]]; then
   abort "no tar command found, but required to unpack kexec tarball"
 fi
+
+if [[ ${has_bash-n} == "n" ]]; then
+  abort "no bash command found, but required for running the reboot script"
+fi
+
+if [[ ${has_setsid-n} == "n" ]]; then
+  abort "no setsid command found, but required to run the kexec script under a new session"
+fi
+
 maybe_sudo=""
 if [[ ${has_sudo-n} == "y" ]]; then
   maybe_sudo="sudo"
 fi
+
 if [[ ${is_os-n} != "Linux" ]]; then
   abort "This script requires Linux as the operating system, but got $is_os"
 fi
