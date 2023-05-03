@@ -40,6 +40,10 @@ abort() {
   exit 1
 }
 
+warn() {
+  echo "warning: $*" >&2
+}
+
 default_kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-x86_64-linux.tar.gz
 kexec_url="$default_kexec_url"
 enable_debug=""
@@ -141,6 +145,11 @@ timeout_ssh_() {
 }
 ssh_() {
   ssh -T -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+}
+install_binary_to_host() {
+  local target_binary="$1"
+  local local_binary="$2"
+  ssh_ "mkdir -p ${...} && cat > $1 && chmod +x $1" < "$2"
 }
 
 nix_copy() {
@@ -252,16 +261,23 @@ SSH
 
 import_facts
 
+tar_="tar"
 if [[ ${has_tar-n} == "n" ]]; then
-  abort "no tar command found, but required to unpack kexec tarball"
+  warn "no tar command found, but required to unpack kexec tarball; will polyfill with a Nix-built static binary: \`pkgsStatic.gnutar\` "
+  tar_="/root/nixos-anywhere-binaries/tar"
+  install_binary_to_host ${tar_} "$(nix_build "nixpkgs#pkgsStatic.gnutar" --no-out-link)/tar"
 fi
 
+# We cannot polyfill it, I don't know where it's used.
 if [[ ${has_bash-n} == "n" ]]; then
-  abort "no bash command found, but required for running the reboot script"
+  warn "no bash command found, but required for running the reboot script"
 fi
 
+setsid_="setsid"
 if [[ ${has_setsid-n} == "n" ]]; then
-  abort "no setsid command found, but required to run the kexec script under a new session"
+  abort "no setsid command found, but required to run the kexec script under a new session; will polyfill with a Nix-built static binary: \`pkgsStatic.busybox\`"
+  setsid_="/root/nixos-anywhere-binaries/setsid"
+  install_binary_to_host ${setsid_} "$(nix_build "nixpkgs#pkgsStatic.busybox" --no-out-link)/setsid"
 fi
 
 maybe_sudo=""
@@ -285,17 +301,17 @@ $maybe_sudo mkdir -p /root/kexec
 SSH
 
   if [[ -f $kexec_url ]]; then
-    ssh_ "${maybe_sudo} tar -C /root/kexec -xvzf-" <"$kexec_url"
+    ssh_ "${maybe_sudo} ${tar_} -C /root/kexec -xvzf-" <"$kexec_url"
   elif [[ ${has_curl-n} == "y" ]]; then
-    ssh_ "curl --fail -Ss -L '${kexec_url}' | ${maybe_sudo} tar -C /root/kexec -xvzf-"
+    ssh_ "curl --fail -Ss -L '${kexec_url}' | ${maybe_sudo} ${tar_} -C /root/kexec -xvzf-"
   elif [[ ${has_wget-n} == "y" ]]; then
-    ssh_ "wget '${kexec_url}' -O- | ${maybe_sudo} tar -C /root/kexec -xvzf-"
+    ssh_ "wget '${kexec_url}' -O- | ${maybe_sudo} ${tar_} -C /root/kexec -xvzf-"
   else
-    curl --fail -Ss -L "${kexec_url}" | ssh_ "${maybe_sudo} tar -C /root/kexec -xvzf-"
+    curl --fail -Ss -L "${kexec_url}" | ssh_ "${maybe_sudo} ${tar_} -C /root/kexec -xvzf-"
   fi
 
   ssh_ <<SSH
-TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run
+TMPDIR=/root/kexec ${setsid_} ${maybe_sudo} /root/kexec/kexec/run
 SSH
 
   # wait for machine to become unreachable
