@@ -51,9 +51,15 @@ variable "instance_id" {
   default     = null
 }
 
-variable "ssh_private_key" {
+variable "install_ssh_key" {
   type        = string
-  description = "Content of private key used to connect to the target_host"
+  description = "Content of private key used to connect to the target_host during initial installation"
+  default     = null
+}
+
+variable "deployment_ssh_key" {
+  type        = string
+  description = "Content of private key used to deploy to the target_host after initial installation. To ensure maximum security, it is advisable to connect to your host using ssh-agent instead of relying on this variable"
   default     = null
 }
 

@@ -30,6 +30,8 @@ Options:
   nix option to pass to every nix related command
 * --from store-uri
   URL of the source Nix store to copy the nixos and disko closure from
+* --build-on-remote
+  build the closure on the remote machine instead of locally and copy-closuring it
 USAGE
 }
 
@@ -109,6 +111,9 @@ while [[ $# -gt 0 ]]; do
   --no-substitute-on-destination)
     substitute_on_destination=n
     ;;
+  --build-on-remote)
+    build_on_remote=y
+    ;;
 
   *)
     if [[ -z ${ssh_connection-} ]]; then
@@ -145,7 +150,7 @@ nix_copy() {
     "$@"
 }
 nix_build() {
-  nix build \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere" nix build \
     --print-out-paths \
     --no-link \
     "${nix_options[@]}" \
@@ -173,8 +178,10 @@ if [[ -n ${flake-} ]]; then
     echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
     exit 1
   fi
-  disko_script=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.disko")
-  nixos_system=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
+  if [[ ${build_on_remote-n} == "n" ]]; then
+    disko_script=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.disko")
+    nixos_system=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
+  fi
 elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
   if [[ ! -e ${disko_script} ]] || [[ ! -e ${nixos_system} ]]; then
     abort "${disko_script} and ${nixos_system} must be existing store-paths"
@@ -227,6 +234,8 @@ has_tar=\$(has tar)
 has_sudo=\$(has sudo)
 has_wget=\$(has wget)
 has_curl=\$(has curl)
+has_setsid=\$(has setsid)
+has_bash=\$(has bash)
 FACTS
 SSH
   ); then
@@ -246,10 +255,20 @@ import_facts
 if [[ ${has_tar-n} == "n" ]]; then
   abort "no tar command found, but required to unpack kexec tarball"
 fi
+
+if [[ ${has_bash-n} == "n" ]]; then
+  abort "no bash command found, but required for running the reboot script"
+fi
+
+if [[ ${has_setsid-n} == "n" ]]; then
+  abort "no setsid command found, but required to run the kexec script under a new session"
+fi
+
 maybe_sudo=""
 if [[ ${has_sudo-n} == "y" ]]; then
   maybe_sudo="sudo"
 fi
+
 if [[ ${is_os-n} != "Linux" ]]; then
   abort "This script requires Linux as the operating system, but got $is_os"
 fi
@@ -293,6 +312,14 @@ for path in "${!disk_encryption_keys[@]}"; do
   ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
 done
 
+pubkey=$(ssh-keyscan -t ed25519 "${ssh_connection//*@/}" 2>/dev/null | sed -e 's/^[^ ]* //' | base64 -w0)
+
+if [[ -z ${disko_script-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
+  disko_script=$(
+    nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.disko" \
+      --builders "ssh://$ssh_connection?base64-ssh-public-host-key=$pubkey&ssh-key=$ssh_key_dir/nixos-anywhere $is_arch-linux"
+  )
+fi
 nix_copy --to "ssh://$ssh_connection" "$disko_script"
 ssh_ "$disko_script"
 
@@ -303,7 +330,14 @@ if [[ ${stop_after_disko-n} == "y" ]]; then
   exit 0
 fi
 
+if [[ -z ${nixos_system-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
+  nixos_system=$(
+    nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
+      --builders "ssh://$ssh_connection?remote-store=local?root=/mnt&base64-ssh-public-host-key=$pubkey&ssh-key=$ssh_key_dir/nixos-anywhere $is_arch-linux"
+  )
+fi
 nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
+
 if [[ -n ${extra_files-} ]]; then
   if [[ -d $extra_files ]]; then
     extra_files="$extra_files/"

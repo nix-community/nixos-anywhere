@@ -119,3 +119,7 @@ To format the code
 ```console
 nix fmt
 ```
+
+# Further Reading 
+
+@tfc has written a walkthrough on how use nixos-anywhere to bootstrap hetzner cloud servers as well as dedicated ones on his blog: https://galowicz.de/2023/04/05/single-command-server-bootstrap/

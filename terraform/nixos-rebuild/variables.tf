@@ -19,3 +19,15 @@ variable "target_port" {
   description = "SSH port used to connect to the target_host"
   default     = 22
 }
+
+variable "ssh_private_key" {
+  type        = string
+  description = "Content of private key used to connect to the target_host. If set to - no key is passed to openssh and ssh will back to its own configuration"
+  default     = "-"
+}
+
+variable "ignore_systemd_errors" {
+  type = bool
+  description = "Ignore systemd errors happening during deploy"
+  default = false
+}
