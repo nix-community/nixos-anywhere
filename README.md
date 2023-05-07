@@ -20,10 +20,10 @@ detected `nixos-anywhere` will not try to kexec into its own image.
 If your system is not booted into a nixos installer than the following
 requirements apply for kexec to succeed:
 
-- x86_64 Linux system with kexec support (most x86_64 machine do have kexec
+- `x86_64` Linux system with kexec support (most `x86_64` machine do have kexec
   support) or you have to provide your own
   [image](https://github.com/numtide/nixos-anywhere#using-your-own-kexec-image)
-- At least 2.5GB RAM (swap does not count). If you do not have enough RAM you
+- At least 1.5GB RAM (swap does not count). If you do not have enough RAM you
   will see failures unpacking the initrd), this is because kexec needs to load
   the whole nixos into memory.
 
@@ -90,7 +90,7 @@ than uploaded prior to executing.
 
 ```shell
 nixos-anywhere \
-  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.x86_64-linux.kexec-installer-nixos-unstable)/nixos-kexec-installer-x86_64-linux.tar.gz" \
+  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.x86_64-linux.kexec-installer-noninteractive-nixos-unstable)/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz" \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip
 ```
@@ -101,7 +101,7 @@ for aarch64-linux either natively or through a remote builder
 
 ```shell
 nixos-anywhere \
-  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable)/nixos-kexec-installer-aarch64-linux.tar.gz" \
+  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-noninteractive-nixos-unstable)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz" \
   --flake 'your-flake#your-system' \
   root@yourip
 ```

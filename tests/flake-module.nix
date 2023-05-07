@@ -7,7 +7,7 @@
         inherit pkgs;
         inherit (inputs.disko.nixosModules) disko;
         nixos-anywhere = config.packages.nixos-anywhere;
-        kexec-installer = "${inputs'.nixos-images.packages.kexec-installer-nixos-unstable}/nixos-kexec-installer-${system}.tar.gz";
+        kexec-installer = "${inputs'.nixos-images.packages.kexec-installer-nixos-unstable-noninteractive}/nixos-kexec-installer-noninteractive-${system}.tar.gz";
       };
     in
     {
