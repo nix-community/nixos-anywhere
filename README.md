@@ -90,7 +90,7 @@ than uploaded prior to executing.
 
 ```shell
 nixos-anywhere \
-  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.x86_64-linux.kexec-installer-nixos-unstable)/nixos-kexec-installer-x86_64-linux.tar.gz" \
+  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.x86_64-linux.kexec-installer-noninteractive-nixos-unstable)/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz" \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip
 ```
@@ -101,7 +101,7 @@ for aarch64-linux either natively or through a remote builder
 
 ```shell
 nixos-anywhere \
-  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable)/nixos-kexec-installer-aarch64-linux.tar.gz" \
+  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-noninteractive-nixos-unstable)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz" \
   --flake 'your-flake#your-system' \
   root@yourip
 ```
