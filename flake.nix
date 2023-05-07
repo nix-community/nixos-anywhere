@@ -7,8 +7,10 @@
     disko = { url = "github:nix-community/disko/master"; inputs.nixpkgs.follows = "nixpkgs"; };
     # used for testing
     nixos-images.url = "github:nix-community/nixos-images";
+    nixos-images.inputs.nixos-2211.follows = "";
+    nixos-images.inputs.nixos-unstable.follows = "nixpkgs";
     # used for development
-    treefmt-nix.url = "github:numtide/treefmt-nix";
+    treefmt-nix = { url = "github:numtide/treefmt-nix"; inputs.nixpkgs.follows = "nixpkgs"; };
   };
 
 
