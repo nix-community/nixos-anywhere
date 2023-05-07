@@ -23,7 +23,7 @@ requirements apply for kexec to succeed:
 - x86_64 Linux system with kexec support (most x86_64 machine do have kexec
   support) or you have to provide your own
   [image](https://github.com/numtide/nixos-anywhere#using-your-own-kexec-image)
-- At least 2.5GB RAM (swap does not count). If you do not have enough RAM you
+- At least 1.5GB RAM (swap does not count). If you do not have enough RAM you
   will see failures unpacking the initrd), this is because kexec needs to load
   the whole nixos into memory.
 
