@@ -20,7 +20,7 @@ detected `nixos-anywhere` will not try to kexec into its own image.
 If your system is not booted into a nixos installer than the following
 requirements apply for kexec to succeed:
 
-- x86_64 Linux system with kexec support (most x86_64 machine do have kexec
+- `x86_64` Linux system with kexec support (most `x86_64` machine do have kexec
   support) or you have to provide your own
   [image](https://github.com/numtide/nixos-anywhere#using-your-own-kexec-image)
 - At least 1.5GB RAM (swap does not count). If you do not have enough RAM you
