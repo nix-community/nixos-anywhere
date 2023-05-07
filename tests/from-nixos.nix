@@ -30,7 +30,11 @@
         --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
         root@installed >&2
     """)
-    installed.shutdown()
+    try:
+      installed.shutdown()
+    except BrokenPipeError:
+      # qemu has already exited
+      pass
     new_machine = create_test_machine(oldmachine=installed, args={ "name": "after_install" })
     new_machine.start()
     hostname = new_machine.succeed("hostname").strip()
