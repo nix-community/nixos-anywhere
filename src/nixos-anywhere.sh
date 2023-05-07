@@ -235,7 +235,6 @@ has_sudo=\$(has sudo)
 has_wget=\$(has wget)
 has_curl=\$(has curl)
 has_setsid=\$(has setsid)
-has_bash=\$(has bash)
 FACTS
 SSH
   ); then
@@ -254,10 +253,6 @@ import_facts
 
 if [[ ${has_tar-n} == "n" ]]; then
   abort "no tar command found, but required to unpack kexec tarball"
-fi
-
-if [[ ${has_bash-n} == "n" ]]; then
-  abort "no bash command found, but required for running the reboot script"
 fi
 
 if [[ ${has_setsid-n} == "n" ]]; then
