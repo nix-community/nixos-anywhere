@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
 showUsage() {
   cat <<USAGE
 Usage: nixos-anywhere [options] ssh-host
