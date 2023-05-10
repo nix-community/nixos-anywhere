@@ -79,6 +79,8 @@ Options:
   nix option to pass to every nix related command
 * --from store-uri
   URL of the source Nix store to copy the nixos and disko closure from
+* --build-on-remote
+  build the closure on the remote machine instead of locally and copy-closuring it
 ```
 
 ## Using your own kexec image
