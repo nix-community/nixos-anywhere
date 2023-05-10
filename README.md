@@ -46,9 +46,8 @@ nix run github:numtide/nixos-anywhere -- root@yourip --flake github:your-user/yo
 The parameter passed to `--flake` should point to your nixos configuration
 exposed in your flake (`nixosConfigurations.your-system` in the example above).
 
-`nixos-anywhere --help`
-
-```shell
+<!-- `$ ./src/nixos-anywhere.sh --help` -->
+```
 Usage: nixos-anywhere [options] ssh-host
 
 Options:
