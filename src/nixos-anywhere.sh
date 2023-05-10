@@ -43,6 +43,10 @@ abort() {
   exit 1
 }
 
+step() {
+  echo "### $* ###"
+}
+
 default_kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-22.11/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz
 kexec_url="$default_kexec_url"
 enable_debug=""
@@ -206,6 +210,7 @@ if [[ -n ${SSH_PRIVATE_KEY-} ]]; then
   ssh_copy_id_args+=(-f)
 fi
 
+step Uploading install SSH keys
 until
   ssh-copy-id \
     -i "$ssh_key_dir"/nixos-anywhere.pub \
@@ -252,6 +257,7 @@ SSH
   export $(echo "$filtered_facts" | xargs)
 }
 
+step Gathering machine facts
 import_facts
 
 if [[ ${has_tar-n} == "n" ]]; then
@@ -276,6 +282,7 @@ if [[ ${is_arch-n} != "x86_64" ]] && [[ $kexec_url == "$default_kexec_url" ]]; t
 fi
 
 if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
+  step Switching system into kexec
   ssh_ <<SSH
 set -efu ${enable_debug}
 $maybe_sudo rm -rf /root/kexec
@@ -306,18 +313,20 @@ SSH
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
 for path in "${!disk_encryption_keys[@]}"; do
-  echo "Uploading ${disk_encryption_keys[$path]} to $path"
+  step "Uploading ${disk_encryption_keys[$path]} to $path"
   ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
 done
 
 pubkey=$(ssh-keyscan -t ed25519 "${ssh_connection//*@/}" 2>/dev/null | sed -e 's/^[^ ]* //' | base64 -w0)
 
 if [[ -z ${disko_script-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
+  step Building disko script
   disko_script=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.disko" \
       --builders "ssh://$ssh_connection?base64-ssh-public-host-key=$pubkey&ssh-key=$ssh_key_dir/nixos-anywhere $is_arch-linux"
   )
 fi
+step Formatting hard drive with disko
 nix_copy --to "ssh://$ssh_connection" "$disko_script"
 ssh_ "$disko_script"
 
@@ -329,20 +338,24 @@ if [[ ${stop_after_disko-n} == "y" ]]; then
 fi
 
 if [[ -z ${nixos_system-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
+  step Building the system closure
   nixos_system=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
       --builders "ssh://$ssh_connection?remote-store=local?root=/mnt&base64-ssh-public-host-key=$pubkey&ssh-key=$ssh_key_dir/nixos-anywhere $is_arch-linux"
   )
 fi
+step Uploading the system closure
 nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
 
 if [[ -n ${extra_files-} ]]; then
   if [[ -d $extra_files ]]; then
     extra_files="$extra_files/"
   fi
+  step Copying extra files
   rsync -rlpv -FF -e "ssh -i \"$ssh_key_dir\"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
 fi
 
+step Installing NixOS
 ssh_ <<SSH
 set -efu ${enable_debug}
 # needed for installation if initrd-secrets are used
@@ -354,7 +367,9 @@ nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 nohup bash -c '${maybe_reboot}' >/dev/null &
 SSH
 
-# wait for machine to become unreachable due to reboot
 if [[ -n ${maybe_reboot} ]]; then
+  step Waiting for the maching to become reachable again
   while timeout_ssh_ -- exit 0; do sleep 1; done
 fi
+
+step "Done!"
