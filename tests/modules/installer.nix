@@ -9,7 +9,7 @@ let
 in
 {
   system.activationScripts.rsa-key = ''
-    ${pkgs.coreutils}/bin/install -D -m600 ${./ssh-keys/ssh} /root/.ssh/id_rsa
+    ${pkgs.coreutils}/bin/install -D -m600 ${./ssh-keys/ssh} /root/.ssh/install_key
   '';
 
   environment.systemPackages = [ inputs.nixos-anywhere ];

@@ -24,6 +24,7 @@
     installer.succeed("echo value > /tmp/extra-files/var/lib/secrets/key")
     installer.succeed("""
       nixos-anywhere \
+        -i /root/.ssh/install_key \
         --debug \
         --kexec /etc/nixos-anywhere/kexec-installer \
         --extra-files /tmp/extra-files \
