@@ -4,11 +4,11 @@ TODO: Populate this guide properly
 
 ## Contents
 
-[Command Line Usage](developer-guide)
+[Command Line Usage](#command-line-usage)
 
-[Developer guide](developer-guide)
+[Developer guide](#developer-guide)
 
-[Explanation of known error messages](explanation-of-known-error-messages)
+[Explanation of known error messages](#explanation-of-known-error-messages)
 
 ## Command Line Usage
 
@@ -61,7 +61,7 @@ To format the code
 nix fmt
 ```
 
-# ## Explanation of known error messages
+## Explanation of known error messages
 
 TODO: List actual error messages and meanings. Include:
 
