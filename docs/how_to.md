@@ -6,6 +6,8 @@
 
 [Using your own kexec image](using-your-own-kexec-image)
 
+[Using nixos-anywhere without flakes](using-nixos-anywhere-without-flakes)
+
 TODO: Add more topics
 
 ## Installing on a machine with no operating system
@@ -28,6 +30,10 @@ nixos-anywhere \
 ```
 
 This is particularly useful for distributions like aarch64-linux, where there is no pre-build image. The following example assumes that your local machine can build for aarch64-linux either natively or through a remote builder
+
+## Using nixos-anywhere without flakes
+
+TODO: Add content
 
 ```
 
