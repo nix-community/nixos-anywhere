@@ -1,6 +1,6 @@
 # nixos-anywhere
 
-***Install nixos everywhere via ssh***
+***Install NixOS everywhere via ssh***
 
 ![](https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png)
 
