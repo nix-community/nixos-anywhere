@@ -33,7 +33,7 @@ Once the configuration has been created, a single command will:
 - Optionally install any Nix packages and other software required.
 - Optionally copy additional files to the new machine
 
-It's also possible to use **nixos-anywhere** to simplify the installation on a machine that has no current operating system, first booting from a NixOS installer image. This feature is described in the [how-to guide](http://./docs/how_to.md#installing-on-a-machine-with-no-operating-system). It's useful because you can pre-configure your required software and preferences, and build the new machine with a single command.
+It's also possible to use **nixos-anywhere** to simplify the installation on a machine that has no current operating system, first booting from a NixOS installer image. This feature is described in the [how-to guide](./docs/how_to.md#installing-on-a-machine-with-no-operating-system). It's useful because you can pre-configure your required software and preferences, and build the new machine with a single command.
 
 **Important Note:** Never use a production server as the target. It will be completely overwritten and all data lost. This tool should only be used for commissioning a new computer or repurposing an old machine once all important data has been migrated.
 
@@ -51,11 +51,11 @@ It's also possible to use **nixos-anywhere** to simplify the installation on a m
 
 ## How to use nixos-anywhere
 
-Here’s  a quick summary of how to use **nixos-anywhere**. You can find more information in the [product documentation](http://./docs).
+Here’s  a quick summary of how to use **nixos-anywhere**. You can find more information in the [product documentation](./docs).
 
 The tool doesn't need to be installed, since it can be run directly from this repository.
 
-First create a repo that includes the disk configuration and a [flake](https://nixos.wiki/wiki/Flakes) to configure your options.
+First create a repo that includes the disk configuration and a [flake](https://nixos.wiki/wiki/Flakes) to configure your options. This example assumes that flakes have been enabled on your source machine. 
 
 Here’s an example of a simple disk configuration:
 
@@ -107,7 +107,7 @@ Here’s an example of a simple disk configuration:
 }
 ```
 
-The [Disko repository](https://github.com/nix-community/disko/tree/master/example) has several examples of disk configurations. You can adapt them to our own needs.
+The [disko repository](https://github.com/nix-community/disko/tree/master/example) has several examples of disk configurations. You can adapt them to our own needs.
 
 A simple flake may look like this:
 
@@ -160,15 +160,15 @@ nix run github:numtide/nixos-anywhere -- --flake github:JillThornhill/flakes-exa
 
 Note that this command references the URL of your flake, in this case github:JillThornhill/flakes-example, together with the name of the system #hetzner-cloud, as highlighted by the comment in the sample flake.
 
-The [Quickstart Guide](./docs/quickstart.md) gives more information on how to run **nixos-anywhere** in its simplest form. For more specific instructions to suit individual requirements, see the [How To Guide](./docs/how_to.md).
+The [Quickstart Guide](./docs/Quickstart.md) gives more information on how to run **nixos-anywhere** in its simplest form. For more specific instructions to suit individual requirements, see the [How To Guide](./docs/how_to.md).
 
 # Further Reading
 
-@tfc has written a walkthrough on how use **nixos-anywhere** to bootstrap hetzner cloud servers as well as dedicated ones on his [blog](https://galowicz.de/2023/04/05/single-command-server-bootstrap/):
+@tfc has written a walkthrough on how use **nixos-anywhere** to bootstrap hetzner cloud servers as well as dedicated machines on his [blog](https://galowicz.de/2023/04/05/single-command-server-bootstrap/):
 
 ## Related Tools
 
-**nixos-anywhere** makes use of the [Disko](https://github.com/nix-community/disko) tool to handle the partitioning and formatting of the disks.
+**nixos-anywhere** makes use of the [disko](https://github.com/nix-community/disko) tool to handle the partitioning and formatting of the disks.
 
 ## Licensing and Contribution details
 
