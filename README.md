@@ -44,7 +44,7 @@ It's also possible to use **nixos-anywhere** to simplify the installation on a m
 - - Can be any Linux machine with Nix installed, or a NixOS machine.
 - Target Machine:
   
-  - Unless you're using the option to boot from a NixOS installer image, or providing your own ```kexec``` image, it must be running x86-64 Linux with kexec support. Most x86_64 Linux systems do have kexec support. By providing your own [image](./docs/how_to#using-your-own-kexec-image) you can also perform kexec for other architectures eg aarch64
+  - Unless you're using the option to boot from a NixOS installer image, or providing your own ```kexec``` image, it must be running x86-64 Linux with kexec support. Most x86_64 Linux systems do have kexec support. By providing your own [image](./docs/how_to.md#using-your-own-kexec-image) you can also perform kexec for other architectures eg aarch64
     
   - Must have at least 1.5 GB of RAM, excluding swap.
     
