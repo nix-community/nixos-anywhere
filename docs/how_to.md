@@ -2,11 +2,11 @@
 
 ## Contents
 
-[Installing on a machine with no operating system](installing-on-a-machine-with-no-operating-system)
+[Installing on a machine with no operating system](#installing-on-a-machine-with-no-operating-system)
 
-[Using your own kexec image](using-your-own-kexec-image)
+[Using your own kexec image](#using-your-own-kexec-image)
 
-[Using nixos-anywhere without flakes](using-nixos-anywhere-without-flakes)
+[Using nixos-anywhere without flakes](#using-nixos-anywhere-without-flakes)
 
 TODO: Add more topics
 
