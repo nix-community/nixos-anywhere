@@ -187,12 +187,12 @@ Once you’ve created the disk configuration and the flake, you can run the tool
 with a single nix command, which may look like this:
 
 ```
-nix run github:numtide/nixos-anywhere -- --flake github:JillThornhill/flakes-example#hetzner-cloud root@135.181.254.201
+nix run github:numtide/nixos-anywhere -- --flake .#hetzner-cloud root@135.181.254.201
 ```
 
-Note that this command references the URL of your flake, in this case
-github:JillThornhill/flakes-example, together with the name of the system
-#hetzner-cloud, as highlighted by the comment in the sample flake.
+Note that this command references the URL of your flake, in this case `.#`,
+together with the name of the system `hetzner-cloud`, as highlighted by the
+comment in the sample flake.
 
 The [Quickstart Guide](./docs/quickstart.md) gives more information on how to
 run **nixos-anywhere** in its simplest form. For more specific instructions to
