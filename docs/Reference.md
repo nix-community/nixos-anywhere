@@ -12,6 +12,7 @@ TODO: Populate this guide properly
 
 ## Command Line Usage
 
+<!-- `$ bash ./src/nixos-anywhere.sh --help` -->
 ```
 Usage: nixos-anywhere [options] ssh-host
 
