@@ -49,20 +49,6 @@ Options:
   build the closure on the remote machine instead of locally and copy-closuring it
 ```
 
-## Developer guide
-
-To run `nixos-anywhere` from the repo:
-
-```shell
-nix run . -- --help
-```
-
-To format the code
-
-```shell
-nix fmt
-```
-
 ## Explanation of known error messages
 
 TODO: List actual error messages and meanings. Include:
