@@ -31,6 +31,7 @@
           programs.nixpkgs-fmt.enable = true;
           programs.shellcheck.enable = true;
           programs.shfmt.enable = true;
+          programs.prettier.enable = true;
           settings.formatter.shellcheck.options = [ "-s" "bash" ];
         };
         formatter = config.treefmt.build.wrapper;

@@ -1,6 +1,6 @@
 # nixos-anywhere
 
-***Install NixOS everywhere via ssh***
+**_Install NixOS everywhere via ssh_**
 
 ![](https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png)
 
@@ -27,7 +27,7 @@ You first create Nix configurations to specify partitioning, formatting and NixO
 Once the configuration has been created, a single command will:
 
 - Connect to the remote server via SSH
-- Detect whether a NixOS installer is present; if not, it will use the Linux ```kexec``` tool to boot into a Nixos installer.
+- Detect whether a NixOS installer is present; if not, it will use the Linux `kexec` tool to boot into a Nixos installer.
 - Use the [disko](https://github.com/nix-community/disko) tool to partition and format the hard drive
 - Install NixOS
 - Optionally install any Nix packages and other software required.
@@ -40,14 +40,11 @@ It's also possible to use **nixos-anywhere** to simplify the installation on a m
 ## Prerequisites
 
 - Source Machine:
-  
 - - Can be any Linux machine with Nix installed, or a NixOS machine.
 - Target Machine:
-  
-  - Unless you're using the option to boot from a NixOS installer image, or providing your own ```kexec``` image, it must be running x86-64 Linux with kexec support. Most x86_64 Linux systems do have kexec support. By providing your own [image](./docs/how_to.md#using-your-own-kexec-image) you can also perform kexec for other architectures eg aarch64
-    
+
+  - Unless you're using the option to boot from a NixOS installer image, or providing your own `kexec` image, it must be running x86-64 Linux with kexec support. Most x86_64 Linux systems do have kexec support. By providing your own [image](./docs/how_to.md#using-your-own-kexec-image) you can also perform kexec for other architectures eg aarch64
   - Must have at least 1.5 GB of RAM, excluding swap.
-    
 
 ## How to use nixos-anywhere
 
@@ -55,11 +52,11 @@ Here’s  a quick summary of how to use **nixos-anywhere**. You can find more i
 
 The tool doesn't need to be installed, since it can be run directly from this repository.
 
-First create a repo that includes the disk configuration and a [flake](https://nixos.wiki/wiki/Flakes) to configure your options. This example assumes that flakes have been enabled on your source machine. 
+First create a repo that includes the disk configuration and a [flake](https://nixos.wiki/wiki/Flakes) to configure your options. This example assumes that flakes have been enabled on your source machine.
 
 Here’s an example of a simple disk configuration:
 
-```
+```nix
 { disks ? [ "/dev/vda" ], ... }:
 {
   disk = {
@@ -111,7 +108,7 @@ The [disko repository](https://github.com/nix-community/disko/tree/master/exampl
 
 A simple flake may look like this:
 
-```
+```nix
 {
   inputs.nixpkgs.url = github:NixOS/nixpkgs;
   inputs.disko.url = github:nix-community/disko;
@@ -178,7 +175,7 @@ If you would like to become a contributor, please see our [contribution guidelin
 
 ---
 
-This project is supported by [Numtide](https://numtide.com/).  ![Untitledpng](https://codahosted.io/docs/6FCIMTRM0p/blobs/bl-sgSunaXYWX/077f3f9d7d76d6a228a937afa0658292584dedb5b852a8ca370b6c61dabb7872b7f617e603f1793928dc5410c74b3e77af21a89e435fa71a681a868d21fd1f599dd10a647dd855e14043979f1df7956f67c3260c0442e24b34662307204b83ea34de929d)    
+This project is supported by [Numtide](https://numtide.com/).  ![Untitledpng](https://codahosted.io/docs/6FCIMTRM0p/blobs/bl-sgSunaXYWX/077f3f9d7d76d6a228a937afa0658292584dedb5b852a8ca370b6c61dabb7872b7f617e603f1793928dc5410c74b3e77af21a89e435fa71a681a868d21fd1f599dd10a647dd855e14043979f1df7956f67c3260c0442e24b34662307204b83ea34de929d)
 
 We are a team of independent freelancers that love open source.  We help our customers make their project lifecycles more efficient by:
 
