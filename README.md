@@ -51,7 +51,7 @@ Once the configuration has been created, a single command will:
 It's also possible to use **nixos-anywhere** to simplify the installation on a
 machine that has no current operating system, first booting from a NixOS
 installer image. This feature is described in the
-[how-to guide](./docs/how_to.md#installing-on-a-machine-with-no-operating-system).
+[how-to guide](./docs/howtos.md#installing-on-a-machine-with-no-operating-system).
 It's useful because you can pre-configure your required software and
 preferences, and build the new machine with a single command.
 
@@ -69,7 +69,7 @@ data has been migrated.
   - Unless you're using the option to boot from a NixOS installer image, or
     providing your own `kexec` image, it must be running x86-64 Linux with kexec
     support. Most x86_64 Linux systems do have kexec support. By providing your
-    own [image](./docs/how_to.md#using-your-own-kexec-image) you can also
+    own [image](./docs/howtos.md#using-your-own-kexec-image) you can also
     perform kexec for other architectures eg aarch64
   - Must have at least 1.5 GB of RAM, excluding swap.
 
@@ -194,9 +194,9 @@ Note that this command references the URL of your flake, in this case
 github:JillThornhill/flakes-example, together with the name of the system
 #hetzner-cloud, as highlighted by the comment in the sample flake.
 
-The [Quickstart Guide](./docs/Quickstart.md) gives more information on how to
+The [Quickstart Guide](./docs/quickstart.md) gives more information on how to
 run **nixos-anywhere** in its simplest form. For more specific instructions to
-suit individual requirements, see the [How To Guide](./docs/how_to.md).
+suit individual requirements, see the [How To Guide](./docs/howtos.md).
 
 # Further Reading
 
@@ -214,9 +214,6 @@ and formatting of the disks.
 
 This software is provided free under the
 [MIT Licence](https://opensource.org/licenses/MIT).
-
-If you would like to become a contributor, please see our
-[contribution guidelines.](https://github.com/numtide/docs/contribution-guidelines.md)
 
 ---
 
