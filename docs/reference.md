@@ -67,4 +67,5 @@ nix fmt
 
 TODO: List actual error messages and meanings. Include:
 
-If you do not have enough RAM you will see failures unpacking the initrd), this is because kexec needs to load the whole nixos into memory.
+If you do not have enough RAM you will see failures unpacking the initrd), this
+is because kexec needs to load the whole nixos into memory.
