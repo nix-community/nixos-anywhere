@@ -7,8 +7,10 @@ Usage: nixos-anywhere [options] ssh-host
 
 Options:
 
-* -f, --flake flake
-  set the flake to install the system from
+* -f, --flake <flake_uri>
+  set the flake to install the system from.
+* -i <identity_file>
+  selects which SSH private key file to use.
 * -L, --print-build-logs
   print full build logs
 * -s, --store-paths
@@ -56,6 +58,7 @@ nix_options=(
   "--no-write-lock-file"
 )
 substitute_on_destination=y
+ssh_private_key_file=
 
 declare -A disk_encryption_keys
 declare -a nix_copy_options
@@ -65,6 +68,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
   -f | --flake)
     flake=$2
+    shift
+    ;;
+  -i)
+    ssh_private_key_file=$2
     shift
     ;;
   -L | --print-build-logs)
@@ -198,15 +205,19 @@ else
   abort "flake must be set"
 fi
 
+# overrides -i if passed as an env var
 if [[ -n ${SSH_PRIVATE_KEY-} ]]; then
-  sshPrivateKeyFile=$(mktemp)
-  trap 'rm "$sshPrivateKeyFile"' EXIT
+  # $ssh_key_dir is getting deleted on trap EXIT
+  ssh_private_key_file="$ssh_key_dir/from-env"
   (
     umask 077
-    printf '%s\n' "$SSH_PRIVATE_KEY" >"$sshPrivateKeyFile"
+    printf '%s\n' "$SSH_PRIVATE_KEY" >"$ssh_private_key_file"
   )
+fi
+
+if [[ -n ${ssh_private_key_file-} ]]; then
   unset SSH_AUTH_SOCK # don't use system agent if key was supplied
-  ssh_copy_id_args+=(-o "IdentityFile=${sshPrivateKeyFile}")
+  ssh_copy_id_args+=(-o "IdentityFile=${ssh_private_key_file}")
   ssh_copy_id_args+=(-f)
 fi
 

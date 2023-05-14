@@ -19,8 +19,10 @@ Usage: nixos-anywhere [options] ssh-host
 
 Options:
 
-* -f, --flake flake
-  set the flake to install the system from
+* -f, --flake <flake_uri>
+  set the flake to install the system from.
+* -i <identity_file>
+  selects which SSH private key file to use.
 * -L, --print-build-logs
   print full build logs
 * -s, --store-paths
