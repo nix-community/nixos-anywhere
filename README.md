@@ -2,7 +2,7 @@
 
 **_Install NixOS everywhere via ssh_**
 
-![](https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png)
+<img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
 
 Setting up a new machine is time-consuming, and becomes complicated when it
 needs to be done remotely. If you're installing NixOS, the **nixos-anywhere**
