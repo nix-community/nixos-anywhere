@@ -2,7 +2,7 @@
 
 - [Introduction](./introduction.md)
   - [What is nixos-anywhere?](#)
-  - [Quickstart](#)
+  - [Quickstart](./quickstart.md)
   - [Getting Started](#)
   - [System Requirements](#)
   - [Support Matrix](#)
