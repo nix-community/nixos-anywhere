@@ -32,6 +32,7 @@
           programs.shellcheck.enable = true;
           programs.shfmt.enable = true;
           programs.prettier.enable = true;
+          settings.formatter.prettier.options = [ "--prose-wrap" "always" ];
           settings.formatter.shellcheck.options = [ "-s" "bash" ];
         };
         formatter = config.treefmt.build.wrapper;

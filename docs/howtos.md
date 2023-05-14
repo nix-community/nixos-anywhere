@@ -16,11 +16,17 @@ TODO: Still to be documented
 
 Include:
 
-`nixos-anywhere` can detect a nixos installer if it contains the identifier `VARIANT=installer` in its `/etc/os-release` file. This is the case for the nixos-unstable installer and will be also part of nixos 23.05. If an installer is detected `nixos-anywhere` will not try to kexec into its own image.
+`nixos-anywhere` can detect a nixos installer if it contains the
+identifier `VARIANT=installer` in its `/etc/os-release` file. This is the case
+for the nixos-unstable installer and will be also part of nixos 23.05. If an
+installer is detected `nixos-anywhere` will not try to kexec into its own image.
 
 ## Using your own kexec image
 
-By default `nixos-anywhere` will download the kexec image from [here](https://github.com/nix-community/nixos-images#kexec-tarballs). It is also possible to provide your own by using the command line switch `--kexec` to specify the image file. The image will then be uploaded prior to executing.
+By default `nixos-anywhere` will download the kexec image
+from [here](https://github.com/nix-community/nixos-images#kexec-tarballs). It is
+also possible to provide your own by using the command line switch `--kexec` to
+specify the image file. The image will then be uploaded prior to executing.
 
 ```
 nixos-anywhere \
@@ -29,7 +35,9 @@ nixos-anywhere \
   root@yourip
 ```
 
-This is particularly useful for distributions like aarch64-linux, where there is no pre-build image. The following example assumes that your local machine can build for aarch64-linux either natively or through a remote builder
+This is particularly useful for distributions like aarch64-linux, where there is
+no pre-build image. The following example assumes that your local machine can
+build for aarch64-linux either natively or through a remote builder
 
 ## Using nixos-anywhere without flakes
 
