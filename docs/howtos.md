@@ -14,7 +14,7 @@ TODO: Add more topics
 
 TODO: Still to be documented
 
-Include: 
+Include:
 
 `nixos-anywhere` can detect a nixos installer if it contains the identifier `VARIANT=installer` in its `/etc/os-release` file. This is the case for the nixos-unstable installer and will be also part of nixos 23.05. If an installer is detected `nixos-anywhere` will not try to kexec into its own image.
 
@@ -38,5 +38,3 @@ TODO: Add content
 ```
 
 ```
-
-
