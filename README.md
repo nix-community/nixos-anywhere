@@ -68,15 +68,15 @@ data has been migrated.
 
   - Unless you're using the option to boot from a NixOS installer image, or
     providing your own `kexec` image, it must be running x86-64 Linux with kexec
-    support. Most x86_64 Linux systems do have kexec support. By providing your
-    own [image](./docs/howtos.md#using-your-own-kexec-image) you can also
+    support. Most `x86_64` Linux systems do have kexec support. By providing
+    your own [image](./docs/howtos.md#using-your-own-kexec-image) you can also
     perform kexec for other architectures eg aarch64
   - Must have at least 1.5 GB of RAM, excluding swap.
 
 ## How to use nixos-anywhere
 
 Here’s  a quick summary of how to use **nixos-anywhere**. You can find more
-information in the [product documentation](./docs).
+information in the [documentation](./docs).
 
 The tool doesn't need to be installed, since it can be run directly from this
 repository.
@@ -148,10 +148,10 @@ A simple flake may look like this:
   inputs.disko.url = github:nix-community/disko;
   inputs.disko.inputs.nixpkgs.follows = "nixpkgs";
   outputs = { self, nixpkgs, disko, ... }@attrs: {
-  #-----------------------------------------------------------
-  #The following line names the configuration as hetzner-cloud
-  #This name will be referenced when nixos-remote is run
-  #-----------------------------------------------------------
+    #-----------------------------------------------------------
+    # The following line names the configuration as hetzner-cloud
+    # This name will be referenced when nixos-remote is run
+    #-----------------------------------------------------------
     nixosConfigurations.hetzner-cloud = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = attrs;
@@ -171,10 +171,10 @@ A simple flake may look like this:
             efiInstallAsRemovable = true;
           };
           services.openssh.enable = true;
-#-------------------------------------------------------
-# Change the line below replacing <insert your key here>
-# with your own ssh public key
-#-------------------------------------------------------
+          #-------------------------------------------------------
+          # Change the line below replacing <insert your key here>
+          # with your own ssh public key
+          #-------------------------------------------------------
           users.users.root.openssh.authorizedKeys.keys = [ "<insert your key here>" ];
         })
       ];
