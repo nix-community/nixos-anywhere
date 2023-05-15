@@ -41,9 +41,27 @@
         "type": "github"
       }
     },
+    "nixos-2211": {
+      "locked": {
+        "lastModified": 1684141842,
+        "narHash": "sha256-sbdzOwBDcyzz/Dr1ztdF+tElMyM/cgx+4XxVgz+NLRM=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2eb0795720849ae19c068e39b17362d3ebcd585c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "release-22.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixos-images": {
       "inputs": {
-        "nixos-2211": [],
+        "nixos-2211": [
+          "nixos-2211"
+        ],
         "nixos-unstable": [
           "nixpkgs"
         ]
@@ -82,6 +100,7 @@
       "inputs": {
         "disko": "disko",
         "flake-parts": "flake-parts",
+        "nixos-2211": "nixos-2211",
         "nixos-images": "nixos-images",
         "nixpkgs": "nixpkgs",
         "treefmt-nix": "treefmt-nix"
