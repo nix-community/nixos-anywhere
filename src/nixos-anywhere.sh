@@ -364,6 +364,7 @@ if [[ -n ${extra_files-} ]]; then
   fi
   step Copying extra files
   rsync -rlpv -FF -e "ssh -i \"$ssh_key_dir\"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
+  ssh_ "chmod 755 /mnt" # rsync also changes permissions of /mnt
 fi
 
 step Installing NixOS
