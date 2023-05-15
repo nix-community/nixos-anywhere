@@ -6,9 +6,10 @@
     flake-parts = { url = "github:hercules-ci/flake-parts"; inputs.nixpkgs-lib.follows = "nixpkgs"; };
     disko = { url = "github:nix-community/disko/master"; inputs.nixpkgs.follows = "nixpkgs"; };
     # used for testing
+    nixos-2211.url = "github:NixOS/nixpkgs/release-22.11";
     nixos-images.url = "github:nix-community/nixos-images";
-    nixos-images.inputs.nixos-2211.follows = "";
     nixos-images.inputs.nixos-unstable.follows = "nixpkgs";
+    nixos-images.inputs.nixos-2211.follows = "nixos-2211";
     # used for development
     treefmt-nix = { url = "github:numtide/treefmt-nix"; inputs.nixpkgs.follows = "nixpkgs"; };
   };
