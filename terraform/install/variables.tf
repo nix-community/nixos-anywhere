@@ -50,3 +50,9 @@ variable "debug_logging" {
   description = "Enable debug logging"
   default     = false
 }
+
+variable "stop_after_disko" {
+  type        = bool
+  description = "Enable debug logging"
+  default     = false
+}
