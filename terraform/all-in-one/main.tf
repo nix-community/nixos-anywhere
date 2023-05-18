@@ -32,6 +32,10 @@ module "nixos-rebuild" {
   depends_on = [
     module.install
   ]
+
+  # Do not execute this step if var.stop_after_disko == true  
+  count = var.stop_after_disko ? 0 : 1
+
   source = "../nixos-rebuild"
   nixos_system = module.system-build.result.out
   ssh_private_key = var.deployment_ssh_key
