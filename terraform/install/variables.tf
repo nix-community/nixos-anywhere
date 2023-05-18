@@ -53,6 +53,6 @@ variable "debug_logging" {
 
 variable "stop_after_disko" {
   type        = bool
-  description = "Enable debug logging"
+  description = "Exit after disko formating"
   default     = false
 }
