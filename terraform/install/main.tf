@@ -1,5 +1,5 @@
 locals {
-  nixos_anywhere_flags = "${var.debug_logging ? "--debug" : ""} ${var.kexec_tarball_url != null ? "--kexec ${var.kexec_tarball_url}" : "" } --store-paths ${var.nixos_partitioner} ${var.nixos_system} ${var.target_user}@${var.target_host}"
+  nixos_anywhere_flags = "${var.stop_after_disko ? "--stop-after-disko" : ""} ${var.debug_logging ? "--debug" : ""} ${var.kexec_tarball_url != null ? "--kexec ${var.kexec_tarball_url}" : "" } --store-paths ${var.nixos_partitioner} ${var.nixos_system} ${var.target_user}@${var.target_host}"
 }
 
 resource "null_resource" "nixos-remote" {
