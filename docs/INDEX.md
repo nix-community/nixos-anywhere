@@ -1,0 +1,17 @@
+# Table of Content
+
+- [Introduction](./introduction.md)
+  - [What is nixos-anywhere?](#)
+  - [Quickstart](./quickstart.md)
+  - [Getting Started](#)
+  - [System Requirements](#)
+  - [Support Matrix](#)
+- [Installation](./installation.md)
+  - [Bare Metal Platforms](#)
+  - [Virtualized Platforms](#)
+  - [Cloud Platforms](#)
+  - [Local Platforms](#)
+  - [Single Board Computers](#)
+- [Avanced Guides](#)
+- [Reference](#)
+  - [CLI](./cli.md)
