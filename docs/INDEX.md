@@ -7,5 +7,6 @@
 - [README](../README.md)
 - [Quickstart](./quickstart.md)
 - [System Requirements](./requirements.md)
+- [How to Guide](./howtos.md)
 - [Support Matrix](./supportmatrix.md)
 - [Reference](./reference.md)

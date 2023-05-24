@@ -4,13 +4,17 @@
 
 <img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
 
-We have verified that **nixos-anywhere** runs successfully on the platforms listed below. 
+[Documentation Index](./INDEX.md)
+
+## List of tested environments
+
+We have verified that **nixos-anywhere** runs successfully on the environments listed below. 
 
 **kexec boot:**    Indicates whether it can work by using a kexec boot
 
-**Image boot:**   Indicates it will work if booted from a NixOS installer
+**Image boot:**   Indicates whether it can work if booted from a NixOS installer
 
-**Own kexec:**     Indicates it will work if you supply your own kexec 
+**Own kexec:**     Indicates whether it can work if you supply your own kexec 
 
 | **Platform**  | **Operating System** | kexec boot | Image boot | Own kexec |
 | ------------- | -------------------- | ---------- | ---------- | --------- |

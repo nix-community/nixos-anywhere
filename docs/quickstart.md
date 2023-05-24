@@ -4,6 +4,8 @@
 
 <img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
 
+[Documentation Index](./INDEX.md)
+
 ## Introduction
 
 This guide documents a simple installation of NixOS using **nixos-anywhere** on

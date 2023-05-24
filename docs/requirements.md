@@ -4,7 +4,9 @@
 
 <img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
 
-## 
+[Documentation Index](./INDEX.md) 
+
+## Requirements
 
 - Source Machine:
   - Can be any Linux or Mac computer with Nix installed, or a NixOS machine.

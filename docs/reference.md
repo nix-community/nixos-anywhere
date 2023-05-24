@@ -4,6 +4,8 @@
 
 <img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="141">
 
+[Documentation Index](./INDEX.md)
+
 TODO: Populate this guide properly
 
 ## Contents
