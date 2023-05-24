@@ -1,17 +1,11 @@
-# Table of Content
+# Table of Content: - nixos-anywhere
 
-- [Introduction](./introduction.md)
-  - [What is nixos-anywhere?](#)
-  - [Quickstart](./quickstart.md)
-  - [Getting Started](#)
-  - [System Requirements](#)
-  - [Support Matrix](#)
-- [Installation](./installation.md)
-  - [Bare Metal Platforms](#)
-  - [Virtualized Platforms](#)
-  - [Cloud Platforms](#)
-  - [Local Platforms](#)
-  - [Single Board Computers](#)
-- [Avanced Guides](#)
-- [Reference](#)
-  - [CLI](./cli.md)
+***Install NixOS everywhere via ssh***
+
+<img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="149">
+
+- [README](../README.md)
+- [Quickstart](./quickstart.md)
+- [System Requirements](./requirements.md)
+- [Support Matrix](./supportmatrix.md)
+- [Reference](./reference.md)
