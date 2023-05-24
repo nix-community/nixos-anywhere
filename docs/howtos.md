@@ -1,5 +1,9 @@
 # How To Guide: nixos-anywhere
 
+***Install NixOS everywhere via ssh***
+
+<img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="129">
+
 ## Contents
 
 [Installing on a machine with no operating system](#installing-on-a-machine-with-no-operating-system)
@@ -10,16 +14,11 @@
 
 ## Installing on a machine with no operating system
 
-If your machine does not run any operating system, you can boot the standard
-NixOS installer using a USB or netboot. Detailed instructions on how to do this
-can be found in the
-[NixOS installation guide](https://nixos.org/manual/nixos/stable/index.html#sec-booting-from-usb).
+If your machine doesn't currently have an operating system installed, you still run `nixos-anywhere` remotely to automate the install after booting from the standard NixOS installer.  You can either boot from  a USB or use `netboot`.  The [NixOS installation guide](https://nixos.org/manual/nixos/stable/index.html#sec-booting-from-usb) has detailed instructions on how to boot the installer.
 
-When you're using `nixos-anywhere`, it will detect a NixOS installer by checking
-if the `/etc/os-release` file contains the identifier `VARIANT=installer`
-(available since NixOS 23.05). If an installer is detected, `nixos-anywhere`
-will not attempt to kexec into its own image. This is particularly useful for
-targets that do not have enough RAM for kexec or do not support kexec.
+When you run `nixos-anywhere`, it will determine whether a NixOS installer is present by checking whether the `/etc/os-release` file contains the identifier `VARIANT=installer`. This identifier is available on releases NixOS 23.05 or later. 
+
+If an installer is detected, `nixos-anywhere`will not attempt to `kexec` into its own image. This is particularly useful for targets that don't have enough RAM for `kexec` or don't support `kexec`.
 
 NixOS starts an SSH server on the installer by default, but you need to set a
 password in order to access it. To set a password for the `nixos` user, run the
