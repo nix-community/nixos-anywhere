@@ -64,8 +64,8 @@ NixOS has been installed.
    [here](https://github.com/numtide/nixos-anywhere-examples/blob/main/disk-config.nix).
    This configures a standard GPT (GUID Partition Table) partition compatible
    with both EFI and BIOS systems, and mounts the disk as `/dev/sda`. If this
-   doesn’t meet your requirements, choose an example that suits your disk
-   layout from the
+   doesn’t meet your requirements, choose an example that suits your disk layout
+   from the
    [disko examples](https://github.com/nix-community/disko/tree/master/example).
    For more information about this configuration, refer to the
    [disko documentation.](https://github.com/nix-community/disko)
@@ -85,15 +85,15 @@ example uses a local directory on the source machine.
 
 6. You can now run **nixos-anywhere** from the command line as shown below,
    where:
-   
+
    - `<path to configuration>` is the path to the directory or repository
      containing `flake.nix` and `disk-config.nix`
-   
+
    - `<configuration name>` must match the name that immediately follows the
      text `nixosConfigurations.` in the flake, as indicated by the comment in
      the
      [example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)).
-   
+
    - `<ip address>` is the IP address of the target machine.
 
 ```
