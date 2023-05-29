@@ -1,6 +1,6 @@
 # Table of Content: - nixos-anywhere
 
-***Install NixOS everywhere via ssh***
+**_Install NixOS everywhere via ssh_**
 
 <img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="149">
 

@@ -1,6 +1,6 @@
 # Reference Manual: nixos-anywhere
 
-***Install NixOS everywhere via ssh***
+**_Install NixOS everywhere via ssh_**
 
 <img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="141">
 
@@ -59,11 +59,14 @@ Options:
 
 TODO: Add additional error messages and meanings. Fill in missing explanations
 
-This section lists known error messages and their explanations. Some explanations may refer to the following CLI syntax:
+This section lists known error messages and their explanations. Some
+explanations may refer to the following CLI syntax:
 
 `nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<configuration name> root@<ip address>`
 
-This list is not comprehensive. It's possible you may encounter errors that originate from the underlying operating system. These should be documented in the relevant operating system manual.
+This list is not comprehensive. It's possible you may encounter errors that
+originate from the underlying operating system. These should be documented in
+the relevant operating system manual.
 
 | Id  | Message                                                                                                                                                | Explanation                                                                                                                                                                                                                                      |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

@@ -71,7 +71,7 @@ data has been migrated.
 - - Can be any Linux machine with Nix installed, or a NixOS machine.
 
 - Target Machine:
-  
+
   - Unless you're using the option to boot from a NixOS installer image, or
     providing your own `kexec` image, it must be running x86-64 Linux with kexec
     support. Most `x86_64` Linux systems do have kexec support. By providing

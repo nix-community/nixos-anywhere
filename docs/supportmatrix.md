@@ -8,13 +8,14 @@
 
 ## List of tested environments
 
-We have verified that **nixos-anywhere** runs successfully on the environments listed below. 
+We have verified that **nixos-anywhere** runs successfully on the environments
+listed below.
 
 **kexec boot:**    Indicates whether it can work by using a kexec boot
 
-**Image boot:**   Indicates whether it can work if booted from a NixOS installer
+**Image boot:** Indicates whether it can work if booted from a NixOS installer
 
-**Own kexec:**     Indicates whether it can work if you supply your own kexec 
+**Own kexec:**     Indicates whether it can work if you supply your own kexec
 
 | **Platform**  | **Operating System** | kexec boot | Image boot | Own kexec |
 | ------------- | -------------------- | ---------- | ---------- | --------- |
@@ -26,4 +27,4 @@ We have verified that **nixos-anywhere** runs successfully on the environments l
 |               |                      |            |            |           |
 |               |                      |            |            |           |
 
-## 
+##
