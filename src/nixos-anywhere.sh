@@ -11,6 +11,8 @@ Options:
   set the flake to install the system from.
 * -i <identity_file>
   selects which SSH private key file to use.
+* -p <ssh_port>
+  set the ssh port to connect with. Defaults to 22.
 * -L, --print-build-logs
   print full build logs
 * -s, --store-paths <disko-script> <nixos-system>
@@ -59,6 +61,7 @@ nix_options=(
 )
 substitute_on_destination=y
 ssh_private_key_file=
+ssh_port=22
 
 declare -A disk_encryption_keys
 declare -a nix_copy_options
@@ -72,6 +75,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   -i)
     ssh_private_key_file=$2
+    shift
+    ;;
+  -p)
+    ssh_port=$2
     shift
     ;;
   -L | --print-build-logs)
@@ -151,10 +158,10 @@ fi
 
 # ssh wrapper
 timeout_ssh_() {
-  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -p "$ssh_port" -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
 ssh_() {
-  ssh -T -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+  ssh -T -i "$ssh_key_dir"/nixos-anywhere -p "$ssh_port" -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
 
 nix_copy() {
@@ -231,6 +238,7 @@ step Uploading install SSH keys
 until
   ssh-copy-id \
     -i "$ssh_key_dir"/nixos-anywhere.pub \
+    -p "$ssh_port" \
     -o ConnectTimeout=10 \
     -o UserKnownHostsFile=/dev/null \
     -o StrictHostKeyChecking=no \
@@ -320,13 +328,16 @@ SSH
 TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run
 SSH
 
-  # wait for machine to become unreachable
+  # use the default SSH port to connect at this point
+  ssh_port=22
+
+  # wait for machine to become unreachable.
   while timeout_ssh_ -- exit 0; do sleep 1; done
 
   # After kexec we explicitly set the user to root@
   ssh_connection="root@${ssh_host}"
 
-  # watiting for machine to become available again
+  # waiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
 for path in "${!disk_encryption_keys[@]}"; do
@@ -390,7 +401,7 @@ nohup bash -c '${maybe_reboot}' >/dev/null &
 SSH
 
 if [[ -n ${maybe_reboot} ]]; then
-  step Waiting for the maching to become reachable again
+  step Waiting for the machine to become reachable again
   while timeout_ssh_ -- exit 0; do sleep 1; done
 fi
 
