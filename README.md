@@ -67,8 +67,9 @@ data has been migrated.
 ## Prerequisites
 
 - Source Machine:
+
   - Can be any machine with Nix installed, e.g. a NixOS machine.
-  - Should be able to build nix derivations for the target platform. Otherwise 
+  - Should be able to build nix derivations for the target platform. Otherwise
     `--build-on-remote` can be used.
 
 - Target Machine:
