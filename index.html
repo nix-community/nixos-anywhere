@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - nixos-anywhere - install NixOS everywhere</title>
+        <title>Quickstart - nixos-anywhere - install NixOS everywhere</title>
 
 
         <!-- Custom HTML head -->
@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.1.</strong> What is nixos-anywhere?</a></li><li class="chapter-item expanded "><a href="quickstart.html"><strong aria-hidden="true">1.2.</strong> Quickstart</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.3.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.4.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.5.</strong> Support Matrix</a></li></ol></li><li class="chapter-item expanded "><a href="installation.html"><strong aria-hidden="true">2.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.1.</strong> Bare Metal Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.2.</strong> Virtualized Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.3.</strong> Cloud Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.4.</strong> Local Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.5.</strong> Single Board Computers</a></li></ol></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">3.</strong> Avanced Guides</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">4.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="cli.html"><strong aria-hidden="true">4.1.</strong> CLI</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="quickstart.html" class="active">Quickstart</a></li><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="howtos.html">How to Guide</a></li><li class="chapter-item expanded affix "><a href="supportmatrix.html">Support Matrix</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -144,21 +144,158 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+                        <h1 id="quickstart-guide-nixos-anywhere"><a class="header" href="#quickstart-guide-nixos-anywhere">Quickstart Guide: nixos-anywhere</a></h1>
+<p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
+<img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
+<p><a href="./INDEX.html">Documentation Index</a></p>
+<h2 id="introduction"><a class="header" href="#introduction">Introduction</a></h2>
+<p>This guide documents a simple installation of NixOS using <strong>nixos-anywhere</strong> on
+a target machine running x86_64 Linux with
+<a href="https://man7.org/linux/man-pages/man8/kexec.8.html">kexec</a> support. The example
+used in this guide installs NixOS on a Hetzner cloud machine. The configuration
+may be different for some other instances. We will be including further examples
+in the <a href="./howtos.html">How To Guide</a> as and when they are available.</p>
+<p>You will need:</p>
 <ul>
-<li><a href="#">What is nixos-anywhere?</a></li>
-<li><a href="#">Quickstart</a></li>
-<li><a href="#">Getting Started</a></li>
-<li><a href="#">System Requirements</a></li>
-<li><a href="#">Support Matrix</a></li>
+<li>A <a href="https://nixos.wiki/wiki/Flakes">flake</a> that controls the actions to be
+performed</li>
+<li>A disk configuration containing details of the file system that will be
+created on the new server.</li>
 </ul>
+<p><strong>nixos-anywhere</strong> doesn’t need to be installed. You can run it directly from
+<a href="https://github.com/numtide/nixos-anywhere">Numtide's repository on Github.</a></p>
+<p>Details of the flake, the disk configuration and the CLI command are discussed
+below.</p>
+<h2 id="steps-required-to-run-nixos-anywhere"><a class="header" href="#steps-required-to-run-nixos-anywhere">Steps required to run nixos-anywhere</a></h2>
+<ol>
+<li>
+<p>Create a directory for the flake and configuration files, and ensure flakes
+are enabled on your system. The
+<a href="https://nixos.wiki/wiki/Flakes#enable-flakes">Nixos Wiki</a> describes how to
+enable flakes.</p>
+</li>
+<li>
+<p>In this directory, run the following command to create a flake.</p>
+</li>
+</ol>
+<pre><code>nix flake init
+</code></pre>
+<p>This will create a flake in a file named flake.nix. Edit the flake to suit your
+requirements. For a minimal installation, you can paste in the contents of the
+example flake from
+<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix">here</a>.</p>
+<p>Lines 29 in the sample file reads:</p>
+<pre><code># change this to your ssh key
+            &quot;CHANGE&quot;
+</code></pre>
+<p>Substitute  the text that reads <code>CHANGE</code> with your own SSH key. This is
+important, otherwise you will not be able to log on to the target machine after
+NixOS has been installed.</p>
+<ol start="3">
+<li>
+<p>In the same directory, create a file named <code>disk-config.nix</code>. This will be
+used to specify the disk layout to the <strong>disko</strong> tool, which nixos-anywhere
+uses to partition, format and mount the disks. Again, for a simple
+installation you can paste the contents from the example
+<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/disk-config.nix">here</a>.
+This configures a standard GPT (GUID Partition Table) partition compatible
+with both EFI and BIOS systems, and mounts the disk as <code>/dev/sda</code>. If this
+doesn’t meet your requirements, choose an example that suits your disk layout
+from the
+<a href="https://github.com/nix-community/disko/tree/master/example">disko examples</a>.
+For more information about this configuration, refer to the
+<a href="https://github.com/nix-community/disko">disko documentation.</a></p>
+</li>
+<li>
+<p>Run the following command to create the <code>flake.lock</code> file:</p>
+</li>
+</ol>
+<pre><code>nix flake lock
+</code></pre>
+<p>Optionally, you can commit these files to a repo such as Github, or you can
+simply reference your local directory when you run <strong>nixos-anywhere</strong>. This
+example uses a local directory on the source machine.</p>
+<ol start="5">
+<li>
+<p>On the target machine, make sure you have access as root via ssh by adding
+your SSH key to the file <code>authorized_keys</code> in the directory <code>/root/.ssh</code></p>
+</li>
+<li>
+<p>You can now run <strong>nixos-anywhere</strong> from the command line as shown below,
+where:</p>
+<ul>
+<li>
+<p><code>&lt;path to configuration&gt;</code> is the path to the directory or repository
+containing <code>flake.nix</code> and <code>disk-config.nix</code></p>
+</li>
+<li>
+<p><code>&lt;configuration name&gt;</code> must match the name that immediately follows the
+text <code>nixosConfigurations.</code> in the flake, as indicated by the comment in
+the
+<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
+</li>
+<li>
+<p><code>&lt;ip address&gt;</code> is the IP address of the target machine.</p>
+</li>
+</ul>
+</li>
+</ol>
+<pre><code>nix run github:numtide/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; root@&lt;ip address&gt;
+</code></pre>
+<p>The command would look  like this if you had created your files in a directory
+named <code>/home/mydir/test</code> and the IP address of your target machine is
+<code>37.27.18.135</code>:</p>
+<pre><code>nix run github:numtide/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud root@37.27.18.135
+</code></pre>
+<p><strong>nixos-anywhere</strong> will then run, showing various output messages at each stage.
+It may take some time to complete, depending on Internet speeds. It should
+finish by showing the messages below before returning to the command prompt.</p>
+<pre><code>Installation finished. No error reported.
+Warning: Permanently added '&lt;ip-address&gt;' (ED25519) to the list of known hosts
+</code></pre>
+<p>When this happens, the target server will have been overwritten with a new
+installation of NixOS. Note that the server's public SSH key will have changed.</p>
+<p>If you have previously accessed this server using SSH, you may see the following
+message the next time you try to log in to the target.</p>
+<pre><code>  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ED25519 key sent by the remote host is
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.
+Please contact your system administrator.
+Add correct host key in ~/.ssh/known_hosts to get rid of this message.
+Offending ECDSA key in ~/.ssh/known_hosts:6
+  remove with:
+  ssh-keygen -f ~/.ssh/known_hosts&quot; -R &quot;&lt;ip addrress&gt;&quot;
+Host key for &lt;ip_address&gt; has changed and you have requested strict checking.
+Host key verification failed.
+</code></pre>
+<p>This is because the <code>known_hosts</code> file in the <code>.ssh</code> directory now contains a
+mismatch, since the server has been overwritten. To solve this, use a text
+editor to remove the old entry from the <code>known_hosts</code> file. The next connection
+attempt will then treat this as a new server.</p>
+<p>The error message line <code>Offending ECDSA key in ~/.ssh/known_hosts:</code> gives the
+line number that needs to be removed from the <code>known_hosts</code> file.</p>
+<p><strong>Note:</strong> If you subsequently make any changes to either the <code>flake.nix</code> or
+<code>disk-config.nix</code> file, you will need to run the following command in the
+directory containing the flake to update <code>flake.lock</code> before rerunning
+<strong>nixos-anywhere</strong>:</p>
+<pre><code>nix flake update
+</code></pre>
+<p>For more information on different use cases of <strong>nixos-anywhere</strong> please refer
+to the <a href="./howtos.html">How to Guide</a>, and for more technical information and
+explanation of known error messages, refer to the
+<a href="./reference.html">Reference Manual</a>.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
 
-                            <a rel="next" href="#.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="requirements.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -169,7 +306,7 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
 
-                    <a rel="next" href="#.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="requirements.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

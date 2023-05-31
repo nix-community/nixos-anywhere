@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.1.</strong> What is nixos-anywhere?</a></li><li class="chapter-item expanded "><a href="quickstart.html" class="active"><strong aria-hidden="true">1.2.</strong> Quickstart</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.3.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.4.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.5.</strong> Support Matrix</a></li></ol></li><li class="chapter-item expanded "><a href="installation.html"><strong aria-hidden="true">2.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.1.</strong> Bare Metal Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.2.</strong> Virtualized Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.3.</strong> Cloud Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.4.</strong> Local Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.5.</strong> Single Board Computers</a></li></ol></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">3.</strong> Avanced Guides</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">4.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="cli.html"><strong aria-hidden="true">4.1.</strong> CLI</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="quickstart.html" class="active">Quickstart</a></li><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="howtos.html">How to Guide</a></li><li class="chapter-item expanded affix "><a href="supportmatrix.html">Support Matrix</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -147,7 +147,8 @@
                         <h1 id="quickstart-guide-nixos-anywhere"><a class="header" href="#quickstart-guide-nixos-anywhere">Quickstart Guide: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
 <img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
-<h2 id="inroduction"><a class="header" href="#inroduction">Inroduction</a></h2>
+<p><a href="./INDEX.html">Documentation Index</a></p>
+<h2 id="introduction"><a class="header" href="#introduction">Introduction</a></h2>
 <p>This guide documents a simple installation of NixOS using <strong>nixos-anywhere</strong> on
 a target machine running x86_64 Linux with
 <a href="https://man7.org/linux/man-pages/man8/kexec.8.html">kexec</a> support. The example
@@ -199,8 +200,8 @@ installation you can paste the contents from the example
 <a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/disk-config.nix">here</a>.
 This configures a standard GPT (GUID Partition Table) partition compatible
 with both EFI and BIOS systems, and mounts the disk as <code>/dev/sda</code>. If this
-doesn’t meet your requirements, choose an example that suits your disk
-layout from the
+doesn’t meet your requirements, choose an example that suits your disk layout
+from the
 <a href="https://github.com/nix-community/disko/tree/master/example">disko examples</a>.
 For more information about this configuration, refer to the
 <a href="https://github.com/nix-community/disko">disko documentation.</a></p>
@@ -293,11 +294,8 @@ explanation of known error messages, refer to the
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="#.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <i class="fa fa-angle-left"></i>
-                            </a>
 
-                            <a rel="next" href="#.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="requirements.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -307,11 +305,8 @@ explanation of known error messages, refer to the
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="#.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <i class="fa fa-angle-left"></i>
-                    </a>
 
-                    <a rel="next" href="#.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="requirements.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

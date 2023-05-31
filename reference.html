@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>CLI - nixos-anywhere - install NixOS everywhere</title>
+        <title>Reference - nixos-anywhere - install NixOS everywhere</title>
 
 
         <!-- Custom HTML head -->
@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.1.</strong> What is nixos-anywhere?</a></li><li class="chapter-item expanded "><a href="quickstart.html"><strong aria-hidden="true">1.2.</strong> Quickstart</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.3.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.4.</strong> System Requirements</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">1.5.</strong> Support Matrix</a></li></ol></li><li class="chapter-item expanded "><a href="installation.html"><strong aria-hidden="true">2.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.1.</strong> Bare Metal Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.2.</strong> Virtualized Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.3.</strong> Cloud Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.4.</strong> Local Platforms</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">2.5.</strong> Single Board Computers</a></li></ol></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">3.</strong> Avanced Guides</a></li><li class="chapter-item expanded "><a href="#.html"><strong aria-hidden="true">4.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="cli.html" class="active"><strong aria-hidden="true">4.1.</strong> CLI</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="howtos.html">How to Guide</a></li><li class="chapter-item expanded affix "><a href="supportmatrix.html">Support Matrix</a></li><li class="chapter-item expanded affix "><a href="reference.html" class="active">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -144,28 +144,87 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="cli"><a class="header" href="#cli">CLI</a></h1>
+                        <h1 id="reference-manual-nixos-anywhere"><a class="header" href="#reference-manual-nixos-anywhere">Reference Manual: nixos-anywhere</a></h1>
+<p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
+<img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="141">
+<p><a href="./INDEX.html">Documentation Index</a></p>
+<p>TODO: Populate this guide properly</p>
+<h2 id="contents"><a class="header" href="#contents">Contents</a></h2>
+<p><a href="#command-line-usage">Command Line Usage</a></p>
+<p><a href="#explanation-of-known-error-messages">Explanation of known error messages</a></p>
+<h2 id="command-line-usage"><a class="header" href="#command-line-usage">Command Line Usage</a></h2>
+<!-- `$ bash ./src/nixos-anywhere.sh --help` -->
 <pre><code>Usage: nixos-anywhere [options] ssh-host
 
 Options:
 
-* -f, --flake flake
-  set the flake to install the system from
+* -f, --flake &lt;flake_uri&gt;
+  set the flake to install the system from.
+* -i &lt;identity_file&gt;
+  selects which SSH private key file to use.
+* -L, --print-build-logs
+  print full build logs
 * -s, --store-paths
   set the store paths to the disko-script and nixos-system directly
   if this is give, flake is not needed
+* --no-reboot
+  do not reboot after installation, allowing further customization of the target installation.
 * --kexec url
   use another kexec tarball to bootstrap NixOS
+* --stop-after-disko
+  exit after disko formating, you can then proceed to install manually or some other way
+* --extra-files files
+  files to copy into the new nixos installation
+* --disk-encryption-keys remote_path local_path
+  copy the contents of the file or pipe in local_path to remote_path in the installer environment,
+  after kexec but before installation. Can be repeated.
+* --no-substitute-on-destination
+  disable passing --substitute-on-destination to nix-copy
 * --debug
   enable debug output
-
+* --option KEY VALUE
+  nix option to pass to every nix related command
+* --from store-uri
+  URL of the source Nix store to copy the nixos and disko closure from
+* --build-on-remote
+  build the closure on the remote machine instead of locally and copy-closuring it
 </code></pre>
-
+<h2 id="explanation-of-known-error-messages"><a class="header" href="#explanation-of-known-error-messages">Explanation of known error messages</a></h2>
+<p>TODO: Add additional error messages and meanings. Fill in missing explanations</p>
+<p>This section lists known error messages and their explanations. Some
+explanations may refer to the following CLI syntax:</p>
+<p><code>nix run github:numtide/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; root@&lt;ip address&gt;</code></p>
+<p>This list is not comprehensive. It's possible you may encounter errors that
+originate from the underlying operating system. These should be documented in
+the relevant operating system manual.</p>
+<div class="table-wrapper"><table><thead><tr><th>Id</th><th>Message</th><th>Explanation</th></tr></thead><tbody>
+<tr><td>1</td><td>Failure unpacking initrd</td><td>You don't have enough RAM to hold <code>kexec</code></td></tr>
+<tr><td>2</td><td>Flake &lt;flake_url&gt; does not provide attirbute</td><td>The configuration name you specified in your flake URI is not defined as a NixOS configuration in your flake eg if your URI was mydir#myconfig, then myconfig should be included in the flake as <code>nixosConfigurations.myconfig</code></td></tr>
+<tr><td>3</td><td>Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri.</td><td>As for error #2</td></tr>
+<tr><td></td><td>For example, to use the output nixosConfigurations.foo from the flake.nix, append &quot;#foo&quot; to the flake-uri</td><td></td></tr>
+<tr><td>4</td><td>Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already</td><td>TODO: Explain</td></tr>
+<tr><td>5</td><td>ssh-host must be set</td><td>&lt;ip_address&gt; has not been supplied</td></tr>
+<tr><td>6</td><td>&lt;disko_script&gt; and &lt;nixos_system&gt; must be existing store-paths</td><td>This occurs if the -s switch has been used to specify the disko script and store path correctly, and the scripts cannot be found at the given URI</td></tr>
+<tr><td>7</td><td>flake must be set</td><td>This occurs if both the -flake option (use a flake) and the -s option (specify paths directly) have been omitted. Either one or the other must be specified.</td></tr>
+<tr><td>8</td><td>no tar command found, but required to unpack kexec tarball</td><td>The destination machine does not have a <code>tar</code> command available. This is needed to unpack the <code>kexec</code>.</td></tr>
+<tr><td>9</td><td>no setsid command found, but required to run the kexec script under a new session</td><td>The destination machine does not have the <code>setsid</code> command available</td></tr>
+<tr><td>10</td><td>This script requires Linux as the operating system, but got <operating system></td><td>The destination machine is not running Linux</td></tr>
+<tr><td>11</td><td>The default kexec image only support x86_64 cpus. Checkout https://github.com/numtide/nixos-anywhere/#using-your-own-kexec-image for more information.</td><td>By default, <code>nixos-anywhere</code> uses its own <code>kexec</code> image, which will only run on x86_64 CPUs. For other CPU types, you can use your own <code>kexec</code> image instead. Refer to the <a href="./howtos#using-your-own-kexec-image">How To Guide</a> for instructions.</td></tr>
+<tr><td>12</td><td>Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri.</td><td>This is a <code>disko</code> error. As for Error #2</td></tr>
+<tr><td></td><td>For example, to use the output diskoConfigurations.foo from the flake.nix, append &quot;#foo&quot; to the flake-uri.</td><td></td></tr>
+<tr><td>13</td><td>mode must be either create, mount or zap_create_mount</td><td>This is a <code>disko</code> error. The <code>disko</code> switches have not been used correctly. This could happen if you supplied your own <code>disko</code> script using the -s option</td></tr>
+<tr><td>14</td><td>disko config must be an existing file or flake must be set</td><td>This is a <code>disko</code> error. This will happen if the <code>disko.devices</code> entry in your flake doesn't match the name of a file in the same location as your flake.</td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+</tbody></table>
+</div>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="#.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="supportmatrix.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
@@ -176,7 +235,7 @@ Options:
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="#.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="supportmatrix.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
