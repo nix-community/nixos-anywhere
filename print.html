@@ -336,7 +336,7 @@ has detailed instructions on how to boot the installer.</p>
 present by checking whether the <code>/etc/os-release</code> file contains the identifier
 <code>VARIANT=installer</code>. This identifier is available on releases NixOS 23.05 or
 later.</p>
-<p>If an installer is detected, <code>nixos-anywhere</code>will not attempt to <code>kexec</code> into
+<p>If an installer is detected, <code>nixos-anywhere</code> will not attempt to <code>kexec</code> into
 its own image. This is particularly useful for targets that don't have enough
 RAM for <code>kexec</code> or don't support <code>kexec</code>.</p>
 <p>NixOS starts an SSH server on the installer by default, but you need to set a
