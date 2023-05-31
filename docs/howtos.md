@@ -30,7 +30,7 @@ present by checking whether the `/etc/os-release` file contains the identifier
 `VARIANT=installer`. This identifier is available on releases NixOS 23.05 or
 later.
 
-If an installer is detected, `nixos-anywhere`will not attempt to `kexec` into
+If an installer is detected, `nixos-anywhere` will not attempt to `kexec` into
 its own image. This is particularly useful for targets that don't have enough
 RAM for `kexec` or don't support `kexec`.
 
