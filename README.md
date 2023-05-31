@@ -68,7 +68,7 @@ data has been migrated.
 
 - Source Machine:
 
-- - Can be any Linux machine with Nix installed, or a NixOS machine.
+  - Can be any Linux machine with Nix installed, or a NixOS machine.
 
 - Target Machine:
 

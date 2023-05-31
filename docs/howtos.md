@@ -16,7 +16,7 @@
 
 ## Installing on a machine with no operating system
 
-If your machine doesn't currently have an operating system installed, you still
+If your machine doesn't currently have an operating system installed, you can still
 run `nixos-anywhere` remotely to automate the install. To do this, you would
 first need to boot the target machine from the standard NixOS installer. You can
 either boot from a USB or use `netboot`.
