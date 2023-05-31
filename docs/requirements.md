@@ -17,4 +17,4 @@
     must:
     - Be running x86-64 Linux with kexec support . Most x86_64 Linux systems do
       have kexec support.
-    - Have at least 2.5 GB of RAM, excluding swap.
+    - Have at least 1.5 GB of RAM, excluding swap.
