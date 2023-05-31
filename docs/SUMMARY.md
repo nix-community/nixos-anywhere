@@ -9,8 +9,6 @@ installing NixOS, and run the install remotely with a single CLI command.
 
 Refer to the following documentation for more information.
 
-[README](../README.md): An overview of nixos-anywhere
-
 [Quickstart](./quickstart.md): Instructions for a typical installation
 
 [System Requirements](./requirements.md): CPU and memory requirements
