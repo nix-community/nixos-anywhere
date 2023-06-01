@@ -13,6 +13,8 @@ Options:
   selects which SSH private key file to use.
 * -p <ssh_port>
   set the ssh port to connect with
+* -o <ssh_option>
+  set an ssh option
 * -L, --print-build-logs
   print full build logs
 * -s, --store-paths <disko-script> <nixos-system>
@@ -79,6 +81,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   -p)
     ssh_args+=("-p" "$2")
+    shift
+    ;;
+  -o)
+    ssh_args+=("-o" "$2")
     shift
     ;;
   -L | --print-build-logs)
