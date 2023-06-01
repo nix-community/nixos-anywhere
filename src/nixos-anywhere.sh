@@ -193,7 +193,7 @@ if [[ -n ${flake-} ]]; then
     exit 1
   fi
   if [[ ${build_on_remote-n} == "n" ]]; then
-    disko_script=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.disko")
+    disko_script=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
     nixos_system=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
   fi
 elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
@@ -333,7 +333,7 @@ pubkey=$(ssh-keyscan -t ed25519 "${ssh_connection//*@/}" 2>/dev/null | sed -e 's
 if [[ -z ${disko_script-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
   step Building disko script
   disko_script=$(
-    nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.disko" \
+    nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
       --builders "ssh://$ssh_connection?base64-ssh-public-host-key=$pubkey&ssh-key=$ssh_key_dir/nixos-anywhere $is_arch-linux"
   )
 fi
