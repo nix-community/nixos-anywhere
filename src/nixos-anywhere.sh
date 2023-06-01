@@ -336,7 +336,7 @@ SSH
 
   # use the default SSH port to connect at this point
   for i in "${!ssh_args[@]}"; do
-    if [[ "${ssh_args[i]}" == "-p" ]]; then
+    if [[ ${ssh_args[i]} == "-p" ]]; then
       ssh_args[i + 1]=22
       break
     fi
