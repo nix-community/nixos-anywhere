@@ -12,7 +12,7 @@ Options:
 * -i <identity_file>
   selects which SSH private key file to use.
 * -p <ssh_port>
-  set the ssh port to connect with. Defaults to 22.
+  set the ssh port to connect with
 * -L, --print-build-logs
   print full build logs
 * -s, --store-paths <disko-script> <nixos-system>
@@ -61,11 +61,11 @@ nix_options=(
 )
 substitute_on_destination=y
 ssh_private_key_file=
-ssh_port=22
 
 declare -A disk_encryption_keys
 declare -a nix_copy_options
 declare -a ssh_copy_id_args
+declare -a ssh_args
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -78,7 +78,7 @@ while [[ $# -gt 0 ]]; do
     shift
     ;;
   -p)
-    ssh_port=$2
+    ssh_args+=("-p" "$2")
     shift
     ;;
   -L | --print-build-logs)
@@ -158,10 +158,10 @@ fi
 
 # ssh wrapper
 timeout_ssh_() {
-  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -p "$ssh_port" -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "${ssh_args[@]}" "$@"
 }
 ssh_() {
-  ssh -T -i "$ssh_key_dir"/nixos-anywhere -p "$ssh_port" -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+  ssh -T -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "${ssh_args[@]}" "$@"
 }
 
 nix_copy() {
@@ -238,11 +238,11 @@ step Uploading install SSH keys
 until
   ssh-copy-id \
     -i "$ssh_key_dir"/nixos-anywhere.pub \
-    -p "$ssh_port" \
     -o ConnectTimeout=10 \
     -o UserKnownHostsFile=/dev/null \
     -o StrictHostKeyChecking=no \
     "${ssh_copy_id_args[@]}" \
+    "${ssh_args[@]}" \
     "$ssh_connection"
 do
   sleep 3
@@ -329,7 +329,12 @@ TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run
 SSH
 
   # use the default SSH port to connect at this point
-  ssh_port=22
+  for i in "${!ssh_args[@]}"; do
+    if [[ "${ssh_args[i]}" == "-p" ]]; then
+      ssh_args[i + 1]=22
+      break
+    fi
+  done
 
   # wait for machine to become unreachable.
   while timeout_ssh_ -- exit 0; do sleep 1; done
