@@ -164,10 +164,10 @@ fi
 
 # ssh wrapper
 timeout_ssh_() {
-  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "${ssh_args[@]}" "$@"
+  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${ssh_args[@]}" "$ssh_connection" "$@"
 }
 ssh_() {
-  ssh -T -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "${ssh_args[@]}" "$@"
+  ssh -T -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${ssh_args[@]}" "$ssh_connection" "$@"
 }
 
 nix_copy() {
