@@ -106,13 +106,11 @@ Here’s an example of a simple disk configuration:
         partitions = [
           {
             name = "boot";
-            type = "partition";
             start = "0";
             end = "1M";
             flags = [ "bios_grub" ];
           }
           {
-            type = "partition";
             name = "ESP";
             start = "1M";
             end = "512M";
@@ -124,7 +122,6 @@ Here’s an example of a simple disk configuration:
             };
           }
           {
-            type = "partition";
             name = "root";
             start = "512M";
             end = "100%";
