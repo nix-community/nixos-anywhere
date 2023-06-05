@@ -11,5 +11,6 @@ resource "null_resource" "nixos-remote" {
       SSH_PRIVATE_KEY = var.ssh_private_key
     }
     command = "nix run --extra-experimental-features 'nix-command flakes' path:${path.module}/../..#nixos-anywhere -- ${local.nixos_anywhere_flags}"
+    quiet   = var.debug_logging
   }
 }

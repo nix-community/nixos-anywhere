@@ -23,6 +23,7 @@ sshOpts=(-p "${TARGET_PORT}")
 sshOpts+=(-o UserKnownHostsFile=/dev/null)
 sshOpts+=(-o StrictHostKeyChecking=no)
 
+set +x
 if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
   sshPrivateKeyFile="$workDir/ssh_key"
   # Create the file with 0700 - umask calculation: 777 - 700 = 077
@@ -33,6 +34,7 @@ if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
   unset SSH_AUTH_SOCK # don't use system agent if key was supplied
   sshOpts+=(-o "IdentityFile=${sshPrivateKeyFile}")
 fi
+set -x
 
 try=1
 until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --experimental-features nix-command --to "ssh://$TARGET" "$NIXOS_SYSTEM"; do
