@@ -2,7 +2,9 @@ cut_body_after = "" # don't include text from the PR body in the merge commit me
 status = [
   "Evaluate flake.nix",
   "check from-nixos [x86_64-linux]",
+  "check from-nixos-2211 [x86_64-linux]",
   "check from-nixos-with-sudo [x86_64-linux]",
+  "check from-nixos-with-sudo-2211 [x86_64-linux]",
   "check treefmt [x86_64-linux]",
   "deploy",
   "devShell default [x86_64-linux]",
