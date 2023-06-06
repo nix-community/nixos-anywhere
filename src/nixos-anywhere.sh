@@ -221,6 +221,10 @@ if [[ -n ${ssh_private_key_file-} ]]; then
   ssh_copy_id_args+=(-f)
 fi
 
+ssh_settings=$(ssh -G "${ssh_connection}")
+ssh_host=$(echo "$ssh_settings" | awk '/^host / { print $2 }')
+ssh_port=$(echo "$ssh_settings" | awk '/^port / { print $2 }')
+
 step Uploading install SSH keys
 until
   ssh-copy-id \
@@ -318,7 +322,7 @@ SSH
   while timeout_ssh_ -- exit 0; do sleep 1; done
 
   # After kexec we explicitly set the user to root@
-  ssh_connection="root@${ssh_connection#*@}"
+  ssh_connection="root@${ssh_host}"
 
   # watiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
@@ -328,7 +332,11 @@ for path in "${!disk_encryption_keys[@]}"; do
   ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
 done
 
-pubkey=$(ssh-keyscan -t ed25519 "${ssh_connection//*@/}" 2>/dev/null | sed -e 's/^[^ ]* //' | base64 -w0)
+pubkey=$(ssh-keyscan -p "$ssh_port" -t ed25519 "$ssh_host" 2>/dev/null || {
+  echo "ERROR: failed to retrieve host public key for ${ssh_connection}"
+  exit 1
+})
+pubkey=$(echo "$pubkey" | sed -e 's/^[^ ]* //' | base64 -w0)
 
 if [[ -z ${disko_script-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
   step Building disko script
