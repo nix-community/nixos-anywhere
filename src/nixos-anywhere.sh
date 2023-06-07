@@ -11,9 +11,9 @@ Options:
   set the flake to install the system from.
 * -i <identity_file>
   selects which SSH private key file to use.
-* -p <ssh_port>
+* -p, --ssh-port <ssh_port>
   set the ssh port to connect with
-* -o <ssh_option>
+* -o, --ssh-option <ssh_option>
   set an ssh option
 * -L, --print-build-logs
   print full build logs
@@ -79,11 +79,11 @@ while [[ $# -gt 0 ]]; do
     ssh_private_key_file=$2
     shift
     ;;
-  -p)
+  -p | --ssh-port)
     ssh_args+=("-p" "$2")
     shift
     ;;
-  -o)
+  -o | --ssh-option)
     ssh_args+=("-o" "$2")
     shift
     ;;
