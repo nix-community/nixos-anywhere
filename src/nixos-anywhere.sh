@@ -179,6 +179,8 @@ fi
 ssh_key_dir=$(mktemp -d)
 trap 'rm -rf "$ssh_key_dir"' EXIT
 mkdir -p "$ssh_key_dir"
+# ssh-copy-id requires this directory
+mkdir -p "$HOME/.ssh/"
 ssh-keygen -t ed25519 -f "$ssh_key_dir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
 
 # parse flake nixos-install style syntax, get the system attr
