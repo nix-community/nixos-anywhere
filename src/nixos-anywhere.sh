@@ -335,7 +335,7 @@ for path in "${!disk_encryption_keys[@]}"; do
 done
 
 pubkey=$(ssh-keyscan -p "$ssh_port" -t ed25519 "$ssh_host" 2>/dev/null || {
-  echo "ERROR: failed to retrieve host public key for ${ssh_connection}"
+  echo "ERROR: failed to retrieve host public key for ${ssh_connection}" >&2
   exit 1
 })
 pubkey=$(echo "$pubkey" | sed -e 's/^[^ ]* //' | base64 -w0)
