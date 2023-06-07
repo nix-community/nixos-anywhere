@@ -24,6 +24,8 @@ Options:
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <url>
   use another kexec tarball to bootstrap NixOS
+* --post-kexec-ssh-port <ssh_port>
+  after kexec is executed, use a custom ssh port to connect. Defaults to 22
 * --stop-after-disko
   exit after disko formating, you can then proceed to install manually or some other way
 * --extra-files <file...>
@@ -63,6 +65,7 @@ nix_options=(
 )
 substitute_on_destination=y
 ssh_private_key_file=
+post_kexec_ssh_port=22
 
 declare -A disk_encryption_keys
 declare -a nix_copy_options
@@ -102,6 +105,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   --kexec)
     kexec_url=$2
+    shift
+    ;;
+  --post-kexec-ssh-port)
+    post_kexec_ssh_port=$2
     shift
     ;;
   --debug)
@@ -337,7 +344,7 @@ SSH
   # use the default SSH port to connect at this point
   for i in "${!ssh_args[@]}"; do
     if [[ ${ssh_args[i]} == "-p" ]]; then
-      ssh_args[i + 1]=22
+      ssh_args[i + 1]=$post_kexec_ssh_port
       break
     fi
   done
