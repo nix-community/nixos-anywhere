@@ -380,6 +380,9 @@ fi
 step Installing NixOS
 ssh_ <<SSH
 set -efu ${enable_debug}
+# when running not in nixos we might miss this directory, but it's needed in the nixos chroot during installation
+export PATH=\$PATH:/run/current-system/sw/bin 
+
 # needed for installation if initrd-secrets are used
 mkdir -p /mnt/tmp
 chmod 777 /mnt/tmp
