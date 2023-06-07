@@ -14,7 +14,7 @@ needs to be done remotely. If you're installing NixOS, the **nixos-anywhere**
 process including:
 
 - Disk partitioning and formatting
-- Configuring and installing either NixOS or SrvOS
+- Configuring and installing NixOS
 - Installing additional files and software
 
 You can then initiate an unattended installation with a single CLI command.
