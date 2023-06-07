@@ -224,7 +224,7 @@ if [[ -n ${ssh_private_key_file-} ]]; then
 fi
 
 ssh_settings=$(ssh -G "${ssh_connection}")
-ssh_host=$(echo "$ssh_settings" | awk '/^host / { print $2 }')
+ssh_host=$(echo "$ssh_settings" | awk '/^hostname / { print $2 }')
 ssh_port=$(echo "$ssh_settings" | awk '/^port / { print $2 }')
 
 step Uploading install SSH keys
