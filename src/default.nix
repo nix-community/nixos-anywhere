@@ -6,6 +6,7 @@
 , coreutils
 , curl
 , gnugrep
+, gawk
 , findutils
 , gnused
 , lib
@@ -19,6 +20,7 @@ let
     coreutils
     curl # when uploading tarballs
     gnugrep
+    gawk
     findutils
     gnused # needed by ssh-copy-id
   ];
