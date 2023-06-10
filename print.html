@@ -388,7 +388,7 @@ image file. The image will be uploaded prior to execution.</p>
 <p>Here's an example command that demonstrates how to use a custom kexec image with
 <code>nixos-anywhere</code> for aarch64 instead of the default <code>x86_64</code> architecture:</p>
 <pre><code>nix run github:numtide/nixos-anywhere -- \
-  --kexec &quot;$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-noninteractive-nixos-unstable)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz&quot; \
+  --kexec &quot;$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz&quot; \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip
 </code></pre>
