@@ -103,7 +103,7 @@ Here's an example command that demonstrates how to use a custom kexec image with
 
 ```
 nix run github:numtide/nixos-anywhere -- \
-  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-noninteractive-nixos-unstable)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz" \
+  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz" \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip
 ```
