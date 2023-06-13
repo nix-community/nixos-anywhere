@@ -16,6 +16,9 @@ Options:
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
   if this is give, flake is not needed
+* -t --tty
+  Force pseudo-terminal allocation in SSH sessions. Use this when you expect e.g.
+  to be asked for password entry during LUKS configuration.
 * --no-reboot
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <url>
@@ -59,6 +62,7 @@ nix_options=(
 )
 substitute_on_destination=y
 ssh_private_key_file=
+ssh_tty_param="-T"
 
 declare -A disk_encryption_keys
 declare -a nix_copy_options
@@ -82,6 +86,9 @@ while [[ $# -gt 0 ]]; do
     nixos_system=$(readlink -f "$3")
     shift
     shift
+    ;;
+  -t | --tty)
+    ssh_tty_param="-t"
     ;;
   --help)
     showUsage
@@ -154,7 +161,7 @@ timeout_ssh_() {
   timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
 ssh_() {
-  ssh -T -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+  ssh "$ssh_tty_param" -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
 }
 
 nix_copy() {
