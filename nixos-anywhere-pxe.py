@@ -384,12 +384,14 @@ def build_pxe_image(netboot_image_flake: str) -> Path:
     )
     return Path(res.stdout.strip())
 
-
 def pause():
     print("")
-    input(
-        "Press [enter] to terminate this script and tear down the network to the server."
-    )
+    # no clue how to flush stdin with python. Gonna wait for a specific string instead (as opposed to wait for [enter]).
+    answer = ""
+    while (answer != "continue"):
+        answer = input(
+                "Answer 'continue' to terminate this script and tear down the network to the server: "
+        )
 
 
 def dispatch_dnsmasq(
