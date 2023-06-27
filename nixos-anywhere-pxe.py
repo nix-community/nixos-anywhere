@@ -19,6 +19,7 @@ from netaddr import AddrFormatError, IPAddress, IPNetwork
 
 FILE = Union[None, int, IO]
 
+NIXOS_ANYWHERE_SH = Path(__file__).parent.absolute() / "src/nixos-anywhere.sh"
 
 def run(
     cmd: Union[str, list[str]],
@@ -337,7 +338,7 @@ def nixos_anywhere(
         [
             # FIXME: path
             "bash",
-            "./src/nixos-remote.sh",
+            str(NIXOS_ANYWHERE_SH),
             "--flake",
             flake,
             "-L",
