@@ -158,7 +158,6 @@ nix flake update
 
 The new server's configurations are defined in the flake. `nixos-anywhere` does not create `etc/nixos/configuration.nix`since it expects the server to be administered remotely. Any future changes to the configuration should be made to the flake, and you would reference this flake when doing the rebuild:
 
-NoneBashCSSCC#ElixirErlangGoGraphQLGroovyHaskellHCLHTMLINIJavaJavaScriptJSONJSXKotlinLispLuaMermaid DiagramNixObjective-COCamlPerlPHPPowershellPythonRubyRustScalaSQLSoliditySwiftTOMLTSXTypeScriptVisual BasicYAMLZigCopy
 
 ```
 nixos-rebuild --flake <URL to your flake> switch
