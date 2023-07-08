@@ -17,8 +17,7 @@ in the [How To Guide](./howtos.md) as and when they are available.
 
 You will need:
 
-- A [flake](https://nixos.wiki/wiki/Flakes) that controls the actions to be
-  performed
+- A [flake](https://nixos.wiki/wiki/Flakes) that controls the actions to be performed and contains or imports the configuration of the new server
 - A disk configuration containing details of the file system that will be
   created on the new server.
 
@@ -43,8 +42,7 @@ nix flake init
 
 This will create a flake in a file named flake.nix. Edit the flake to suit your
 requirements. For a minimal installation, you can paste in the contents of the
-example flake from
-[here](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix).
+example flake from [here](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix). 
 
 Lines 29 in the sample file reads:
 
@@ -85,15 +83,15 @@ example uses a local directory on the source machine.
 
 6. You can now run **nixos-anywhere** from the command line as shown below,
    where:
-
+   
    - `<path to configuration>` is the path to the directory or repository
      containing `flake.nix` and `disk-config.nix`
-
+   
    - `<configuration name>` must match the name that immediately follows the
      text `nixosConfigurations.` in the flake, as indicated by the comment in
      the
      [example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)).
-
+   
    - `<ip address>` is the IP address of the target machine.
 
 ```
@@ -156,6 +154,14 @@ directory containing the flake to update `flake.lock` before rerunning
 
 ```
 nix flake update
+```
+
+The new server's configurations are defined in the flake. `nixos-anywhere` does not create `etc/nixos/configuration.nix`since it expects the server to be administered remotely. Any future changes to the configuration should be made to the flake, and you would reference this flake when doing the rebuild:
+
+NoneBashCSSCC#ElixirErlangGoGraphQLGroovyHaskellHCLHTMLINIJavaJavaScriptJSONJSXKotlinLispLuaMermaid DiagramNixObjective-COCamlPerlPHPPowershellPythonRubyRustScalaSQLSoliditySwiftTOMLTSXTypeScriptVisual BasicYAMLZigCopy
+
+```
+nixos-rebuild --flake <URL to your flake> switch
 ```
 
 For more information on different use cases of **nixos-anywhere** please refer

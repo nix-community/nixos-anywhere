@@ -67,13 +67,13 @@ data has been migrated.
 ## Prerequisites
 
 - Source Machine:
-
+  
   - Can be any machine with Nix installed, e.g. a NixOS machine.
   - Should be able to build nix derivations for the target platform. Otherwise
     `--build-on-remote` can be used.
 
 - Target Machine:
-
+  
   - Unless you're using the option to boot from a NixOS installer image, or
     providing your own `kexec` image, it must be running x86-64 Linux with kexec
     support. Most `x86_64` Linux systems do have kexec support. By providing
@@ -198,6 +198,14 @@ nix run github:numtide/nixos-anywhere -- --flake .#hetzner-cloud root@135.181.25
 Note that this command references the URL of your flake, in this case `.#`,
 together with the name of the system `hetzner-cloud`, as highlighted by the
 comment in the sample flake.
+
+This will configure and build the new NixOS server. Since the configurations are defined in the flake, it will not create `/etc/nixos/configuration.nix`. If you need to make changes to the configuration in future, you should make the changes in the flake, and rebuild using the --flake option as shown below:
+
+
+
+```
+nixos-rebuild --flake <flake URL> switch
+```
 
 The [Quickstart Guide](./docs/quickstart.md) gives more information on how to
 run **nixos-anywhere** in its simplest form. For more specific instructions to
