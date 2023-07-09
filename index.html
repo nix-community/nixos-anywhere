@@ -285,6 +285,12 @@ directory containing the flake to update <code>flake.lock</code> before rerunnin
 <strong>nixos-anywhere</strong>:</p>
 <pre><code>nix flake update
 </code></pre>
+<p>The new server's configurations are defined in the flake. <code>nixos-anywhere</code> does
+not create <code>etc/nixos/configuration.nix</code>since it expects the server to be
+administered remotely. Any future changes to the configuration should be made to
+the flake, and you would reference this flake when doing the rebuild:</p>
+<pre><code>nixos-rebuild --flake &lt;URL to your flake&gt; switch
+</code></pre>
 <p>For more information on different use cases of <strong>nixos-anywhere</strong> please refer
 to the <a href="./howtos.html">How to Guide</a>, and for more technical information and
 explanation of known error messages, refer to the
