@@ -199,10 +199,10 @@ Note that this command references the URL of your flake, in this case `.#`,
 together with the name of the system `hetzner-cloud`, as highlighted by the
 comment in the sample flake.
 
-This will configure and build the new NixOS server. Since the configurations are defined
-in the flake, it will not create `/etc/nixos/configuration.nix`. If you need to make 
-changes to the configuration in future, you should make the changes in the flake, and 
-rebuild using the --flake option as shown below:
+This will configure and build the new NixOS server. Since the configurations are
+defined in the flake, it will not create `/etc/nixos/configuration.nix`. If you
+need to make changes to the configuration in future, you should make the changes
+in the flake, and rebuild using the --flake option as shown below:
 
 ```
 nixos-rebuild --flake <flake URL> switch
