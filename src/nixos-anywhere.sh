@@ -13,7 +13,7 @@ Options:
   selects which SSH private key file to use.
 * -p, --ssh-port <ssh_port>
   set the ssh port to connect with
-* -o, --ssh-option <ssh_option>
+* --ssh-option <ssh_option>
   set an ssh option
 * -L, --print-build-logs
   print full build logs
