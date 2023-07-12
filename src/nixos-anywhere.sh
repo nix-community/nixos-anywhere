@@ -11,6 +11,10 @@ Options:
   set the flake to install the system from.
 * -i <identity_file>
   selects which SSH private key file to use.
+* -p, --ssh-port <ssh_port>
+  set the ssh port to connect with
+* --ssh-option <ssh_option>
+  set an ssh option
 * -L, --print-build-logs
   print full build logs
 * -s, --store-paths <disko-script> <nixos-system>
@@ -23,6 +27,8 @@ Options:
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <url>
   use another kexec tarball to bootstrap NixOS
+* --post-kexec-ssh-port <ssh_port>
+  after kexec is executed, use a custom ssh port to connect. Defaults to 22
 * --stop-after-disko
   exit after disko formating, you can then proceed to install manually or some other way
 * --extra-files <file...>
@@ -63,10 +69,12 @@ nix_options=(
 substitute_on_destination=y
 ssh_private_key_file=
 ssh_tty_param="-T"
+post_kexec_ssh_port=22
 
 declare -A disk_encryption_keys
 declare -a nix_copy_options
 declare -a ssh_copy_id_args
+declare -a ssh_args
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -76,6 +84,14 @@ while [[ $# -gt 0 ]]; do
     ;;
   -i)
     ssh_private_key_file=$2
+    shift
+    ;;
+  -p | --ssh-port)
+    ssh_args+=("-p" "$2")
+    shift
+    ;;
+  --ssh-option)
+    ssh_args+=("-o" "$2")
     shift
     ;;
   -L | --print-build-logs)
@@ -96,6 +112,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   --kexec)
     kexec_url=$2
+    shift
+    ;;
+  --post-kexec-ssh-port)
+    post_kexec_ssh_port=$2
     shift
     ;;
   --debug)
@@ -158,10 +178,10 @@ fi
 
 # ssh wrapper
 timeout_ssh_() {
-  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${ssh_args[@]}" "$ssh_connection" "$@"
 }
 ssh_() {
-  ssh "$ssh_tty_param" -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "$ssh_connection" "$@"
+  ssh "$ssh_tty_param" -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${ssh_args[@]}" "$ssh_connection" "$@"
 }
 
 nix_copy() {
@@ -242,6 +262,7 @@ until
     -o UserKnownHostsFile=/dev/null \
     -o StrictHostKeyChecking=no \
     "${ssh_copy_id_args[@]}" \
+    "${ssh_args[@]}" \
     "$ssh_connection"
 do
   sleep 3
@@ -327,13 +348,21 @@ SSH
 TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run
 SSH
 
-  # wait for machine to become unreachable
+  # use the default SSH port to connect at this point
+  for i in "${!ssh_args[@]}"; do
+    if [[ ${ssh_args[i]} == "-p" ]]; then
+      ssh_args[i + 1]=$post_kexec_ssh_port
+      break
+    fi
+  done
+
+  # wait for machine to become unreachable.
   while timeout_ssh_ -- exit 0; do sleep 1; done
 
   # After kexec we explicitly set the user to root@
   ssh_connection="root@${ssh_host}"
 
-  # watiting for machine to become available again
+  # waiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
 for path in "${!disk_encryption_keys[@]}"; do
@@ -400,7 +429,7 @@ nohup bash -c '${maybe_reboot}' >/dev/null &
 SSH
 
 if [[ -n ${maybe_reboot} ]]; then
-  step Waiting for the maching to become reachable again
+  step Waiting for the machine to become reachable again
   while timeout_ssh_ -- exit 0; do sleep 1; done
 fi
 
