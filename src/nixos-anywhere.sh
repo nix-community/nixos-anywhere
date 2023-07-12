@@ -86,7 +86,7 @@ while [[ $# -gt 0 ]]; do
     ssh_args+=("-p" "$2")
     shift
     ;;
-  -o | --ssh-option)
+  --ssh-option)
     ssh_args+=("-o" "$2")
     shift
     ;;
