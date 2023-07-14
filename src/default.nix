@@ -16,6 +16,7 @@ let
   runtimeInputs = [
     gitMinimal # for git flakes
     rsync
+    # pinned because nix-copy-closure hangs if ControlPath provided for SSH: https://github.com/NixOS/nix/issues/8480
     nixVersions.nix_2_16
     coreutils
     curl # when uploading tarballs
