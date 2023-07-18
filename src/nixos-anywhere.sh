@@ -423,7 +423,9 @@ export PATH=\$PATH:/run/current-system/sw/bin
 mkdir -p /mnt/tmp
 chmod 777 /mnt/tmp
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
-zpool export -a || : # we always want to export the zfs pools so people can boot from it without force import
+if command -v zpool >/dev/null; then
+  zpool export -a || : # we always want to export the zfs pools so people can boot from it without force import
+fi
 # We will reboot in background so we can cleanly finish the script before the hosts go down.
 # This makes integration into scripts easier
 nohup bash -c '${maybe_reboot}' >/dev/null &
