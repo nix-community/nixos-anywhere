@@ -25,7 +25,7 @@ Options:
   to be asked for password entry during LUKS configuration.
 * --no-reboot
   do not reboot after installation, allowing further customization of the target installation.
-* --kexec <url>
+* --kexec <path>
   use another kexec tarball to bootstrap NixOS
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
