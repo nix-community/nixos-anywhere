@@ -83,7 +83,23 @@ example uses a local directory on the source machine.
 5. On the target machine, make sure you have access as root via ssh by adding
    your SSH key to the file `authorized_keys` in the directory `/root/.ssh`
 
-6. You can now run **nixos-anywhere** from the command line as shown below,
+6. (Optional) Test your nixos and disko configuration:
+
+The following command will automatically test your nixos configuration and run
+disko inside a virtual machine, where
+
+- `<path to configuration>` is the path to the directory or repository
+  containing `flake.nix` and `disk-config.nix`
+
+- `<configuration name>` must match the name that immediately follows the text
+  `nixosConfigurations.` in the flake, as indicated by the comment in the
+  [example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)).
+
+```
+nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<configuration name> --vm-test
+```
+
+7. You can now run **nixos-anywhere** from the command line as shown below,
    where:
 
    - `<path to configuration>` is the path to the directory or repository
