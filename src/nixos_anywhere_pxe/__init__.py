@@ -1,8 +1,9 @@
-#!/usr/bin/env python3
+from __future__ import annotations
 
 import argparse
 import binascii
 import gzip
+import ipaddress
 import json
 import os
 import shutil
@@ -13,23 +14,28 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import IO, Iterator, List, NoReturn, Optional, Tuple, Union
+from typing import IO, TYPE_CHECKING, NoReturn
 
-from netaddr import AddrFormatError, IPAddress, IPNetwork
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
-FILE = Union[None, int, IO]
+FILE = None | int | IO
 
 NIXOS_ANYWHERE_SH = Path(__file__).parent.absolute() / "src/nixos-anywhere.sh"
 
+
+
 def run(
-    cmd: Union[str, list[str]],
-    input: Optional[str] = None,
+    cmd: str | list[str],
+    input: str | None = None,  # noqa: A002
     stdout: FILE = None,
     stderr: FILE = None,
-    extra_env: dict[str, str] = {},
-    cwd: Union[None, str, Path] = None,
+    extra_env: dict[str, str] | None = None,
+    cwd: None | str | Path = None,
     check: bool = True,
 ) -> subprocess.CompletedProcess[str]:
+    if extra_env is None:
+        extra_env = {}
     shell = False
     if isinstance(cmd, str):
         cmd = [cmd]
@@ -56,7 +62,7 @@ class DhcpEvent:
     action: str
     mac_address: str
     ip_addr: str
-    hostname: Optional[str] = None
+    hostname: str | None = None
 
 
 class Dnsmasq:
@@ -66,7 +72,7 @@ class Dnsmasq:
 
     def next_dhcp_event(self) -> Iterator[DhcpEvent]:
         while True:
-            with open(self.dhcp_fifo_path, "r") as f:
+            with self.dhcp_fifo_path.open() as f:
                 for fifo_line in f:
                     raw_event = json.loads(fifo_line)
                     yield DhcpEvent(**raw_event)
@@ -92,7 +98,8 @@ class Dnsmasq:
 # 	even if dnsmasq is configured to change UID to an unprivileged user.
 @contextmanager
 def start_dnsmasq(
-    interface: str, dhcp_range: Tuple[IPAddress, IPAddress]
+    interface: str,
+    dhcp_range: tuple[ipaddress.IPv4Address, ipaddress.IPv4Address],
 ) -> Iterator[Dnsmasq]:
     with TemporaryDirectory(prefix="dnsmasq.") as _temp:
         temp = Path(_temp)
@@ -111,7 +118,7 @@ with open("{fifo}", "w") as f:
     if len(sys.argv) >= 5:
         data["hostname"] = sys.argv[4]
     print(json.dumps(data), file=f)
-"""
+""",
         )
         dhcp_script.chmod(0o700)
         conf = temp / "dnsmasq.conf"
@@ -126,7 +133,7 @@ dhcp-range={dhcp_range[0]},{dhcp_range[1]},12h
 interface={interface}
 port=0
 dhcp-script={dhcp_script}
-        """
+        """,
         )
         import time
 
@@ -144,14 +151,15 @@ dhcp-script={dhcp_script}
                 process.terminate()
                 try:
                     process.wait(timeout=4)
-                    return
                 except subprocess.TimeoutExpired:
                     process.kill()
+                else:
+                    return
 
 
 @contextmanager
 def start_pixiecore(
-    server_ip: IPAddress,
+    server_ip: ipaddress.IPv4Address,
     port: int,
     ssh_public_key: Path,
     pxe_image_store_path: Path,
@@ -166,7 +174,7 @@ def start_pixiecore(
         uncompressed_initrd_file = temp / "extra-initrd.cpio"
         with uncompressed_initrd_file.open("w+") as f:
             run(
-                ["cpio", "-o", "-H" "newc"],
+                ["cpio", "-o", "-Hnewc"],
                 cwd=extra_initrd_root,
                 stdout=f,
                 input="./\n./ssh\n./ssh/authorized_keys",
@@ -175,9 +183,11 @@ def start_pixiecore(
 
         # compression is needed here since at least the UEFI implementation used
         # in qemu does not like uncompressed.
-        with uncompressed_initrd_file.open(mode="rb") as f_in:
-            with gzip.open(compressed_initrd_file, "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        with (
+            uncompressed_initrd_file.open(mode="rb") as f_in,
+            gzip.open(compressed_initrd_file, "wb") as f_out,
+        ):
+            shutil.copyfileobj(f_in, f_out)
 
         init = (pxe_image_store_path / "init").resolve()
         cmdline = (pxe_image_store_path / "kernel-params").read_text()
@@ -191,9 +201,7 @@ def start_pixiecore(
                     "pixiecore",
                     "boot",
                     kernel,
-                ]
-                + initrds
-                + [
+                    *initrds,
                     "--cmdline",
                     cmdline,
                     "--debug",
@@ -205,7 +213,7 @@ def start_pixiecore(
                     "--status-port",
                     port,
                 ],
-            )
+            ),
         )
         print(f"spawn {' '.join(args)}")
         with subprocess.Popen(args, text=True) as process:
@@ -215,9 +223,10 @@ def start_pixiecore(
                 process.terminate()
                 try:
                     process.wait(timeout=4)
-                    return
                 except subprocess.TimeoutExpired:
                     process.kill()
+                else:
+                    return
 
 
 @dataclass
@@ -225,12 +234,12 @@ class Options:
     flake: str
     netboot_image_flake: str
     dhcp_interface: str
-    dhcp_server_ip: IPAddress
+    dhcp_server_ip: ipaddress.IPv4Address
     dhcp_subnet: int
-    dhcp_range: Tuple[IPAddress, IPAddress]
+    dhcp_range: tuple[ipaddress.IPv4Address, ipaddress.IPv4Address]
     pixiecore_http_port: int
     pause_after_completion: bool
-    nixos_anywhere_args: List[str]
+    nixos_anywhere_args: list[str]
 
 
 def die(msg: str) -> NoReturn:
@@ -240,7 +249,7 @@ def die(msg: str) -> NoReturn:
 
 def parse_args(args: list[str]) -> Options:
     parser = argparse.ArgumentParser(
-        description="Note: All arguments not listed here will be passed on to nixos-anywhere (see `nixos-anywhere --help`)."
+        description="Note: All arguments not listed here will be passed on to nixos-anywhere (see `nixos-anywhere --help`).",
     )
     parser.add_argument(
         "--flake",
@@ -270,22 +279,22 @@ def parse_args(args: list[str]) -> Options:
     )
     parser.add_argument(
         "--pause-after-completion",
-        help="Whether to wait for user confimation before tearing down the network setup once the installation completed",
+        help="Whether to wait for user confirmation before tearing down the network setup once the installation completed",
         action="store_true",
     )
 
     parsed, unknown_args = parser.parse_known_args(args)
     try:
-        dhcp_subnet = IPNetwork(parsed.dhcp_subnet)
-    except AddrFormatError as e:
+        dhcp_subnet = ipaddress.ip_network(parsed.dhcp_subnet)
+    except ValueError as e:
         die(f"subnet specified in --dhcp-subnet is not valid: {e}")
 
     if dhcp_subnet.version != 4:
         die(
-            "Sorry. Only ipv4 subnets are supported just now because of compatibility with older bios firmware"
+            "Sorry. Only ipv4 subnets are supported just now because of compatibility with older bios firmware",
         )
 
-    hosts = dhcp_subnet.iter_hosts()
+    hosts = dhcp_subnet.hosts()
     try:
         dhcp_server_ip = next(hosts)
     except StopIteration:
@@ -296,11 +305,11 @@ def parse_args(args: list[str]) -> Options:
         stop_ip = start_ip
     except StopIteration:
         die(f"not enough ip addresses found in dhcp-subnet: {parsed.dhcp_subnet}")
-    for _ in range(50):
-        try:
+    try:
+        for _ in range(50):
             stop_ip = next(hosts)
-        except StopIteration:
-            break
+    except StopIteration:
+        pass
 
     return Options(
         flake=parsed.flake,
@@ -323,8 +332,8 @@ class SshKey:
 
 @contextmanager
 def ssh_private_key() -> Iterator[SshKey]:
-    with TemporaryDirectory(suffix="ssh-keys") as dir:
-        temp = Path(dir)
+    with TemporaryDirectory(suffix="ssh-keys") as _dir:
+        temp = Path(_dir)
         private_key = temp / "id_ed25519"
         public_key = temp / "id_ed25519.pub"
         run(["ssh-keygen", "-t", "ed25519", "-f", str(private_key), "-N", ""])
@@ -332,7 +341,10 @@ def ssh_private_key() -> Iterator[SshKey]:
 
 
 def nixos_anywhere(
-    ip: str, flake: str, ssh_private_key: Path, nixos_anywhere_args: List[str]
+    ip: str,
+    flake: str,
+    ssh_private_key: Path,
+    nixos_anywhere_args: list[str],
 ) -> None:
     run(
         [
@@ -360,7 +372,8 @@ def configure_network_interface(interface: str, ip_addr: str) -> Iterator[None]:
         if has_nmcli:
             # Don't fail execution if networkmanager is not running
             subprocess.run(
-                ["nmcli", "device", "set", interface, "managed", "no"], check=False
+                ["nmcli", "device", "set", interface, "managed", "no"],
+                check=False,
             )
         # FIXME find a way to avoid this. having multiple ip addresses messes up pixieboot just now.
         run(["ip", "addr", "flush", "dev", interface])
@@ -384,13 +397,14 @@ def build_pxe_image(netboot_image_flake: str) -> Path:
     )
     return Path(res.stdout.strip())
 
-def pause():
-    print("")
+
+def pause() -> None:
+    print()
     # no clue how to flush stdin with python. Gonna wait for a specific string instead (as opposed to wait for [enter]).
     answer = ""
-    while (answer != "continue"):
+    while answer != "continue":
         answer = input(
-                "Answer 'continue' to terminate this script and tear down the network to the server: "
+            "Answer 'continue' to terminate this script and tear down the network to the server: ",
         )
 
 
@@ -403,55 +417,59 @@ def dispatch_dnsmasq(
     seen_devices = set()
     for event in dnsmasq.next_dhcp_event():
         print(f"{event.action} client (mac: {event.mac_address}, ip: {event.ip_addr}")
-        if event.action == "add" or event.action == "old":
-            if event.hostname != random_hostname:
-                print(
-                    f"ignore client {event.hostname or event.mac_address} != {random_hostname}"
-                )
-                continue
-            if event.mac_address in seen_devices:
-                print(f"skip already seen device with mac address {event.mac_address}")
-            seen_devices.add(event.mac_address)
-
+        if event.action not in ("add", "old"):
+            continue
+        if event.hostname != random_hostname:
             print(
-                "Will now run nixos-remote on this target. You can also try to connect to the machine by doing:"
+                f"ignore client {event.hostname or event.mac_address} != {random_hostname}",
             )
+            continue
+        if event.mac_address in seen_devices:
+            print(f"skip already seen device with mac address {event.mac_address}")
+        seen_devices.add(event.mac_address)
+
+        print(
+            "Will now run nixos-remote on this target. You can also try to connect to the machine by doing:",
+        )
+        print(f"  ssh -i {ssh_key.private_key} root@{event.ip_addr}")
+        nixos_anywhere(
+            event.ip_addr,
+            options.flake,
+            ssh_key.private_key,
+            options.nixos_anywhere_args,
+        )
+        # to avoid having to reboot physical machines all the time because networking disappears:
+        if options.pause_after_completion:
+            print("You can connect to the machine by doing:")
             print(f"  ssh -i {ssh_key.private_key} root@{event.ip_addr}")
-            nixos_anywhere(
-                event.ip_addr,
-                options.flake,
-                ssh_key.private_key,
-                options.nixos_anywhere_args,
-            )
-            # to avoid having to reboot physical machines all the time because networking disappears:
-            if options.pause_after_completion:
-                print("You can connect to the machine by doing:")
-                print(f"  ssh -i {ssh_key.private_key} root@{event.ip_addr}")
-                pause()
-            return
+            pause()
+        return
 
 
-def run_nixos_anywhere(options: Options):
+def run_nixos_anywhere(options: Options) -> None:
     pxe_image_store_path = build_pxe_image(options.netboot_image_flake)
 
     random_hostname = f"nixos-pxe-{binascii.b2a_hex(os.urandom(4)).decode('ascii')}"
-    with configure_network_interface(
-        options.dhcp_interface, f"{options.dhcp_server_ip}/{options.dhcp_subnet}"
-    ), ssh_private_key() as ssh_key:
-        with start_pixiecore(
+    with (
+        configure_network_interface(
+            options.dhcp_interface,
+            f"{options.dhcp_server_ip}/{options.dhcp_subnet}",
+        ),
+        ssh_private_key() as ssh_key,
+        start_pixiecore(
             options.dhcp_server_ip,
             options.pixiecore_http_port,
             ssh_key.public_key,
             pxe_image_store_path,
             random_hostname,
-        ), start_dnsmasq(options.dhcp_interface, options.dhcp_range) as dnsmasq:
-            print("Waiting for a client to install nixos to. Cancel with Ctrl-C!")
-            try:
-                dispatch_dnsmasq(dnsmasq, options, ssh_key, random_hostname)
-            except Exception as e:
-                print(e)
-            except KeyboardInterrupt:
-                print("terminating...")
+        ),
+        start_dnsmasq(options.dhcp_interface, options.dhcp_range) as dnsmasq,
+    ):
+        print("Waiting for a client to install nixos to. Cancel with Ctrl-C!")
+        try:
+            dispatch_dnsmasq(dnsmasq, options, ssh_key, random_hostname)
+        except KeyboardInterrupt:
+            print("terminating...")
 
 
 # switch to https://pojntfx.github.io/go-isc-dhcp/ ?
