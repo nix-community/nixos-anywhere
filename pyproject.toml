@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nixos-anywhere-pxe"
+description = "Install NixOS with PXE"
+dynamic = ["version"]
+scripts = { nixos-anywhere-pxe = "nixos_anywhere_pxe:main"}
+
+[tool.pytest.ini_options]
+addopts = "--cov . --cov-report term --cov-fail-under=100 --no-cov-on-fail"
+
+[tool.mypy]
+python_version = "3.10"
+warn_redundant_casts = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = "setuptools.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pytest.*"
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 88
+
+select = ["E", "F", "I"]
+ignore = [ "E501" ]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  # The following are specific to Black, you probably don't want those.
+  | blib2to3
+  | tests/data
+  | profiling
+)/
+'''

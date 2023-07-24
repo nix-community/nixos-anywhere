@@ -3,6 +3,7 @@
 import argparse
 import binascii
 import gzip
+import ipaddress
 import json
 import os
 import shutil
@@ -15,11 +16,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import IO, Iterator, List, NoReturn, Optional, Tuple, Union
 
-from netaddr import AddrFormatError, IPAddress, IPNetwork
-
 FILE = Union[None, int, IO]
 
 NIXOS_ANYWHERE_SH = Path(__file__).parent.absolute() / "src/nixos-anywhere.sh"
+
+
 
 def run(
     cmd: Union[str, list[str]],
@@ -92,7 +93,7 @@ class Dnsmasq:
 # 	even if dnsmasq is configured to change UID to an unprivileged user.
 @contextmanager
 def start_dnsmasq(
-    interface: str, dhcp_range: Tuple[IPAddress, IPAddress]
+    interface: str, dhcp_range: Tuple[ipaddress.IPv4Address, ipaddress.IPv4Address]
 ) -> Iterator[Dnsmasq]:
     with TemporaryDirectory(prefix="dnsmasq.") as _temp:
         temp = Path(_temp)
@@ -151,7 +152,7 @@ dhcp-script={dhcp_script}
 
 @contextmanager
 def start_pixiecore(
-    server_ip: IPAddress,
+    server_ip: ipaddress.IPv4Address,
     port: int,
     ssh_public_key: Path,
     pxe_image_store_path: Path,
@@ -225,9 +226,9 @@ class Options:
     flake: str
     netboot_image_flake: str
     dhcp_interface: str
-    dhcp_server_ip: IPAddress
+    dhcp_server_ip: ipaddress.IPv4Address
     dhcp_subnet: int
-    dhcp_range: Tuple[IPAddress, IPAddress]
+    dhcp_range: Tuple[ipaddress.IPv4Address, ipaddress.IPv4Address]
     pixiecore_http_port: int
     pause_after_completion: bool
     nixos_anywhere_args: List[str]
@@ -276,8 +277,8 @@ def parse_args(args: list[str]) -> Options:
 
     parsed, unknown_args = parser.parse_known_args(args)
     try:
-        dhcp_subnet = IPNetwork(parsed.dhcp_subnet)
-    except AddrFormatError as e:
+        dhcp_subnet = ipaddress.ip_network(parsed.dhcp_subnet)
+    except ValueError as e:
         die(f"subnet specified in --dhcp-subnet is not valid: {e}")
 
     if dhcp_subnet.version != 4:
@@ -285,7 +286,7 @@ def parse_args(args: list[str]) -> Options:
             "Sorry. Only ipv4 subnets are supported just now because of compatibility with older bios firmware"
         )
 
-    hosts = dhcp_subnet.iter_hosts()
+    hosts = dhcp_subnet.hosts()
     try:
         dhcp_server_ip = next(hosts)
     except StopIteration:
@@ -384,13 +385,14 @@ def build_pxe_image(netboot_image_flake: str) -> Path:
     )
     return Path(res.stdout.strip())
 
+
 def pause():
     print("")
     # no clue how to flush stdin with python. Gonna wait for a specific string instead (as opposed to wait for [enter]).
     answer = ""
-    while (answer != "continue"):
+    while answer != "continue":
         answer = input(
-                "Answer 'continue' to terminate this script and tear down the network to the server: "
+            "Answer 'continue' to terminate this script and tear down the network to the server: "
         )
 
 
