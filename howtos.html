@@ -151,7 +151,7 @@
 <h2 id="contents"><a class="header" href="#contents">Contents</a></h2>
 <p><a href="#installing-on-a-machine-with-no-operating-system">Installing on a machine with no operating system</a></p>
 <p><a href="#using-your-own-kexec-image">Using your own kexec image</a></p>
-<p><a href="#using-nixos-anywhere-without-flakes">Using nixos-anywhere without flakes</a></p>
+<p><a href="#secrets-and-full-disk-encryption">Secrets and full disk encryption</a></p>
 <h2 id="installing-on-a-machine-with-no-operating-system"><a class="header" href="#installing-on-a-machine-with-no-operating-system">Installing on a machine with no operating system</a></h2>
 <p>If your machine doesn't currently have an operating system installed, you can
 still run <code>nixos-anywhere</code> remotely to automate the install. To do this, you
@@ -240,6 +240,59 @@ configuration:</p>
   boot.binfmt.emulatedSystems = [ &quot;aarch64-linux&quot; ];
 }
 </code></pre>
+<h2 id="secrets-and-full-disk-encryption"><a class="header" href="#secrets-and-full-disk-encryption">Secrets and full disk encryption</a></h2>
+<p>The <code>nixos-anywhere</code> utility offers the capability to install secrets onto a
+target machine. This feature is particularly beneficial when you want to
+bootstrap secrets management tools such as
+<a href="https://github.com/Mic92/sops-nix">sops-nix</a> or
+<a href="https://github.com/ryantm/agenix">agenix</a>, which rely on machine-specific
+secrets to decrypt other uploaded secrets.</p>
+<h3 id="example-decrypting-an-openssh-host-key-with-pass"><a class="header" href="#example-decrypting-an-openssh-host-key-with-pass">Example: Decrypting an OpenSSH Host Key with pass</a></h3>
+<p>In this example, we demonstrate how to use a script to decrypt an OpenSSH host
+key from the <code>pass</code> password manager and subsequently pass it to
+<code>nixos-anywhere</code> during the installation process:</p>
+<pre><code class="language-bash">#!/usr/bin/env bash
+
+# Create a temporary directory
+temp=$(mktemp -d)
+
+# Function to cleanup temporary directory on exit
+cleanup() {
+  rm -rf &quot;$temp&quot;
+}
+trap cleanup EXIT
+
+# Create the directory where sshd expects to find the host keys
+install -d -m755 &quot;$temp/etc/ssh&quot;
+
+# Decrypt your private key from the password store and copy it to the temporary directory
+pass ssh_host_ed25519_key &gt; &quot;$temp/etc/ssh/ssh_host_ed25519_key&quot;
+
+# Set the correct permissions so sshd will accept the key
+chmod 600 &quot;$temp/etc/ssh/ssh_host_ed25519_key&quot;
+
+# Install NixOS to the host system with our secrets
+nixos-anywhere --extra-files &quot;$temp&quot; --flake '.#your-host' root@yourip
+</code></pre>
+<h3 id="example-uploading-disk-encryption-secrets"><a class="header" href="#example-uploading-disk-encryption-secrets">Example: Uploading Disk Encryption Secrets</a></h3>
+<p>In a similar vein, <code>nixos-anywhere</code> can upload disk encryption secrets, which
+are necessary during formatting with disko. Here's an example that demonstrates
+how to provide your disk encryption password as a file or via the <code>pass</code> utility
+to <code>nixos-anywhere</code>:</p>
+<pre><code class="language-bash"># Write your disk encryption password to a file
+echo &quot;my-super-safe-password&quot; &gt; /tmp/disk-1.key
+
+# Call nixos-anywhere with disk encryption keys
+nixos-anywhere \
+  --disk-encryption-keys /tmp/disk-1.key /tmp/disk-1.key \
+  --disk-encryption-keys /tmp/disk-2.key &lt;(pass my-disk-encryption-password) \
+  --flake '.#your-host' \
+  root@yourip
+</code></pre>
+<p>In the above example, replace <code>&quot;my-super-safe-password&quot;</code> with your actual
+encryption password, and <code>my-disk-encryption-password</code> with the relevant entry
+in your pass password store. Also, ensure to replace <code>'.#your-host'</code> and
+<code>root@yourip</code> with your actual flake and IP address, respectively.</p>
 
                     </main>
 
