@@ -68,6 +68,10 @@ nix_options=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
 )
+nix_build_options=(
+  --print-out-paths
+  --no-link
+)
 substitute_on_destination=y
 ssh_private_key_file=
 ssh_tty_param="-T"
@@ -178,6 +182,7 @@ fi
 
 if [[ ${substitute_on_destination-n} == "y" ]]; then
   nix_copy_options+=("--substitute-on-destination")
+  nix_build_options+=("--builders-use-substitutes")
 fi
 
 # ssh wrapper
@@ -196,9 +201,8 @@ nix_copy() {
 }
 nix_build() {
   NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere" nix build \
-    --print-out-paths \
-    --no-link \
     "${nix_options[@]}" \
+    "${nix_build_options[@]}" \
     "$@"
 }
 
