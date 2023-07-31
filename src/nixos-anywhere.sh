@@ -46,6 +46,8 @@ Options:
   URL of the source Nix store to copy the nixos and disko closure from
 * --build-on-remote
   build the closure on the remote machine instead of locally and copy-closuring it
+* --legacy-ssh
+  use nix "ssh://" protocol instead of "ssh-ng://"
 * --vm-test
   build the system and test the disk configuration inside a VM without installing it to the target.
 USAGE
@@ -74,6 +76,7 @@ nix_build_options=(
 )
 substitute_on_destination=y
 ssh_private_key_file=
+ssh_store_protocol="ssh-ng"
 ssh_tty_param="-T"
 post_kexec_ssh_port=22
 
@@ -160,6 +163,9 @@ while [[ $# -gt 0 ]]; do
     ;;
   --build-on-remote)
     build_on_remote=y
+    ;;
+  --legacy_ssh)
+    ssh_store_protocol="ssh"
     ;;
   --vm-test)
     vm_test=y
@@ -398,11 +404,11 @@ if [[ -z ${disko_script-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
   step Building disko script
   disko_script=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
-      --builders "ssh://$ssh_connection $is_arch-linux $ssh_key_dir/nixos-anywhere - - - - $pubkey "
+      --builders "$ssh_store_protocol://$ssh_connection $is_arch-linux $ssh_key_dir/nixos-anywhere - - - - $pubkey "
   )
 fi
 step Formatting hard drive with disko
-nix_copy --to "ssh://$ssh_connection" "$disko_script"
+nix_copy --to "$ssh_store_protocol://$ssh_connection" "$disko_script"
 ssh_ "$disko_script"
 
 if [[ ${stop_after_disko-n} == "y" ]]; then
@@ -416,11 +422,11 @@ if [[ -z ${nixos_system-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
   step Building the system closure
   nixos_system=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
-      --builders "ssh://$ssh_connection?remote-store=local?root=/mnt $is_arch-linux $ssh_key_dir/nixos-anywhere - - - - $pubkey "
+      --builders "$ssh_store_protocol://$ssh_connection?remote-store=local?root=/mnt $is_arch-linux $ssh_key_dir/nixos-anywhere - - - - $pubkey "
   )
 fi
 step Uploading the system closure
-nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
+nix_copy --to "$ssh_store_protocol://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
 
 if [[ -n ${extra_files-} ]]; then
   if [[ -d $extra_files ]]; then
