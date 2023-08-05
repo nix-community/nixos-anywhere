@@ -60,8 +60,7 @@ step() {
   echo "### $* ###"
 }
 
-default_kexec_url=https://github.com/nix-community/nixos-images/releases/download/nixos-23.05/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz
-kexec_url="$default_kexec_url"
+kexec_url=""
 enable_debug=""
 maybe_reboot="sleep 6 && reboot"
 nix_options=(
@@ -337,8 +336,15 @@ if [[ ${is_os-n} != "Linux" ]]; then
 fi
 
 if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
-  if [[ ${is_arch-n} != "x86_64" ]] && [[ $kexec_url == "$default_kexec_url" ]]; then
-    abort "The default kexec image only support x86_64 cpus. Checkout https://github.com/numtide/nixos-anywhere/#using-your-own-kexec-image for more information."
+  if [[ $kexec_url == "" ]]; then
+    case "${is_arch-unknown}" in
+    x86_64 | aarch64)
+      kexec_url="https://github.com/nix-community/nixos-images/releases/download/nixos-23.05/nixos-kexec-installer-noninteractive-${is_arch}-linux.tar.gz"
+      ;;
+    *)
+      abort "Unsupported architecture: ${is_arch}. Our default kexec images only support x86_64 and aarch64 cpus. Checkout https://github.com/numtide/nixos-anywhere/#using-your-own-kexec-image for more information."
+      ;;
+    esac
   fi
 
   step Switching system into kexec
