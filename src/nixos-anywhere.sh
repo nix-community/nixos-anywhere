@@ -188,13 +188,13 @@ ssh_() {
 }
 
 nix_copy() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere" nix copy \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${ssh_args[*]}" nix copy \
     "${nix_options[@]}" \
     "${nix_copy_options[@]}" \
     "$@"
 }
 nix_build() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere" nix build \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${ssh_args[*]}" nix build \
     --print-out-paths \
     --no-link \
     "${nix_options[@]}" \
