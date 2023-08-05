@@ -92,14 +92,14 @@ By default, `nixos-anywhere` downloads the kexec image from the
 [NixOS images repository](https://github.com/nix-community/nixos-images#kexec-tarballs).
 
 However, you can provide your own `kexec` image file if you need to use a
-different one. This is particularly useful for architectures other than
-`x86_64`, since they don't have a pre-build image.
+different one. This is particularly useful for architectures other than `x86_64`
+and `aarch64`, since they don't have a pre-build image.
 
 To do this, use the `--kexec` command line switch followed by the path to your
 image file. The image will be uploaded prior to execution.
 
 Here's an example command that demonstrates how to use a custom kexec image with
-`nixos-anywhere` for aarch64 instead of the default `x86_64` architecture:
+`nixos-anywhere`:
 
 ```
 nix run github:numtide/nixos-anywhere -- \
