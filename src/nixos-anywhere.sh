@@ -242,7 +242,6 @@ elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
   if [[ ! -e ${disko_script} ]] || [[ ! -e ${nixos_system} ]]; then
     abort "${disko_script} and ${nixos_system} must be existing store-paths"
   fi
-  :
 else
   abort "flake must be set"
 fi
@@ -429,7 +428,10 @@ if [[ -n ${extra_files-} ]]; then
     extra_files="$extra_files/"
   fi
   step Copying extra files
-  rsync -rlpv -FF -e "ssh -i \"$ssh_key_dir\"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" "$extra_files" "${ssh_connection}:/mnt/"
+  rsync -rlpv -FF \
+    -e "ssh -i \"$ssh_key_dir\"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_args[*]}" \
+    "$extra_files" \
+    "${ssh_connection}:/mnt/"
   ssh_ "chmod 755 /mnt" # rsync also changes permissions of /mnt
 fi
 
