@@ -386,6 +386,11 @@ SSH
 fi
 for path in "${!disk_encryption_keys[@]}"; do
   step "Uploading ${disk_encryption_keys[$path]} to $path"
+  [[ "${disk_encryption_keys[$path]}" != *"\n" ]] || {
+    echo "ERROR: disk encryption key $path ends in a trailing newline,
+ this would make it impossible to enter this key at a prompt."
+    exit 1
+  }
   ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
 done
 
