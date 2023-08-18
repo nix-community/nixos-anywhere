@@ -192,7 +192,9 @@ Once you’ve created the disk configuration and the flake, you can run the tool
 with a single nix command, which may look like this:
 
 ```
-nix run github:numtide/nixos-anywhere -- --flake .#hetzner-cloud root@135.181.254.201
+  nix run github:numtide/nixos-anywhere -- --flake <flake URL>     <SSH destination>
+# Example:
+# nix run github:numtide/nixos-anywhere -- --flake .#hetzner-cloud root@135.181.254.201
 ```
 
 Note that this command references the URL of your flake, in this case `.#`,
@@ -205,7 +207,9 @@ need to make changes to the configuration in future, you should make the changes
 in the flake, and rebuild using the --flake option as shown below:
 
 ```
-nixos-rebuild --flake <flake URL> switch
+  nixos-rebuild --flake <flake URL>     --target-host <SSH destination>    switch
+# Example:
+# nixos-rebuild --flake .#hetzner-cloud --target-host root@135.181.254.201 switch
 ```
 
 The [Quickstart Guide](./docs/quickstart.md) gives more information on how to
