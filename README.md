@@ -110,7 +110,7 @@ Here’s an example of a simple disk configuration:
             type = "EF02"; # for grub MBR
           };
           ESP = {
-            size = "511M";
+            size = "512M";
             content = {
               type = "filesystem";
               format = "vfat";
