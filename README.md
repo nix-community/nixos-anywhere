@@ -220,6 +220,11 @@ hetzner cloud servers as well as dedicated machines on his
 [disko](https://github.com/nix-community/disko) tool to handle the partitioning
 and formatting of the disks.
 
+## Contact
+
+For questions, come join us in the
+[nixos-anywhere](https://matrix.to/#/#nixos-anywhere:nixos.org) matrix room.
+
 ## Licensing and Contribution details
 
 This software is provided free under the
