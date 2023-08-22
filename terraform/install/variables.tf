@@ -4,13 +4,13 @@ variable "kexec_tarball_url" {
   default     = null
 }
 
-# To make this re-usuable we maybe should accept a store path here?
+# To make this re-usable we maybe should accept a store path here?
 variable "nixos_partitioner" {
   type        = string
   description = "nixos partitioner and mount script"
 }
 
-# To make this re-usuable we maybe should accept a store path here?
+# To make this re-usable we maybe should accept a store path here?
 variable "nixos_system" {
   type        = string
   description = "The nixos system to deploy"
@@ -53,6 +53,6 @@ variable "debug_logging" {
 
 variable "stop_after_disko" {
   type        = bool
-  description = "Exit after disko formating"
+  description = "Exit after disko formatting"
   default     = false
 }
