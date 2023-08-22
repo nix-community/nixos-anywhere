@@ -4,13 +4,13 @@ variable "kexec_tarball_url" {
   default = null
 }
 
-# To make this re-usuable we maybe should accept a store path here?
+# To make this re-usable we maybe should accept a store path here?
 variable "nixos_partitioner_attr" {
   type        = string
   description = "Nixos partitioner and mount script i.e. your-flake#nixosConfigurations.your-evaluated-nixos.config.system.build.diskoNoDeps or just your-evaluated.config.system.build.diskNoDeps. `config.system.build.diskNoDeps` is provided by the disko nixos module"
 }
 
-# To make this re-usuable we maybe should accept a store path here?
+# To make this re-usable we maybe should accept a store path here?
 variable "nixos_system_attr" {
   type        = string
   description = "The nixos system to deploy i.e. your-flake#nixosConfigurations.your-evaluated-nixos.config.system.build.toplevel or just your-evaluated-nixos.config.system.build.toplevel if you are not using flakes"
@@ -71,6 +71,6 @@ variable "debug_logging" {
 
 variable "stop_after_disko" {
   type        = bool
-  description = "Exit after disko formating"
+  description = "Exit after disko formatting"
   default     = false
 }

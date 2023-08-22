@@ -30,7 +30,7 @@ Options:
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
 * --stop-after-disko
-  exit after disko formating, you can then proceed to install manually or some other way
+  exit after disko formatting, you can then proceed to install manually or some other way
 * --extra-files <file...>
   files to copy into the new nixos installation
 * --disk-encryption-keys <remote_path> <local_path>
