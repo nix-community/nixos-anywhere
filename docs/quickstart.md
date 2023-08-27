@@ -175,12 +175,26 @@ nix flake update
 ```
 
 The new server's configurations are defined in the flake. `nixos-anywhere` does
-not create `etc/nixos/configuration.nix`since it expects the server to be
+not create `etc/nixos/configuration.nix`, since it expects the server to be
 administered remotely. Any future changes to the configuration should be made to
-the flake, and you would reference this flake when doing the rebuild:
+the flake, and you would reference this flake when doing the nixos-rebuild
+command or a deployment tool of your choice i.e.
+[colmena](https://github.com/zhaofengli/colmena),
+[nixinate](https://github.com/MatthewCroughan/nixinate).
+
+This example can be run from the machine itself for updating (replace
+`<URL to your flake>` with your flake i.e. `.#` if your flake is in the current
+directory):
 
 ```
-nixos-rebuild --flake <URL to your flake> switch
+nixos-rebuild switch --flake <URL to your flake>
+```
+
+You can also run `nixos-rebuild` to update a machine remotly, if you have set up
+an openssh server and your ssh key for the root user:
+
+```
+nixos-rebuild switch --flake <URL to your flake> --target-host "root@<ip address>"
 ```
 
 For more information on different use cases of **nixos-anywhere** please refer
