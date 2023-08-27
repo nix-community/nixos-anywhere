@@ -306,10 +306,20 @@ directory containing the flake to update <code>flake.lock</code> before rerunnin
 <pre><code>nix flake update
 </code></pre>
 <p>The new server's configurations are defined in the flake. <code>nixos-anywhere</code> does
-not create <code>etc/nixos/configuration.nix</code>since it expects the server to be
+not create <code>etc/nixos/configuration.nix</code>, since it expects the server to be
 administered remotely. Any future changes to the configuration should be made to
-the flake, and you would reference this flake when doing the rebuild:</p>
-<pre><code>nixos-rebuild --flake &lt;URL to your flake&gt; switch
+the flake, and you would reference this flake when doing the nixos-rebuild
+command or a deployment tool of your choice i.e.
+<a href="https://github.com/zhaofengli/colmena">colmena</a>,
+<a href="https://github.com/MatthewCroughan/nixinate">nixinate</a>.</p>
+<p>This example can be run from the machine itself for updating (replace
+<code>&lt;URL to your flake&gt;</code> with your flake i.e. <code>.#</code> if your flake is in the current
+directory):</p>
+<pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt;
+</code></pre>
+<p>You can also run <code>nixos-rebuild</code> to update a machine remotly, if you have set up
+an openssh server and your ssh key for the root user:</p>
+<pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt; --target-host &quot;root@&lt;ip address&gt;&quot;
 </code></pre>
 <p>For more information on different use cases of <strong>nixos-anywhere</strong> please refer
 to the <a href="./howtos.html">How to Guide</a>, and for more technical information and
