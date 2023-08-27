@@ -179,7 +179,7 @@ not create `etc/nixos/configuration.nix`, since it expects the server to be
 administered remotely. Any future changes to the configuration should be made to
 the flake, and you would reference this flake when doing the nixos-rebuild
 command or a deployment tool of your choice i.e.
-[colmenta](https://github.com/zhaofengli/colmena),
+[colmena](https://github.com/zhaofengli/colmena),
 [nixinate](https://github.com/MatthewCroughan/nixinate).
 
 This example can be run from the machine itself for updating (replace
