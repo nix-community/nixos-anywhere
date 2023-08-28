@@ -25,7 +25,7 @@
         inputs.treefmt-nix.flakeModule
       ];
 
-      perSystem = { config, ... }: {
+      perSystem = { self', config, lib, ... }: {
         treefmt = {
           projectRootFile = "flake.nix";
           programs.mdsh.enable = true;
@@ -37,6 +37,13 @@
           settings.formatter.shellcheck.options = [ "-s" "bash" ];
         };
         formatter = config.treefmt.build.wrapper;
+
+        checks =
+          let
+            packages = lib.mapAttrs' (n: lib.nameValuePair "package-${n}") self'.packages;
+            devShells = lib.mapAttrs' (n: lib.nameValuePair "devShell-${n}") self'.devShells;
+          in
+          packages // devShells;
       };
     };
 }
