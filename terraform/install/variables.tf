@@ -56,3 +56,9 @@ variable "stop_after_disko" {
   description = "Exit after disko formatting"
   default     = false
 }
+
+variable "extra_files_script" {
+  type        = string
+  description = "A script that prepares extra files to be copied to the target host during installation. The script expected to write all its files to the current directory. This directory is rsynced to the target host during installation to the / directory."
+  default     = null
+}

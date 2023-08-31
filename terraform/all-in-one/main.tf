@@ -25,6 +25,7 @@ module "install" {
   ssh_private_key        = var.install_ssh_key
   debug_logging          = var.debug_logging
   stop_after_disko       = var.stop_after_disko
+  extra_files_script     = var.extra_files_script
   instance_id            = var.instance_id
 }
 
