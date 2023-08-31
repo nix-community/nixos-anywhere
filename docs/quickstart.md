@@ -30,34 +30,61 @@ below.
 
 ## Steps required to run nixos-anywhere
 
-1. Create a directory for the flake and configuration files, and ensure flakes
-   are enabled on your system. The
-   [Nixos Wiki](https://nixos.wiki/wiki/Flakes#enable-flakes) describes how to
-   enable flakes.
+1. **Enable Flakes and Create a Directory**:
 
-2. In this directory, run the following command to create a flake.
+   - Ensure that flakes are enabled on your system. To enable flakes, refer to
+     the [NixOS Wiki](https://nixos.wiki/wiki/Flakes#enable-flakes).
+   - Create a directory to store the flake and configuration files.
 
-```
-nix flake init
-```
+2. **Initialize a Flake**: Within the newly-created directory, execute the
+   command:
 
-This will create a flake in a file named flake.nix. Edit the flake to suit your
-requirements. For a minimal installation, you can paste in the contents of the
-example flake from
-[here](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix).
+   ```bash
+   nix flake init
+   ```
 
-Lines 29 in the sample file reads:
+   This command will generate a `flake.nix` file. Modify this file according to
+   your requirements.
 
-```
-# change this to your ssh key
-            "CHANGE"
-```
+   - **For a Minimal Setup**:  
+      You can copy and paste the example flake contents available [here](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix).
+     This example is tailored for a virtual machine setup similar to one on [Hetzner Cloud](https://www.hetzner.com/cloud).
 
-Substitute  the text that reads `CHANGE` with your own SSH key. This is
-important, otherwise you will not be able to log on to the target machine after
-NixOS has been installed.
+     **Hardware-Specific Configuration**: If you're not using a virtual machine,
+     you'll need to generate a custom hardware configuration with
+     `nixos-generate-config`.
 
-3. In the same directory, create a file named `disk-config.nix`. This will be
+- **Getting `nixos-generate-config` on Target Machine**:
+
+  1. **Option 1**: If NixOS is not installed, boot into an installer without
+     first installing NixOS.
+  2. **Option 2**: Use the kexec tarball method, as described
+     [here](https://github.com/nix-community/nixos-images#kexec-tarballs).
+
+- **Generate Configuration**: Run the following command on the target machine:
+
+  ```bash
+  nixos-generate-config --no-filesystems --root /mnt
+  ```
+
+  This creates the necessary configuration files under `/mnt/etc/nixos/`, which
+  you can then customize as needed.
+
+3. **Find SSH Key Line**:  
+   if you cloned
+   [our nixos-anywhere-example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)
+   you will also replace the SSH key like this: In your configuration, locate
+   the line that reads:
+
+   ```bash
+   # change this to your ssh key
+               "CHANGE"
+   ```
+
+   Replace the text `CHANGE` with your own SSH key. This is crucial, as you will
+   not be able to log into the target machine post-installation without it.
+
+4. In the same directory, create a file named `disk-config.nix`. This will be
    used to specify the disk layout to the **disko** tool, which nixos-anywhere
    uses to partition, format and mount the disks. Again, for a simple
    installation you can paste the contents from the example
@@ -70,7 +97,7 @@ NixOS has been installed.
    For more information about this configuration, refer to the
    [disko documentation.](https://github.com/nix-community/disko)
 
-4. Run the following command to create the `flake.lock` file:
+5. Run the following command to create the `flake.lock` file:
 
 ```
 nix flake lock
@@ -80,10 +107,10 @@ Optionally, you can commit these files to a repo such as Github, or you can
 simply reference your local directory when you run **nixos-anywhere**. This
 example uses a local directory on the source machine.
 
-5. On the target machine, make sure you have access as root via ssh by adding
+6. On the target machine, make sure you have access as root via ssh by adding
    your SSH key to the file `authorized_keys` in the directory `/root/.ssh`
 
-6. (Optional) Test your nixos and disko configuration:
+7. (Optional) Test your nixos and disko configuration:
 
 The following command will automatically test your nixos configuration and run
 disko inside a virtual machine, where
@@ -99,7 +126,7 @@ disko inside a virtual machine, where
 nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<configuration name> --vm-test
 ```
 
-7. You can now run **nixos-anywhere** from the command line as shown below,
+8. You can now run **nixos-anywhere** from the command line as shown below,
    where:
 
    - `<path to configuration>` is the path to the directory or repository
