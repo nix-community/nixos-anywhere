@@ -382,6 +382,7 @@ have kexec support.</li>
 <p><a href="howtos.html#installing-on-a-machine-with-no-operating-system">Installing on a machine with no operating system</a></p>
 <p><a href="howtos.html#using-your-own-kexec-image">Using your own kexec image</a></p>
 <p><a href="howtos.html#secrets-and-full-disk-encryption">Secrets and full disk encryption</a></p>
+<p><a href="howtos.html#use-without-flakes">Use without flakes</a></p>
 <h2 id="installing-on-a-machine-with-no-operating-system"><a class="header" href="#installing-on-a-machine-with-no-operating-system">Installing on a machine with no operating system</a></h2>
 <p>If your machine doesn't currently have an operating system installed, you can
 still run <code>nixos-anywhere</code> remotely to automate the install. To do this, you
@@ -523,6 +524,34 @@ nixos-anywhere \
 encryption password, and <code>my-disk-encryption-password</code> with the relevant entry
 in your pass password store. Also, ensure to replace <code>'.#your-host'</code> and
 <code>root@yourip</code> with your actual flake and IP address, respectively.</p>
+<h2 id="use-without-flakes"><a class="header" href="#use-without-flakes">Use without flakes</a></h2>
+<p>While <code>nixos-anywhere</code> is designed to work optimally with Nix Flakes, it also
+supports the traditional approach without flakes. This document outlines how to
+use <code>nixos-anywhere</code> without relying on flakes.</p>
+<h3 id="generate-required-store-paths"><a class="header" href="#generate-required-store-paths">Generate Required Store Paths</a></h3>
+<p>Before you can use <code>nixos-anywhere</code> without flakes, you'll need to manually
+generate the paths for the NixOS system toplevel and disk image. The paths are
+generated using <code>nix-build</code> and are necessary for executing <code>nixos-anywhere</code>.</p>
+<h4 id="generating-nixos-system-toplevel"><a class="header" href="#generating-nixos-system-toplevel">Generating NixOS System Toplevel:</a></h4>
+<p>Execute the following command to generate the store path for the NixOS system
+toplevel:</p>
+<pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.toplevel'
+</code></pre>
+<p>This will output a path in <code>/nix/store</code> that corresponds to the system toplevel,
+which includes all the software and configurations for the system. Make note of
+this path for later use.</p>
+<h4 id="generating-disk-image-without-dependencies"><a class="header" href="#generating-disk-image-without-dependencies">Generating Disk Image without Dependencies:</a></h4>
+<p>To generate the disk image without dependencies, execute:</p>
+<pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.diskNoDeps'
+</code></pre>
+<p>This will also output a script path in <code>/nix/store</code> that will format your disk.
+Keep this path handy as well.</p>
+<h3 id="running-nixos-anywhere"><a class="header" href="#running-nixos-anywhere">Running NixOS-Anywhere</a></h3>
+<p>With both paths in hand, you can execute <code>nixos-anywhere</code> as follows:</p>
+<pre><code class="language-bash">nixos-anywhere --store-paths /nix/store/[your-toplevel-path] /nix/store/[your-disk-image-path]
+</code></pre>
+<p>Replace <code>[your-toplevel-path]</code> and <code>[your-disk-image-path]</code> with the
+corresponding store paths you generated earlier.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="support-matrix-nixos-anywhere"><a class="header" href="#support-matrix-nixos-anywhere">Support Matrix: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
 <img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">

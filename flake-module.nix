@@ -7,12 +7,12 @@
           cd docs
           workdir=$(${pkgs.coreutils}/bin/mktemp -d)
           trap 'rm -rf "$workdir"' EXIT
-          ${lib.getExe pkgs.mdbook} serve --dest-dir "$workdir"
+          ${pkgs.mdbook}/bin/mdbook serve --dest-dir "$workdir"
         '';
       }
       ''
         cp -r ${lib.cleanSource ./.}/* .
-        ${lib.getExe pkgs.mdbook} build --dest-dir "$out"
+        ${pkgs.mdbook}/bin/mdbook build --dest-dir "$out"
       '';
   };
 }
