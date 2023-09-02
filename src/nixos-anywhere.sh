@@ -228,6 +228,14 @@ if [[ -n ${flake-} ]]; then
   fi
   if [[ ${build_on_remote-n} == "n" ]]; then
     if [[ -n ${vm_test-} ]]; then
+      if [[ -n ${extra_files-} ]]; then
+        echo "--vm-test is not supported with --extra-files" >&2
+        exit 1
+      fi
+      if [[ -n ${disk_encryption_keys-} ]]; then
+        echo "--vm-test is not supported with --disk-encryption-keys" >&2
+        exit 1
+      fi
       exec nix build \
         --print-out-paths \
         --no-link \
