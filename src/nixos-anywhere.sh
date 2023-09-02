@@ -239,6 +239,11 @@ if [[ -n ${flake-} ]]; then
     nixos_system=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
   fi
 elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
+  if [[ -n ${vm_test-} ]]; then
+    echo "vm-test is not supported with --store-paths" >&2
+    echo "Please use --flake instead or build config.system.build.installTest of your nixos configuration manually" >&2
+    exit 1
+  fi
   if [[ ! -e ${disko_script} ]] || [[ ! -e ${nixos_system} ]]; then
     abort "${disko_script} and ${nixos_system} must be existing store-paths"
   fi
