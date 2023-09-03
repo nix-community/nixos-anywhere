@@ -17,6 +17,7 @@ resource "null_resource" "nixos-remote" {
       target_user = var.target_user
       target_host = var.target_host
       extra_files_script = var.extra_files_script
+      no_reboot = var.no_reboot
     }, var.extra_environment)
     command = "${path.module}/run-nixos-anywhere.sh ${join(" ", local.disk_encryption_key_scripts)}"
     quiet   = var.debug_logging

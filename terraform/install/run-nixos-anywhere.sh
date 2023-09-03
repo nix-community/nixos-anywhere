@@ -14,6 +14,9 @@ fi
 if [[ ${kexec_tarball_url-} != "" ]]; then
   args+=("--kexec" "${kexec_tarball_url}")
 fi
+if [[ ${no_reboot-} == "true" ]]; then
+  args+=("--no-reboot")
+fi
 args+=("--store-paths" "${nixos_partitioner}" "${nixos_system}")
 
 tmpdir=$(mktemp -d)

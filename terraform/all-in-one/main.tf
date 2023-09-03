@@ -29,6 +29,7 @@ module "install" {
   disk_encryption_key_scripts  = var.disk_encryption_key_scripts
   extra_environment            = var.extra_environment
   instance_id                  = var.instance_id
+  no_reboot                    = var.no_reboot
 }
 
 module "nixos-rebuild" {
