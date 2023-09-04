@@ -74,6 +74,9 @@ data has been migrated.
 
 - Target Machine:
 
+  - The machine must be reachable over the public internet or local network. If
+    a VPN is needed, define a custom installer via the --kexec flag which
+    connects to your VPN.
   - Unless you're using the option to boot from a NixOS installer image, or
     providing your own `kexec` image, it must be running x86-64 Linux with kexec
     support. Most `x86_64` Linux systems do have kexec support. By providing
@@ -95,22 +98,26 @@ assumes that flakes have been enabled on your source machine.
 
 Here’s an example of a simple disk configuration:
 
+`disk-config.nix`:
+
 ```nix
-{ disks ? [ "/dev/vda" ], ... }:
 {
   disk = {
-    main = {
+    my-main-disk = {
       type = "disk";
-      device = builtins.elemAt disks 0;
+      device = "/dev/vda";
       content = {
         type = "gpt";
         partitions = {
+          # for bios boot (omit if using EFI)
           boot = {
             size = "1M";
             type = "EF02"; # for grub MBR
           };
+          # for EFI boot (omit if using BIOS)
           ESP = {
             size = "512M";
+            type = "EF00";
             content = {
               type = "filesystem";
               format = "vfat";
@@ -141,8 +148,8 @@ A simple flake may look like this:
 
 ```nix
 {
-  inputs.nixpkgs.url = github:NixOS/nixpkgs;
-  inputs.disko.url = github:nix-community/disko;
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs";
+  inputs.disko.url = "github:nix-community/disko";
   inputs.disko.inputs.nixpkgs.follows = "nixpkgs";
   outputs = { self, nixpkgs, disko, ... }@attrs: {
     #-----------------------------------------------------------
