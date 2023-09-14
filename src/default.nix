@@ -1,8 +1,9 @@
-{ writeShellApplication
+{ stdenv
 , openssh
 , gitMinimal
 , rsync
 , nixVersions
+, nix
 , coreutils
 , curl
 , gnugrep
@@ -10,14 +11,15 @@
 , findutils
 , gnused
 , lib
+, makeWrapper
 , mkShellNoCC
 }:
 let
-  runtimeInputs = [
+  runtimeDeps = [
     gitMinimal # for git flakes
     rsync
     # pinned because nix-copy-closure hangs if ControlPath provided for SSH: https://github.com/NixOS/nix/issues/8480
-    nixVersions.nix_2_16
+    (if lib.versionAtLeast nix.version "2.16" then nix else nixVersions.nix_2_16)
     coreutils
     curl # when uploading tarballs
     gnugrep
@@ -26,18 +28,29 @@ let
     gnused # needed by ssh-copy-id
   ];
 in
-(writeShellApplication {
-  name = "nixos-anywhere";
-  # We prefer the system's openssh over our own, since it might come with features not present in ours:
-  # https://github.com/numtide/nixos-anywhere/issues/62
-  text = ''
-    export PATH=$PATH:${lib.getBin openssh}
-    ${builtins.readFile ./nixos-anywhere.sh}
+stdenv.mkDerivation {
+  pname = "nixos-anywhere";
+  version = "1.0.0";
+  src = ./..;
+  nativeBuildInputs = [ makeWrapper ];
+  installPhase = ''
+    install -D -m 0755 src/nixos-anywhere.sh $out/bin/nixos-anywhere
+
+    # We prefer the system's openssh over our own, since it might come with features not present in ours:
+    # https://github.com/numtide/nixos-anywhere/issues/62
+    wrapProgram $out/bin/nixos-anywhere \
+      --prefix PATH : ${lib.makeBinPath runtimeDeps} --suffix PATH : ${lib.makeBinPath [ openssh ]}
   '';
-  inherit runtimeInputs;
-}) // {
+
   # Dependencies for our devshell
-  devShell = mkShellNoCC {
-    packages = runtimeInputs ++ [ openssh ];
+  passthru.devShell = mkShellNoCC {
+    packages = runtimeDeps ++ [ openssh ];
+  };
+
+  meta = with lib; {
+    description = "Install nixos everywhere via ssh";
+    homepage = "https://github.com/numtide/nixos-anywhere";
+    license = licenses.mit;
+    platforms = platforms.all;
   };
 }
