@@ -79,6 +79,9 @@ data has been migrated.
     support. Most `x86_64` Linux systems do have kexec support. By providing
     your own [image](./docs/howtos.md#using-your-own-kexec-image) you can also
     perform kexec for other architectures eg aarch64
+  - The machine must be reachable over the public internet or local network. Nixos-anywhere does not support wifi networks. If
+    a VPN is needed, define a custom installer via the --kexec flag which
+    connects to your VPN.
   - Must have at least 1.5 GB of RAM, excluding swap.
 
 ## How to use nixos-anywhere
