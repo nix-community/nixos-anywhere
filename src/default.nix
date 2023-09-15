@@ -35,6 +35,7 @@ in
     ${builtins.readFile ./nixos-anywhere.sh}
   '';
   inherit runtimeInputs;
+  meta = {inherit (import ../flake.nix) description;};
 }) // {
   # Dependencies for our devshell
   devShell = mkShellNoCC {
