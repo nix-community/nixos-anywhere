@@ -36,7 +36,7 @@ in
   '';
   inherit runtimeInputs;
 }) // {
-  meta = {inherit (import ../flake.nix) description;};
+  meta = { inherit (import ../flake.nix) description; };
   # Dependencies for our devshell
   devShell = mkShellNoCC {
     packages = runtimeInputs ++ [ openssh ];
