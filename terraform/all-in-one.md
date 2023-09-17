@@ -36,6 +36,8 @@ module "deploy" {
 }
 ```
 
+_Note:_ You need to mark scripts as executable (`chmod +x`)
+
 ### ./decrypt-ssh-secrets.sh
 
 ```

@@ -1,16 +1,21 @@
-# nixos-anywhere terraform modules
+# NixOS-Anywhere Terraform Modules Overview
 
-These terraform module can run nixos-anywhere from terraform to install nixos as
-well as deploying nixos afterwards.
+The NixOS-Anywhere Terraform modules allow you to use Terraform for installing
+and updating NixOS. It simplifies the deployment process by integrating
+nixos-anywhere functionality.
 
-See what each module does with examples by clicking on the terraform module in
-the following links below:
+Here's a brief overview of each module:
 
-- [all-in-one](all-in-one.md): Combines the install and nixos-rebuild module in
-  one interface to install NixOS with nixos-anywhere and than keep it up-to-date
-  with nixos-rebuild.
-- [install](install.md): Install NixOS with nixos-anywhere
-- [nixos-rebuild](nixos-rebuild.md): Update NixOS machine with nixos-rebuild on
-  a remote machine
-- [nix-build](nix-build.md): Small helper module to run do build a flake
-  attribute or attribute from a nix file.
+- **[All-in-One](all-in-one.md)**: This is a consolidated module that first
+  installs NixOS using nixos-anywhere and then keeps it updated with
+  nixos-rebuild. If you choose this, you won't need additional deployment tools
+  like colmena.
+- **[Install](install.md)**: This module focuses solely on installing NixOS via
+  nixos-anywhere.
+- **[NixOS-Rebuild](nixos-rebuild.md)**: Use this module to remotely update an
+  existing NixOS machine using nixos-rebuild.
+- **[Nix-Build](nix-build.md)**: This is a handy helper module designed to build
+  a flake attribute or an attribute from a nix file.
+
+For detailed information and usage examples, click on the respective module
+links above.
