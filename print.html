@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -441,6 +441,7 @@ explanation of known error messages, refer to the
 <p><a href="howtos/./custom-kexec.html">Using your own kexec image</a></p>
 <p><a href="howtos/./secrets.html">Secrets and full disk encryption</a></p>
 <p><a href="howtos/./use-without-flakes.html">Use without flakes</a></p>
+<p><a href="howtos/./terraform.html">Terraform</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="installing-on-a-machine-with-no-operating-system"><a class="header" href="#installing-on-a-machine-with-no-operating-system">Installing on a machine with no operating system</a></h1>
 <p>If your machine doesn't currently have an operating system installed, you can
 still run <code>nixos-anywhere</code> remotely to automate the install. To do this, you
@@ -610,6 +611,22 @@ Keep this path handy as well.</p>
 </code></pre>
 <p>Replace <code>[your-toplevel-path]</code> and <code>[your-disk-image-path]</code> with the
 corresponding store paths you generated earlier.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="terraform"><a class="header" href="#terraform">Terraform</a></h1>
+<p>The nixos-anywhere terraform modules allow you to use Terraform for installing
+and updating NixOS. It simplifies the deployment process by integrating
+nixos-anywhere functionality.</p>
+<p>Our terraform module requires the
+<a href="https://registry.terraform.io/providers/hashicorp/null/latest">null</a> and
+<a href="https://registry.terraform.io/providers/hashicorp/external/latest">external</a>
+provider.</p>
+<p>You can get these by from nixpkgs like this:</p>
+<pre><code class="language-nix">nix-shell -p '(pkgs.terraform.withPlugins (p: [ p.null p.external ]))'
+</code></pre>
+<p>You can add this expression the <code>packages</code> list in your devshell in flake.nix or
+in shell.nix.</p>
+<p>Checkout out the
+<a href="https://github.com/numtide/nixos-anywhere/tree/main/terraform">module reference</a>
+for examples and module parameter on how to use the modules.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="reference-manual-nixos-anywhere"><a class="header" href="#reference-manual-nixos-anywhere">Reference Manual: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
 <img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="141">
