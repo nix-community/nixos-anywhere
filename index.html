@@ -180,6 +180,8 @@
 <li>NixOS</li>
 <li>Windows systems using WSL2.</li>
 </ul>
+<p><em>Note</em>: Should be able to build nix derivations for the target platform.
+Otherwise <code>--build-on-remote</code> can be used.</p>
 </li>
 <li>
 <p><strong>Nix Installation:</strong> If Nix is not yet installed on your system, refer to
@@ -187,6 +189,9 @@ the <a href="https://nixos.org/download#download-nix">nix installation page</a>.
 </li>
 </ol>
 <h3 id="destination-machine"><a class="header" href="#destination-machine">Destination Machine:</a></h3>
+<p>The machine must be reachable over the public internet or local network.
+Nixos-anywhere does not support wifi networks. If a VPN is needed, define a
+custom installer via the --kexec flag which connects to your VPN.</p>
 <ol>
 <li>
 <p><strong>Direct Boot Option:</strong></p>
