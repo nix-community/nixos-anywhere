@@ -10,8 +10,7 @@
 
 Setting up a new machine is time-consuming, and becomes complicated when it
 needs to be done remotely. If you're installing NixOS, the **nixos-anywhere**
-(formerly known as **nixos-remote**) tool allows you to pre-configure the whole
-process including:
+tool allows you to pre-configure the whole process including:
 
 - Disk partitioning and formatting
 - Configuring and installing NixOS
