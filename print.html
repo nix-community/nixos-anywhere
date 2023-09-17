@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="howtos.html">How to Guide</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -167,7 +167,56 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="quickstart-guide-nixos-anywhere"><a class="header" href="#quickstart-guide-nixos-anywhere">Quickstart Guide: nixos-anywhere</a></h1>
+                        <h1 id="system-requirements-nixos-anywhere"><a class="header" href="#system-requirements-nixos-anywhere">System Requirements: nixos-anywhere</a></h1>
+<p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
+<img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
+<p><a href="./INDEX.html">Documentation Index</a></p>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<h3 id="source-machine"><a class="header" href="#source-machine">Source Machine:</a></h3>
+<ol>
+<li>
+<p><strong>Supported Systems:</strong></p>
+<ul>
+<li>Linux or macOS computers with Nix installed.</li>
+<li>NixOS</li>
+<li>Windows systems using WSL2.</li>
+</ul>
+</li>
+<li>
+<p><strong>Nix Installation:</strong> If Nix is not yet installed on your system, refer to
+the <a href="https://nixos.org/download#download-nix">nix installation page</a>.</p>
+</li>
+</ol>
+<h3 id="destination-machine"><a class="header" href="#destination-machine">Destination Machine:</a></h3>
+<ol>
+<li>
+<p><strong>Direct Boot Option:</strong></p>
+<ul>
+<li>Must be already running a NixOS installer.</li>
+</ul>
+</li>
+<li>
+<p><strong>Alternative Boot Options:</strong> If not booting directly from a NixOS installer
+image:</p>
+<ul>
+<li><strong>Architecture &amp; Support:</strong> Must be operating on:
+<ul>
+<li>x86-64 or aarch64 Linux systems with kexec support. Note: While most
+x86-64 Linux systems support kexec, if you're using an architecture other
+than those mentioned, you may need to specify a
+<a href="./howtos/INDEX.html#using-your-own-kexec-image">different kexec image</a>
+manually.</li>
+</ul>
+</li>
+<li><strong>Memory Requirements:</strong>
+<ul>
+<li>At least 1.5 GB of RAM (excluding swap space).</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="quickstart-guide-nixos-anywhere"><a class="header" href="#quickstart-guide-nixos-anywhere">Quickstart Guide: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
 <img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
 <p><a href="./INDEX.html">Documentation Index</a></p>
@@ -177,7 +226,7 @@ a target machine running x86_64 Linux with
 <a href="https://man7.org/linux/man-pages/man8/kexec.8.html">kexec</a> support. The example
 used in this guide installs NixOS on a Hetzner cloud machine. The configuration
 may be different for some other instances. We will be including further examples
-in the <a href="./howtos.html">How To Guide</a> as and when they are available.</p>
+in the <a href="./howtos/INDEX.html">How To Guide</a> as and when they are available.</p>
 <p>You will need:</p>
 <ul>
 <li>A <a href="https://nixos.wiki/wiki/Flakes">flake</a> that controls the actions to be
@@ -358,12 +407,6 @@ editor to remove the old entry from the <code>known_hosts</code> file. The next 
 attempt will then treat this as a new server.</p>
 <p>The error message line <code>Offending ECDSA key in ~/.ssh/known_hosts:</code> gives the
 line number that needs to be removed from the <code>known_hosts</code> file.</p>
-<p><strong>Note:</strong> If you subsequently make any changes to either the <code>flake.nix</code> or
-<code>disk-config.nix</code> file, you will need to run the following command in the
-directory containing the flake to update <code>flake.lock</code> before rerunning
-<strong>nixos-anywhere</strong>:</p>
-<pre><code>nix flake update
-</code></pre>
 <p>The new server's configurations are defined in the flake. <code>nixos-anywhere</code> does
 not create <code>etc/nixos/configuration.nix</code>, since it expects the server to be
 administered remotely. Any future changes to the configuration should be made to
@@ -381,67 +424,19 @@ an openssh server and your ssh key for the root user:</p>
 <pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt; --target-host &quot;root@&lt;ip address&gt;&quot;
 </code></pre>
 <p>For more information on different use cases of <strong>nixos-anywhere</strong> please refer
-to the <a href="./howtos.html">How to Guide</a>, and for more technical information and
+to the <a href="./howtos/INDEX.html">How to Guide</a>, and for more technical information and
 explanation of known error messages, refer to the
 <a href="./reference.html">Reference Manual</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="system-requirements-nixos-anywhere"><a class="header" href="#system-requirements-nixos-anywhere">System Requirements: nixos-anywhere</a></h1>
-<p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
-<img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
-<p><a href="./INDEX.html">Documentation Index</a></p>
-<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
-<h3 id="source-machine"><a class="header" href="#source-machine">Source Machine:</a></h3>
-<ol>
-<li>
-<p><strong>Supported Systems:</strong></p>
-<ul>
-<li>Linux or macOS computers with Nix installed.</li>
-<li>NixOS</li>
-<li>Windows systems using WSL2.</li>
-</ul>
-</li>
-<li>
-<p><strong>Nix Installation:</strong> If Nix is not yet installed on your system, refer to
-the <a href="https://nixos.org/download#download-nix">nix installation page</a>.</p>
-</li>
-</ol>
-<h3 id="destination-machine"><a class="header" href="#destination-machine">Destination Machine:</a></h3>
-<ol>
-<li>
-<p><strong>Direct Boot Option:</strong></p>
-<ul>
-<li>Must be already running a NixOS installer.</li>
-</ul>
-</li>
-<li>
-<p><strong>Alternative Boot Options:</strong> If not booting directly from a NixOS installer
-image:</p>
-<ul>
-<li><strong>Architecture &amp; Support:</strong> Must be operating on:
-<ul>
-<li>x86-64 or aarch64 Linux systems with kexec support. Note: While most
-x86-64 Linux systems support kexec, if you're using an architecture other
-than those mentioned, you may need to specify a
-<a href="./howtos.html#using-your-own-kexec-image">different kexec image</a> manually.</li>
-</ul>
-</li>
-<li><strong>Memory Requirements:</strong>
-<ul>
-<li>At least 1.5 GB of RAM (excluding swap space).</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="how-to-guide-nixos-anywhere"><a class="header" href="#how-to-guide-nixos-anywhere">How To Guide: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
 <img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="129">
-<p><a href="./INDEX.html">Documentation Index</a></p>
+<p><a href="howtos/./INDEX.html">Documentation Index</a></p>
 <h2 id="contents"><a class="header" href="#contents">Contents</a></h2>
-<p><a href="howtos.html#installing-on-a-machine-with-no-operating-system">Installing on a machine with no operating system</a></p>
-<p><a href="howtos.html#using-your-own-kexec-image">Using your own kexec image</a></p>
-<p><a href="howtos.html#secrets-and-full-disk-encryption">Secrets and full disk encryption</a></p>
-<p><a href="howtos.html#use-without-flakes">Use without flakes</a></p>
-<h2 id="installing-on-a-machine-with-no-operating-system"><a class="header" href="#installing-on-a-machine-with-no-operating-system">Installing on a machine with no operating system</a></h2>
+<p><a href="howtos/./no-os.html">Installing on a machine with no operating system</a></p>
+<p><a href="howtos/./custom-kexec.html">Using your own kexec image</a></p>
+<p><a href="howtos/./secrets.html">Secrets and full disk encryption</a></p>
+<p><a href="howtos/./use-without-flakes.html">Use without flakes</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="installing-on-a-machine-with-no-operating-system"><a class="header" href="#installing-on-a-machine-with-no-operating-system">Installing on a machine with no operating system</a></h1>
 <p>If your machine doesn't currently have an operating system installed, you can
 still run <code>nixos-anywhere</code> remotely to automate the install. To do this, you
 would first need to boot the target machine from the standard NixOS installer.
@@ -494,7 +489,7 @@ SSH command (replace the IP address with your own):</p>
 </code></pre>
 <p>This example assumes a flake in the curent directory containing a configuration
 named <code>myconfig</code>.</p>
-<h2 id="using-your-own-kexec-image"><a class="header" href="#using-your-own-kexec-image">Using your own kexec image</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="using-your-own-kexec-image"><a class="header" href="#using-your-own-kexec-image">Using your own kexec image</a></h1>
 <p>By default, <code>nixos-anywhere</code> downloads the kexec image from the
 <a href="https://github.com/nix-community/nixos-images#kexec-tarballs">NixOS images repository</a>.</p>
 <p>However, you can provide your own <code>kexec</code> image file if you need to use a
@@ -529,14 +524,14 @@ configuration:</p>
   boot.binfmt.emulatedSystems = [ &quot;aarch64-linux&quot; ];
 }
 </code></pre>
-<h2 id="secrets-and-full-disk-encryption"><a class="header" href="#secrets-and-full-disk-encryption">Secrets and full disk encryption</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="secrets-and-full-disk-encryption"><a class="header" href="#secrets-and-full-disk-encryption">Secrets and full disk encryption</a></h1>
 <p>The <code>nixos-anywhere</code> utility offers the capability to install secrets onto a
 target machine. This feature is particularly beneficial when you want to
 bootstrap secrets management tools such as
 <a href="https://github.com/Mic92/sops-nix">sops-nix</a> or
 <a href="https://github.com/ryantm/agenix">agenix</a>, which rely on machine-specific
 secrets to decrypt other uploaded secrets.</p>
-<h3 id="example-decrypting-an-openssh-host-key-with-pass"><a class="header" href="#example-decrypting-an-openssh-host-key-with-pass">Example: Decrypting an OpenSSH Host Key with pass</a></h3>
+<h2 id="example-decrypting-an-openssh-host-key-with-pass"><a class="header" href="#example-decrypting-an-openssh-host-key-with-pass">Example: Decrypting an OpenSSH Host Key with pass</a></h2>
 <p>In this example, we demonstrate how to use a script to decrypt an OpenSSH host
 key from the <code>pass</code> password manager and subsequently pass it to
 <code>nixos-anywhere</code> during the installation process:</p>
@@ -563,7 +558,7 @@ chmod 600 &quot;$temp/etc/ssh/ssh_host_ed25519_key&quot;
 # Install NixOS to the host system with our secrets
 nixos-anywhere --extra-files &quot;$temp&quot; --flake '.#your-host' root@yourip
 </code></pre>
-<h3 id="example-uploading-disk-encryption-secrets"><a class="header" href="#example-uploading-disk-encryption-secrets">Example: Uploading Disk Encryption Secrets</a></h3>
+<h2 id="example-uploading-disk-encryption-secrets"><a class="header" href="#example-uploading-disk-encryption-secrets">Example: Uploading Disk Encryption Secrets</a></h2>
 <p>In a similar vein, <code>nixos-anywhere</code> can upload disk encryption secrets, which
 are necessary during formatting with disko. Here's an example that demonstrates
 how to provide your disk encryption password as a file or via the <code>pass</code> utility
@@ -582,15 +577,15 @@ nixos-anywhere \
 encryption password, and <code>my-disk-encryption-password</code> with the relevant entry
 in your pass password store. Also, ensure to replace <code>'.#your-host'</code> and
 <code>root@yourip</code> with your actual flake and IP address, respectively.</p>
-<h2 id="use-without-flakes"><a class="header" href="#use-without-flakes">Use without flakes</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="use-without-flakes"><a class="header" href="#use-without-flakes">Use without flakes</a></h1>
 <p>While <code>nixos-anywhere</code> is designed to work optimally with Nix Flakes, it also
 supports the traditional approach without flakes. This document outlines how to
 use <code>nixos-anywhere</code> without relying on flakes.</p>
-<h3 id="generate-required-store-paths"><a class="header" href="#generate-required-store-paths">Generate Required Store Paths</a></h3>
+<h2 id="generate-required-store-paths"><a class="header" href="#generate-required-store-paths">Generate Required Store Paths</a></h2>
 <p>Before you can use <code>nixos-anywhere</code> without flakes, you'll need to manually
 generate the paths for the NixOS system toplevel and disk image. The paths are
 generated using <code>nix-build</code> and are necessary for executing <code>nixos-anywhere</code>.</p>
-<h4 id="generating-nixos-system-toplevel"><a class="header" href="#generating-nixos-system-toplevel">Generating NixOS System Toplevel:</a></h4>
+<h3 id="generating-nixos-system-toplevel"><a class="header" href="#generating-nixos-system-toplevel">Generating NixOS System Toplevel:</a></h3>
 <p>Execute the following command to generate the store path for the NixOS system
 toplevel:</p>
 <pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.toplevel'
@@ -598,13 +593,13 @@ toplevel:</p>
 <p>This will output a path in <code>/nix/store</code> that corresponds to the system toplevel,
 which includes all the software and configurations for the system. Make note of
 this path for later use.</p>
-<h4 id="generating-disk-image-without-dependencies"><a class="header" href="#generating-disk-image-without-dependencies">Generating Disk Image without Dependencies:</a></h4>
+<h3 id="generating-disk-image-without-dependencies"><a class="header" href="#generating-disk-image-without-dependencies">Generating Disk Image without Dependencies:</a></h3>
 <p>To generate the disk image without dependencies, execute:</p>
 <pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.diskNoDeps'
 </code></pre>
 <p>This will also output a script path in <code>/nix/store</code> that will format your disk.
 Keep this path handy as well.</p>
-<h3 id="running-nixos-anywhere"><a class="header" href="#running-nixos-anywhere">Running NixOS-Anywhere</a></h3>
+<h2 id="running-nixos-anywhere"><a class="header" href="#running-nixos-anywhere">Running NixOS-Anywhere</a></h2>
 <p>With both paths in hand, you can execute <code>nixos-anywhere</code> as follows:</p>
 <pre><code class="language-bash">nixos-anywhere --store-paths /nix/store/[your-toplevel-path] /nix/store/[your-disk-image-path]
 </code></pre>

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>System Requirements - nixos-anywhere - install NixOS everywhere</title>
+        <title>Use without flakes - nixos-anywhere - install NixOS everywhere</title>
 
 
         <!-- Custom HTML head -->
@@ -12,21 +12,21 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <link rel="icon" href="favicon.svg">
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="fonts/fonts.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
@@ -35,7 +35,7 @@
     <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
-            var path_to_root = "";
+            var path_to_root = "../";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html" class="active">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="../quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="../howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="../howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="../howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="../howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="../howtos/use-without-flakes.html" class="active"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded affix "><a href="../reference.html">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -137,7 +137,7 @@
                     <h1 class="menu-title">nixos-anywhere - install NixOS everywhere</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
 
@@ -166,62 +166,44 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="system-requirements-nixos-anywhere"><a class="header" href="#system-requirements-nixos-anywhere">System Requirements: nixos-anywhere</a></h1>
-<p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
-<img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
-<p><a href="./INDEX.html">Documentation Index</a></p>
-<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
-<h3 id="source-machine"><a class="header" href="#source-machine">Source Machine:</a></h3>
-<ol>
-<li>
-<p><strong>Supported Systems:</strong></p>
-<ul>
-<li>Linux or macOS computers with Nix installed.</li>
-<li>NixOS</li>
-<li>Windows systems using WSL2.</li>
-</ul>
-</li>
-<li>
-<p><strong>Nix Installation:</strong> If Nix is not yet installed on your system, refer to
-the <a href="https://nixos.org/download#download-nix">nix installation page</a>.</p>
-</li>
-</ol>
-<h3 id="destination-machine"><a class="header" href="#destination-machine">Destination Machine:</a></h3>
-<ol>
-<li>
-<p><strong>Direct Boot Option:</strong></p>
-<ul>
-<li>Must be already running a NixOS installer.</li>
-</ul>
-</li>
-<li>
-<p><strong>Alternative Boot Options:</strong> If not booting directly from a NixOS installer
-image:</p>
-<ul>
-<li><strong>Architecture &amp; Support:</strong> Must be operating on:
-<ul>
-<li>x86-64 or aarch64 Linux systems with kexec support. Note: While most
-x86-64 Linux systems support kexec, if you're using an architecture other
-than those mentioned, you may need to specify a
-<a href="./howtos/INDEX.html#using-your-own-kexec-image">different kexec image</a>
-manually.</li>
-</ul>
-</li>
-<li><strong>Memory Requirements:</strong>
-<ul>
-<li>At least 1.5 GB of RAM (excluding swap space).</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
+                        <h1 id="use-without-flakes"><a class="header" href="#use-without-flakes">Use without flakes</a></h1>
+<p>While <code>nixos-anywhere</code> is designed to work optimally with Nix Flakes, it also
+supports the traditional approach without flakes. This document outlines how to
+use <code>nixos-anywhere</code> without relying on flakes.</p>
+<h2 id="generate-required-store-paths"><a class="header" href="#generate-required-store-paths">Generate Required Store Paths</a></h2>
+<p>Before you can use <code>nixos-anywhere</code> without flakes, you'll need to manually
+generate the paths for the NixOS system toplevel and disk image. The paths are
+generated using <code>nix-build</code> and are necessary for executing <code>nixos-anywhere</code>.</p>
+<h3 id="generating-nixos-system-toplevel"><a class="header" href="#generating-nixos-system-toplevel">Generating NixOS System Toplevel:</a></h3>
+<p>Execute the following command to generate the store path for the NixOS system
+toplevel:</p>
+<pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.toplevel'
+</code></pre>
+<p>This will output a path in <code>/nix/store</code> that corresponds to the system toplevel,
+which includes all the software and configurations for the system. Make note of
+this path for later use.</p>
+<h3 id="generating-disk-image-without-dependencies"><a class="header" href="#generating-disk-image-without-dependencies">Generating Disk Image without Dependencies:</a></h3>
+<p>To generate the disk image without dependencies, execute:</p>
+<pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.diskNoDeps'
+</code></pre>
+<p>This will also output a script path in <code>/nix/store</code> that will format your disk.
+Keep this path handy as well.</p>
+<h2 id="running-nixos-anywhere"><a class="header" href="#running-nixos-anywhere">Running NixOS-Anywhere</a></h2>
+<p>With both paths in hand, you can execute <code>nixos-anywhere</code> as follows:</p>
+<pre><code class="language-bash">nixos-anywhere --store-paths /nix/store/[your-toplevel-path] /nix/store/[your-disk-image-path]
+</code></pre>
+<p>Replace <code>[your-toplevel-path]</code> and <code>[your-disk-image-path]</code> with the
+corresponding store paths you generated earlier.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../howtos/secrets.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
 
-                            <a rel="next" href="quickstart.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -231,8 +213,11 @@ manually.</li>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../howtos/secrets.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
 
-                    <a rel="next" href="quickstart.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
@@ -247,13 +232,13 @@ manually.</li>
         </script>
 
 
-        <script src="elasticlunr.min.js"></script>
-        <script src="mark.min.js"></script>
-        <script src="searcher.js"></script>
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
 
-        <script src="clipboard.min.js"></script>
-        <script src="highlight.js"></script>
-        <script src="book.js"></script>
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
 

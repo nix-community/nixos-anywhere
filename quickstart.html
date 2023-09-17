@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="quickstart.html" class="active">Quickstart</a></li><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="howtos.html">How to Guide</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html" class="active">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -176,7 +176,7 @@ a target machine running x86_64 Linux with
 <a href="https://man7.org/linux/man-pages/man8/kexec.8.html">kexec</a> support. The example
 used in this guide installs NixOS on a Hetzner cloud machine. The configuration
 may be different for some other instances. We will be including further examples
-in the <a href="./howtos.html">How To Guide</a> as and when they are available.</p>
+in the <a href="./howtos/INDEX.html">How To Guide</a> as and when they are available.</p>
 <p>You will need:</p>
 <ul>
 <li>A <a href="https://nixos.wiki/wiki/Flakes">flake</a> that controls the actions to be
@@ -357,12 +357,6 @@ editor to remove the old entry from the <code>known_hosts</code> file. The next 
 attempt will then treat this as a new server.</p>
 <p>The error message line <code>Offending ECDSA key in ~/.ssh/known_hosts:</code> gives the
 line number that needs to be removed from the <code>known_hosts</code> file.</p>
-<p><strong>Note:</strong> If you subsequently make any changes to either the <code>flake.nix</code> or
-<code>disk-config.nix</code> file, you will need to run the following command in the
-directory containing the flake to update <code>flake.lock</code> before rerunning
-<strong>nixos-anywhere</strong>:</p>
-<pre><code>nix flake update
-</code></pre>
 <p>The new server's configurations are defined in the flake. <code>nixos-anywhere</code> does
 not create <code>etc/nixos/configuration.nix</code>, since it expects the server to be
 administered remotely. Any future changes to the configuration should be made to
@@ -380,7 +374,7 @@ an openssh server and your ssh key for the root user:</p>
 <pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt; --target-host &quot;root@&lt;ip address&gt;&quot;
 </code></pre>
 <p>For more information on different use cases of <strong>nixos-anywhere</strong> please refer
-to the <a href="./howtos.html">How to Guide</a>, and for more technical information and
+to the <a href="./howtos/INDEX.html">How to Guide</a>, and for more technical information and
 explanation of known error messages, refer to the
 <a href="./reference.html">Reference Manual</a>.</p>
 
@@ -388,8 +382,11 @@ explanation of known error messages, refer to the
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="requirements.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
 
-                            <a rel="next" href="requirements.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="howtos/INDEX.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -399,8 +396,11 @@ explanation of known error messages, refer to the
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="requirements.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
 
-                    <a rel="next" href="requirements.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="howtos/INDEX.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
