@@ -13,7 +13,7 @@ a target machine running x86_64 Linux with
 [kexec](https://man7.org/linux/man-pages/man8/kexec.8.html) support. The example
 used in this guide installs NixOS on a Hetzner cloud machine. The configuration
 may be different for some other instances. We will be including further examples
-in the [How To Guide](./howtos.md) as and when they are available.
+in the [How To Guide](./howtos/INDEX.md) as and when they are available.
 
 You will need:
 
@@ -194,15 +194,6 @@ attempt will then treat this as a new server.
 The error message line `Offending ECDSA key in ~/.ssh/known_hosts:` gives the
 line number that needs to be removed from the `known_hosts` file.
 
-**Note:** If you subsequently make any changes to either the `flake.nix` or
-`disk-config.nix` file, you will need to run the following command in the
-directory containing the flake to update `flake.lock` before rerunning
-**nixos-anywhere**:
-
-```
-nix flake update
-```
-
 The new server's configurations are defined in the flake. `nixos-anywhere` does
 not create `etc/nixos/configuration.nix`, since it expects the server to be
 administered remotely. Any future changes to the configuration should be made to
@@ -227,6 +218,6 @@ nixos-rebuild switch --flake <URL to your flake> --target-host "root@<ip address
 ```
 
 For more information on different use cases of **nixos-anywhere** please refer
-to the [How to Guide](./howtos.md), and for more technical information and
+to the [How to Guide](./howtos/INDEX.md), and for more technical information and
 explanation of known error messages, refer to the
 [Reference Manual](./reference.md).
