@@ -389,27 +389,49 @@ explanation of known error messages, refer to the
 <img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
 <p><a href="./INDEX.html">Documentation Index</a></p>
 <h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<h3 id="source-machine"><a class="header" href="#source-machine">Source Machine:</a></h3>
+<ol>
+<li>
+<p><strong>Supported Systems:</strong></p>
 <ul>
-<li>Source Machine:
-<ul>
-<li>Can be any Linux or Mac computer with Nix installed, or a NixOS machine.</li>
+<li>Linux or macOS computers with Nix installed.</li>
+<li>NixOS</li>
+<li>Windows systems using WSL2.</li>
 </ul>
 </li>
-<li>Destination Machine:
+<li>
+<p><strong>Nix Installation:</strong> If Nix is not yet installed on your system, refer to
+the <a href="https://nixos.org/download#download-nix">nix installation page</a>.</p>
+</li>
+</ol>
+<h3 id="destination-machine"><a class="header" href="#destination-machine">Destination Machine:</a></h3>
+<ol>
+<li>
+<p><strong>Direct Boot Option:</strong></p>
 <ul>
-<li>Must be an x86-64 machine unless you are able to supply a <code>kexec</code> image for
-your CPU type.</li>
-<li>If you're not using the option to boot from a Nixos installer image, it
-must:
+<li>Must be already running a NixOS installer.</li>
+</ul>
+</li>
+<li>
+<p><strong>Alternative Boot Options:</strong> If not booting directly from a NixOS installer
+image:</p>
 <ul>
-<li>Be running x86-64 Linux with kexec support . Most x86_64 Linux systems do
-have kexec support.</li>
-<li>Have at least 1.5 GB of RAM, excluding swap.</li>
+<li><strong>Architecture &amp; Support:</strong> Must be operating on:
+<ul>
+<li>x86-64 or aarch64 Linux systems with kexec support. Note: While most
+x86-64 Linux systems support kexec, if you're using an architecture other
+than those mentioned, you may need to specify a
+<a href="./howtos.html#using-your-own-kexec-image">different kexec image</a> manually.</li>
+</ul>
+</li>
+<li><strong>Memory Requirements:</strong>
+<ul>
+<li>At least 1.5 GB of RAM (excluding swap space).</li>
 </ul>
 </li>
 </ul>
 </li>
-</ul>
+</ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="how-to-guide-nixos-anywhere"><a class="header" href="#how-to-guide-nixos-anywhere">How To Guide: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
 <img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="129">
