@@ -1,4 +1,8 @@
-<!-- BEGIN_TF_DOCS -->
+# Nix-build
+
+## Example
+
+- See [install](install.md) or [nixos-rebuild](nixos-rebuild.md)
 
 ## Requirements
 
