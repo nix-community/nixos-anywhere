@@ -1,3 +1,75 @@
+# All-in-one
+
+## Example
+
+```hcl
+locals {
+  ipv4 = "192.0.2.1"
+}
+
+module "deploy" {
+  source                 = "github.com/numtide/nixos-anywhere//terraform/all-in-one"
+  # with flakes
+  nixos_system_attr      = ".#nixosConfigurations.mymachine.config.system.build.toplevel"
+  nixos_partitioner_attr = ".#nixosConfigurations.mymachine.config.system.build.diskoScript"
+  # without flakes
+  # file can use (pkgs.nixos []) function from nixpkgs
+  #file                   = "${path.module}/../.."
+  #nixos_system_attr      = "config.system.build.toplevel"
+  #nixos_partitioner_attr = "config.system.build.diskoScript"
+
+  target_host            = local.ipv4
+  # when instance id changes, it will trigger a reinstall
+  instance_id            = local.ipv4
+  # useful if something goes wrong
+  # debug_logging          = true
+  # script is below
+  extra_files_script     = "${path.module}/decrypt-ssh-secrets.sh"
+  disk_encryption_key_scripts = [{
+    path   = "/tmp/secret.key"
+    # script is below
+    script = "${path.module}/decrypt-zfs-key.sh"
+  }]
+}
+```
+
+### ./decrypt-ssh-secrets.sh
+
+```
+#!/usr/bin/env bash
+
+mkdir -p etc/ssh var/lib/secrets
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+umask 0177
+sops --extract '["initrd_ssh_key"]' -d "$SCRIPT_DIR/secrets.yaml" >./var/lib/secrets/initrd_ssh_key
+
+# restore umask
+umask 0022
+
+for keyname in ssh_host_rsa_key ssh_host_rsa_key.pub ssh_host_ed25519_key ssh_host_ed25519_key.pub; do
+  if [[ $keyname == *.pub ]]; then
+    umask 0133
+  else
+    umask 0177
+  fi
+  sops --extract '["'$keyname'"]' -d "$SCRIPT_DIR/secrets.yaml" >"./etc/ssh/$keyname"
+done
+```
+
+### ./decrypt-zfs-key.sh
+
+```
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd "$SCRIPT_DIR"
+sops --extract '["zfs-key"]' -d "$SCRIPT_DIR/secrets.yaml" >"./etc/ssh/$keyname"
+```
+
 <!-- BEGIN_TF_DOCS -->
 
 ## Requirements
