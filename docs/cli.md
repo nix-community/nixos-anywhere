@@ -14,5 +14,4 @@ Options:
   use another kexec tarball to bootstrap NixOS
 * --debug
   enable debug output
-
 ```
