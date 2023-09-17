@@ -1,6 +1,6 @@
 # NixOS-Anywhere Terraform Modules Overview
 
-The NixOS-Anywhere Terraform modules allow you to use Terraform for installing
+The nixos-Anywhere terraform modules allow you to use Terraform for installing
 and updating NixOS. It simplifies the deployment process by integrating
 nixos-anywhere functionality.
 
