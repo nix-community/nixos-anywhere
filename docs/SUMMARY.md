@@ -15,6 +15,4 @@ Refer to the following documentation for more information.
 
 [How to Guide](./howtos.md): Instructions for non-typical use cases
 
-[Support Matrix](./supportmatrix.md): List of tested platforms
-
 [Reference](./reference.md): Reference Guide
