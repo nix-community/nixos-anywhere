@@ -1,5 +1,7 @@
 # Nixos-rebuild
 
+Update NixOS machine with nixos-rebuild on a remote machine
+
 ## Example
 
 ```hcl
