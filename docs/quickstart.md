@@ -46,9 +46,11 @@ below.
    This command will generate a `flake.nix` file. Modify this file according to
    your requirements.
 
-   - **For a Minimal Setup**:  
-      You can copy and paste the example flake contents available [here](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix).
-     This example is tailored for a virtual machine setup similar to one on [Hetzner Cloud](https://www.hetzner.com/cloud).
+   - **For a Minimal Setup**:\
+     You can copy and paste the example flake contents available
+     [here](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix).
+     This example is tailored for a virtual machine setup similar to one on
+     [Hetzner Cloud](https://www.hetzner.com/cloud).
 
      **Hardware-Specific Configuration**: If you're not using a virtual machine,
      you'll need to generate a custom hardware configuration with
@@ -70,7 +72,7 @@ below.
   This creates the necessary configuration files under `/mnt/etc/nixos/`, which
   you can then customize as needed.
 
-3. **Find SSH Key Line**:  
+3. **Find SSH Key Line**:\
    if you cloned
    [our nixos-anywhere-example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)
    you will also replace the SSH key like this: In your configuration, locate
