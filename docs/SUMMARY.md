@@ -9,10 +9,15 @@ installing NixOS, and run the install remotely with a single CLI command.
 
 Refer to the following documentation for more information.
 
-[Quickstart](./quickstart.md): Instructions for a typical installation
-
 [System Requirements](./requirements.md): CPU and memory requirements
 
-[How to Guide](./howtos.md): Instructions for non-typical use cases
+[Quickstart](./quickstart.md): Instructions for a typical installation
+
+[How to Guide](./howtos/INDEX.md): Instructions for non-typical use cases
+
+- [Installing on a machine with no operating system](./howtos/no-os.md)
+- [Using your own kexec image](./howtos/custom-kexec.md)
+- [Secrets and full disk encryption](./howtos/secrets.md)
+- [Use without flakes](./howtos/use-without-flakes.md)
 
 [Reference](./reference.md): Reference Guide

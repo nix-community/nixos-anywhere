@@ -29,6 +29,7 @@
      - x86-64 or aarch64 Linux systems with kexec support. Note: While most
        x86-64 Linux systems support kexec, if you're using an architecture other
        than those mentioned, you may need to specify a
-       [different kexec image](./howtos.md#using-your-own-kexec-image) manually.
+       [different kexec image](./howtos/INDEX.md#using-your-own-kexec-image)
+       manually.
    - **Memory Requirements:**
      - At least 1.5 GB of RAM (excluding swap space).
