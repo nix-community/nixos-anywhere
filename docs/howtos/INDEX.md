@@ -15,3 +15,5 @@
 [Secrets and full disk encryption](./secrets.md)
 
 [Use without flakes](./use-without-flakes.md)
+
+[Terraform](./terraform.md)

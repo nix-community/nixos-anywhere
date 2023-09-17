@@ -19,5 +19,6 @@ Refer to the following documentation for more information.
 - [Using your own kexec image](./howtos/custom-kexec.md)
 - [Secrets and full disk encryption](./howtos/secrets.md)
 - [Use without flakes](./howtos/use-without-flakes.md)
+- [Terraform](./howtos/terraform.md)
 
 [Reference](./reference.md): Reference Guide
