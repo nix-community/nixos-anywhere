@@ -56,3 +56,30 @@ variable "stop_after_disko" {
   description = "Exit after disko formatting"
   default     = false
 }
+
+variable "extra_files_script" {
+  type        = string
+  description = "A script file that prepares extra files to be copied to the target host during installation. The script expected to write all its files to the current directory. This directory is rsynced to the target host during installation to the / directory."
+  default     = null
+}
+
+variable "disk_encryption_key_scripts" {
+  type        = list(object({
+    path = string
+    script = string
+  }))
+  description = "Each of these script files will be executed locally and the output of each of them will be made present at the given path to disko during installation. The keys will be not copied to the final system"
+  default     = []
+}
+
+variable "extra_environment" {
+  type        = map(string)
+  description = "Extra environment variables to be set during installation. This can be usefull to set extra variables for the extra_files_script or disk_encryption_key_scripts"
+  default     = {}
+}
+
+variable "no_reboot" {
+  type        = bool
+  description = "Do not reboot the machine after installation"
+  default     = false
+}

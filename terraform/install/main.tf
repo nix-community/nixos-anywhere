@@ -1,5 +1,5 @@
 locals {
-  nixos_anywhere_flags = "${var.stop_after_disko ? "--stop-after-disko" : ""} ${var.debug_logging ? "--debug" : ""} ${var.kexec_tarball_url != null ? "--kexec ${var.kexec_tarball_url}" : "" } --store-paths ${var.nixos_partitioner} ${var.nixos_system} ${var.target_user}@${var.target_host}"
+  disk_encryption_key_scripts = [for k in var.disk_encryption_key_scripts : "\"${k.path}\" \"${k.script}\""]
 }
 
 resource "null_resource" "nixos-remote" {
@@ -7,10 +7,19 @@ resource "null_resource" "nixos-remote" {
     instance_id = var.instance_id
   }
   provisioner "local-exec" {
-    environment = {
+    environment = merge({
       SSH_PRIVATE_KEY = var.ssh_private_key
-    }
-    command = "nix run --extra-experimental-features 'nix-command flakes' path:${path.module}/../..#nixos-anywhere -- ${local.nixos_anywhere_flags}"
+      stop_after_disko = var.stop_after_disko
+      debug_logging = var.debug_logging
+      kexec_tarball_url = var.kexec_tarball_url
+      nixos_partitioner = var.nixos_partitioner
+      nixos_system = var.nixos_system
+      target_user = var.target_user
+      target_host = var.target_host
+      extra_files_script = var.extra_files_script
+      no_reboot = var.no_reboot
+    }, var.extra_environment)
+    command = "${path.module}/run-nixos-anywhere.sh ${join(" ", local.disk_encryption_key_scripts)}"
     quiet   = var.debug_logging
   }
 }
