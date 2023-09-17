@@ -10,6 +10,7 @@
 , gawk
 , findutils
 , gnused
+, terraform-docs
 , lib
 , makeWrapper
 , mkShellNoCC
@@ -44,7 +45,7 @@ stdenv.mkDerivation {
 
   # Dependencies for our devshell
   passthru.devShell = mkShellNoCC {
-    packages = runtimeDeps ++ [ openssh ];
+    packages = runtimeDeps ++ [ openssh terraform-docs ];
   };
 
   meta = with lib; {
