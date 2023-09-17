@@ -1,5 +1,7 @@
 # Install
 
+Install NixOS with nixos-anywhere
+
 ## Example
 
 ```hcl

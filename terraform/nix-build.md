@@ -1,5 +1,8 @@
 # Nix-build
 
+Small helper module to run do build a flake attribute or attribute from a nix
+file.
+
 ## Example
 
 - See [install](install.md) or [nixos-rebuild](nixos-rebuild.md)

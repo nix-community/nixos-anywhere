@@ -1,5 +1,8 @@
 # All-in-one
 
+Combines the install and nixos-rebuild module in one interface to install NixOS
+with nixos-anywhere and than keep it up-to-date with nixos-rebuild.
+
 ## Example
 
 ```hcl
