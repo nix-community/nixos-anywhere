@@ -3,6 +3,7 @@
 , python3
 , ruff
 , runCommand
+, nixos-anywhere
 }:
 let
   src = ../..;
@@ -26,6 +27,9 @@ let
     format = "pyproject";
     nativeBuildInputs = [
       python3.pkgs.setuptools
+    ];
+    propagatedBuildInputs = [
+      nixos-anywhere
     ];
     passthru.tests = { inherit nixos-anywhere-pxe-mypy; };
     passthru.devDependencies = devDependencies;
