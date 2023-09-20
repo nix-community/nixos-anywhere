@@ -15,8 +15,8 @@ Options:
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec url
   use another kexec tarball to bootstrap NixOS
-* --skip-disko
-  dont format disks with disko
+* --skip-reformat
+  dont format disks with disko (only mount)
 * --stop-after-disko
   exit after disko formating, you can then proceed to install manually or some other way
 * --extra-files files
@@ -91,8 +91,8 @@ while [[ $# -gt 0 ]]; do
     shift
     shift
     ;;
-  --skip-disko)
-    skip_disko=y
+  --skip-reformat)
+    skip_reformat=y
     ;;
   --stop-after-disko)
     stop_after_disko=y
@@ -299,7 +299,7 @@ for path in "${!disk_encryption_keys[@]}"; do
 done
 
 nix_copy --to "ssh://$ssh_connection" "$disko_script"
-if [[ ${skip_disko} == "y" ]]; then
+if [[ ${skip_reformat} == "y" ]]; then
   echo "Skipping disko partitioning (only do mount)."
   ssh_ "$disko_script -m mount"
 else

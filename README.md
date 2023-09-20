@@ -64,8 +64,8 @@ Options:
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec url
   use another kexec tarball to bootstrap NixOS
-* --skip-disko
-  dont format disks with disko
+* --skip-reformat
+  dont format disks with disko (only mount)
 * --stop-after-disko
   exit after disko formating, you can then proceed to install manually or some other way
 * --extra-files files
