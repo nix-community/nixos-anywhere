@@ -298,10 +298,11 @@ for path in "${!disk_encryption_keys[@]}"; do
   ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
 done
 
+nix_copy --to "ssh://$ssh_connection" "$disko_script"
 if [[ ${skip_disko} == "y" ]]; then
-  echo "Skipping disko (partitioning)."
+  echo "Skipping disko partitioning (only do mount)."
+  ssh_ "$disko_script -m mount"
 else
-  nix_copy --to "ssh://$ssh_connection" "$disko_script"
   ssh_ "$disko_script"
 fi
 
