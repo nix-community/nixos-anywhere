@@ -21,8 +21,13 @@ if TYPE_CHECKING:
 
 FILE = None | int | IO
 
-NIXOS_ANYWHERE_SH = Path(__file__).parent.absolute() / "src/nixos-anywhere.sh"
-
+# use nixos-anywhere if available, else use unpackaged shell script for development
+NIXOS_ANYWHERE_SH = shutil.which("nixos-anywhere")
+if NIXOS_ANYWHERE_SH is not None:
+    # i prefer not having huge nix-store paths in the logs
+    NIXOS_ANYWHERE_SH = "nixos-anywhere"
+else:
+    NIXOS_ANYWHERE_SH = Path(__file__).parent.absolute() / "src/nixos-anywhere.sh"
 
 
 def run(
