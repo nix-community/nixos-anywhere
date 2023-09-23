@@ -275,7 +275,7 @@ if [[ -n ${ssh_private_key_file-} ]]; then
   ssh_copy_id_args+=(-f)
 fi
 
-ssh_settings=$(ssh -G "${ssh_connection}")
+ssh_settings=$(ssh "${ssh_args[@]}" -G "${ssh_connection}")
 ssh_host=$(echo "$ssh_settings" | awk '/^hostname / { print $2 }')
 ssh_port=$(echo "$ssh_settings" | awk '/^port / { print $2 }')
 
