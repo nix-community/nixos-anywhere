@@ -29,6 +29,8 @@ Options:
   use another kexec tarball to bootstrap NixOS
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
+* --copy-host-keys
+  copy over existing /etc/ssh/ssh_host_* host keys to the installation
 * --stop-after-disko
   exit after disko formatting, you can then proceed to install manually or some other way
 * --extra-files <file...>
@@ -117,6 +119,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   --post-kexec-ssh-port)
     post_kexec_ssh_port=$2
+    shift
+    ;;
+  --copy-host-keys)
+    copy_host_keys=y
     shift
     ;;
   --debug)
@@ -450,13 +456,25 @@ fi
 
 step Installing NixOS
 ssh_ bash <<SSH
-set -efu ${enable_debug}
+set -eu ${enable_debug}
 # when running not in nixos we might miss this directory, but it's needed in the nixos chroot during installation
-export PATH=\$PATH:/run/current-system/sw/bin 
+export PATH="\$PATH:/run/current-system/sw/bin"
 
 # needed for installation if initrd-secrets are used
 mkdir -p /mnt/tmp
 chmod 777 /mnt/tmp
+if [[ ${copy_host_keys-n} == "y" ]]; then
+  # NB we copy host keys that are in turn copied by kexec installer.
+  mkdir -m 755 -p /mnt/etc/ssh
+  for p in /etc/ssh/ssh_host_*; do
+    # Skip if the source file does not exist (i.e. glob did not match any files)
+    # or the destination already exists (e.g. copied with --extra-files).
+    if [ ! -e "\$p" -o -e "/mnt/\$p" ]; then
+      continue
+    end
+    cp -a "\$p" "/mnt/\$p"
+  done
+fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 if command -v zpool >/dev/null; then
   zpool export -a || : # we always want to export the zfs pools so people can boot from it without force import
