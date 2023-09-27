@@ -61,3 +61,16 @@ In the above example, replace `"my-super-safe-password"` with your actual
 encryption password, and `my-disk-encryption-password` with the relevant entry
 in your pass password store. Also, ensure to replace `'.#your-host'` and
 `root@yourip` with your actual flake and IP address, respectively.
+
+## Example: Using existing SSH host keys
+
+If the system contains existing trusted `/etc/ssh/ssh_host_*` SSH host keys and
+certificates, `nixos-anywhere` can copy them in case they are necessary during
+installation and system activation.
+
+```
+nixos-anywhere --copy-host-keys --flake '.#your-host' root@yourip
+```
+
+This would copy `/etc/ssh/ssh_host_*` to `/mnt` after kexec but before
+installation, ignoring files that already exist in destination.
