@@ -470,7 +470,7 @@ if [[ ${copy_host_keys-n} == "y" ]]; then
     # or the destination already exists (e.g. copied with --extra-files).
     if [ ! -e "\$p" -o -e "/mnt/\$p" ]; then
       continue
-    end
+    fi
     cp -a "\$p" "/mnt/\$p"
   done
 fi
