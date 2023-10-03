@@ -29,6 +29,7 @@
         --kexec /etc/nixos-anywhere/kexec-installer \
         --extra-files /tmp/extra-files \
         --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
+        --copy-host-keys \
         root@installed >&2
     """)
     try:
