@@ -123,7 +123,6 @@ while [[ $# -gt 0 ]]; do
     ;;
   --copy-host-keys)
     copy_host_keys=y
-    shift
     ;;
   --debug)
     enable_debug="-x"
