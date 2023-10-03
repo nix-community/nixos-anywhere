@@ -89,12 +89,6 @@ The [Quickstart Guide](./docs/quickstart.md) gives more information on how to
 run **nixos-anywhere** in its simplest form. For more specific instructions to
 suit individual requirements, see the [How To Guide](./docs/howtos.md).
 
-# Further Reading
-
-@tfc has written a walkthrough on how use **nixos-anywhere** to bootstrap
-hetzner cloud servers as well as dedicated machines on his
-[blog](https://galowicz.de/2023/04/05/single-command-server-bootstrap/):
-
 ## Related Tools
 
 **nixos-anywhere** makes use of the
