@@ -22,6 +22,11 @@
     start_all()
     installer.succeed("mkdir -p /tmp/extra-files/var/lib/secrets")
     installer.succeed("echo value > /tmp/extra-files/var/lib/secrets/key")
+    ssh_key_path = "/etc/ssh/ssh_host_ed25519_key.pub"
+    ssh_key_output = installer.wait_until_succeeds(f"""
+      ssh -i /root/.ssh/install_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+        root@installed cat {ssh_key_path}
+    """)
     installer.succeed("""
       nixos-anywhere \
         -i /root/.ssh/install_key \
@@ -43,5 +48,7 @@
     assert "nixos-anywhere" == hostname, f"'nixos-anywhere' != '{hostname}'"
     content = new_machine.succeed("cat /var/lib/secrets/key").strip()
     assert "value" == content, f"secret does not have expected value: {content}"
+    ssh_key_content = new_machine.succeed(f"cat {ssh_key_path}").strip()
+    assert ssh_key_content in ssh_key_output, "SSH host identity changed"
   '';
 }
