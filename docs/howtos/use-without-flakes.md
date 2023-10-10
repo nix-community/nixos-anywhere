@@ -28,7 +28,7 @@ this path for later use.
 To generate the disk image without dependencies, execute:
 
 ```bash
-nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import <nixpkgs/nixos> {}).config.system.build.diskNoDeps'
+nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import <nixpkgs/nixos> {}).config.system.build.diskoNoDeps'
 ```
 
 This will also output a script path in `/nix/store` that will format your disk.
