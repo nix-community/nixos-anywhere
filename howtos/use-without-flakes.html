@@ -184,7 +184,7 @@ which includes all the software and configurations for the system. Make note of
 this path for later use.</p>
 <h3 id="generating-disk-image-without-dependencies"><a class="header" href="#generating-disk-image-without-dependencies">Generating Disk Image without Dependencies:</a></h3>
 <p>To generate the disk image without dependencies, execute:</p>
-<pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.diskNoDeps'
+<pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.diskoNoDeps'
 </code></pre>
 <p>This will also output a script path in <code>/nix/store</code> that will format your disk.
 Keep this path handy as well.</p>
