@@ -594,7 +594,9 @@ installation, ignoring files that already exist in destination.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="use-without-flakes"><a class="header" href="#use-without-flakes">Use without flakes</a></h1>
 <p>While <code>nixos-anywhere</code> is designed to work optimally with Nix Flakes, it also
 supports the traditional approach without flakes. This document outlines how to
-use <code>nixos-anywhere</code> without relying on flakes.</p>
+use <code>nixos-anywhere</code> without relying on flakes.
+You will need to <a href="https://github.com/nix-community/disko/blob/master/docs/HowTo.md#installing-nixos-module">import the disko nixos module</a> in your NixOS configuration
+and define disko devices as described in the <a href="https://github.com/nix-community/disko/tree/master/example">examples</a>.</p>
 <h2 id="generate-required-store-paths"><a class="header" href="#generate-required-store-paths">Generate Required Store Paths</a></h2>
 <p>Before you can use <code>nixos-anywhere</code> without flakes, you'll need to manually
 generate the paths for the NixOS system toplevel and disk image. The paths are
