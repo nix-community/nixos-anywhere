@@ -2,9 +2,10 @@
 
 While `nixos-anywhere` is designed to work optimally with Nix Flakes, it also
 supports the traditional approach without flakes. This document outlines how to
-use `nixos-anywhere` without relying on flakes.
-You will need to [import the disko nixos module](https://github.com/nix-community/disko/blob/master/docs/HowTo.md#installing-nixos-module) in your NixOS configuration
-and define disko devices as described in the [examples](https://github.com/nix-community/disko/tree/master/example).
+use `nixos-anywhere` without relying on flakes. You will need to
+[import the disko nixos module](https://github.com/nix-community/disko/blob/master/docs/HowTo.md#installing-nixos-module)
+in your NixOS configuration and define disko devices as described in the
+[examples](https://github.com/nix-community/disko/tree/master/example).
 
 ## Generate Required Store Paths
 
