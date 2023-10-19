@@ -21,6 +21,8 @@ You will need:
   performed
 - A disk configuration containing details of the file system that will be
   created on the new server.
+- A target machine, reachable via SSH, with your SSH public key deployed and and
+  the privilege to either login directly as root or to use password-less sudo.
 
 **nixos-anywhere** doesn’t need to be installed. You can run it directly from
 [Numtide's repository on Github.](https://github.com/numtide/nixos-anywhere)
@@ -101,32 +103,33 @@ below.
 
 5. Run the following command to create the `flake.lock` file:
 
-```
-nix flake lock
-```
+   ```
+   nix flake lock
+   ```
 
-Optionally, you can commit these files to a repo such as Github, or you can
-simply reference your local directory when you run **nixos-anywhere**. This
-example uses a local directory on the source machine.
+   Optionally, you can commit these files to a repo such as Github, or you can
+   simply reference your local directory when you run **nixos-anywhere**. This
+   example uses a local directory on the source machine.
 
 6. On the target machine, make sure you have access as root via ssh by adding
    your SSH key to the file `authorized_keys` in the directory `/root/.ssh`
 
 7. (Optional) Test your nixos and disko configuration:
 
-The following command will automatically test your nixos configuration and run
-disko inside a virtual machine, where
+   The following command will automatically test your nixos configuration and
+   run disko inside a virtual machine, where
 
-- `<path to configuration>` is the path to the directory or repository
-  containing `flake.nix` and `disk-config.nix`
+   - `<path to configuration>` is the path to the directory or repository
+     containing `flake.nix` and `disk-config.nix`
 
-- `<configuration name>` must match the name that immediately follows the text
-  `nixosConfigurations.` in the flake, as indicated by the comment in the
-  [example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)).
+   - `<configuration name>` must match the name that immediately follows the
+     text `nixosConfigurations.` in the flake, as indicated by the comment in
+     the
+     [example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)).
 
-```
-nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<configuration name> --vm-test
-```
+   ```
+   nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<configuration name> --vm-test
+   ```
 
 8. You can now run **nixos-anywhere** from the command line as shown below,
    where:
@@ -141,83 +144,85 @@ nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<config
 
    - `<ip address>` is the IP address of the target machine.
 
-```
-nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<configuration name> root@<ip address>
-```
+     ```
+     nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<configuration name> root@<ip address>
+     ```
 
-The command would look  like this if you had created your files in a directory
-named `/home/mydir/test` and the IP address of your target machine is
-`37.27.18.135`:
+     The command would look  like this if you had created your files in a
+     directory named `/home/mydir/test` and the IP address of your target
+     machine is `37.27.18.135`:
 
-```
-nix run github:numtide/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud root@37.27.18.135
-```
+     ```
+     nix run github:numtide/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud root@37.27.18.135
+     ```
 
-**nixos-anywhere** will then run, showing various output messages at each stage.
-It may take some time to complete, depending on Internet speeds. It should
-finish by showing the messages below before returning to the command prompt.
+     **nixos-anywhere** will then run, showing various output messages at each
+     stage. It may take some time to complete, depending on Internet speeds. It
+     should finish by showing the messages below before returning to the command
+     prompt.
 
-```
-Installation finished. No error reported.
-Warning: Permanently added '<ip-address>' (ED25519) to the list of known hosts
-```
+     ```
+     Installation finished. No error reported.
+     Warning: Permanently added '<ip-address>' (ED25519) to the list of known hosts
+     ```
 
-When this happens, the target server will have been overwritten with a new
-installation of NixOS. Note that the server's public SSH key will have changed.
+     When this happens, the target server will have been overwritten with a new
+     installation of NixOS. Note that the server's public SSH key will have
+     changed.
 
-If you have previously accessed this server using SSH, you may see the following
-message the next time you try to log in to the target.
+     If you have previously accessed this server using SSH, you may see the
+     following message the next time you try to log in to the target.
 
-```
-  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
-Someone could be eavesdropping on you right now (man-in-the-middle attack)!
-It is also possible that a host key has just been changed.
-The fingerprint for the ED25519 key sent by the remote host is
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.
-Please contact your system administrator.
-Add correct host key in ~/.ssh/known_hosts to get rid of this message.
-Offending ECDSA key in ~/.ssh/known_hosts:6
-  remove with:
-  ssh-keygen -f ~/.ssh/known_hosts" -R "<ip addrress>"
-Host key for <ip_address> has changed and you have requested strict checking.
-Host key verification failed.
-```
+     ```
+     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+     @    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+     IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+     Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+     It is also possible that a host key has just been changed.
+     The fingerprint for the ED25519 key sent by the remote host is
+     XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.
+     Please contact your system administrator.
+     Add correct host key in ~/.ssh/known_hosts to get rid of this message.
+     Offending ECDSA key in ~/.ssh/known_hosts:6
+       remove with:
+       ssh-keygen -f ~/.ssh/known_hosts" -R "<ip addrress>"
+     Host key for <ip_address> has changed and you have requested strict checking.
+     Host key verification failed.
+     ```
 
-This is because the `known_hosts` file in the `.ssh` directory now contains a
-mismatch, since the server has been overwritten. To solve this, use a text
-editor to remove the old entry from the `known_hosts` file. The next connection
-attempt will then treat this as a new server.
+     This is because the `known_hosts` file in the `.ssh` directory now contains
+     a mismatch, since the server has been overwritten. To solve this, use a
+     text editor to remove the old entry from the `known_hosts` file. The next
+     connection attempt will then treat this as a new server.
 
-The error message line `Offending ECDSA key in ~/.ssh/known_hosts:` gives the
-line number that needs to be removed from the `known_hosts` file.
+     The error message line `Offending ECDSA key in ~/.ssh/known_hosts:` gives
+     the line number that needs to be removed from the `known_hosts` file.
 
-The new server's configurations are defined in the flake. `nixos-anywhere` does
-not create `etc/nixos/configuration.nix`, since it expects the server to be
-administered remotely. Any future changes to the configuration should be made to
-the flake, and you would reference this flake when doing the nixos-rebuild
-command or a deployment tool of your choice i.e.
-[colmena](https://github.com/zhaofengli/colmena),
-[nixinate](https://github.com/MatthewCroughan/nixinate).
+     The new server's configurations are defined in the flake. `nixos-anywhere`
+     does not create `etc/nixos/configuration.nix`, since it expects the server
+     to be administered remotely. Any future changes to the configuration should
+     be made to the flake, and you would reference this flake when doing the
+     nixos-rebuild command or a deployment tool of your choice i.e.
+     [colmena](https://github.com/zhaofengli/colmena),
+     [nixinate](https://github.com/MatthewCroughan/nixinate).
 
-This example can be run from the machine itself for updating (replace
-`<URL to your flake>` with your flake i.e. `.#` if your flake is in the current
-directory):
+     This example can be run from the machine itself for updating (replace
+     `<URL to your flake>` with your flake i.e. `.#` if your flake is in the
+     current directory):
 
-```
-nixos-rebuild switch --flake <URL to your flake>
-```
+     ```
+     nixos-rebuild switch --flake <URL to your flake>
+     ```
 
-You can also run `nixos-rebuild` to update a machine remotly, if you have set up
-an openssh server and your ssh key for the root user:
+     You can also run `nixos-rebuild` to update a machine remotly, if you have
+     set up an openssh server and your ssh key for the root user:
 
-```
-nixos-rebuild switch --flake <URL to your flake> --target-host "root@<ip address>"
-```
+     ```
+     nixos-rebuild switch --flake <URL to your flake> --target-host "root@<ip address>"
+     ```
 
-For more information on different use cases of **nixos-anywhere** please refer
-to the [How to Guide](./howtos/INDEX.md), and for more technical information and
-explanation of known error messages, refer to the
-[Reference Manual](./reference.md).
+     For more information on different use cases of **nixos-anywhere** please
+     refer to the [How to Guide](./howtos/INDEX.md), and for more technical
+     information and explanation of known error messages, refer to the
+     [Reference Manual](./reference.md).
