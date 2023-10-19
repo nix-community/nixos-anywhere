@@ -76,7 +76,7 @@ below.
 
 3. **Find SSH Key Line**:\
    if you cloned
-   [our nixos-anywhere-example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)
+   [our nixos-anywhere-example](https://github.com/numtide/nixos-anywhere-examples/blob/main/configuration.nix)
    you will also replace the SSH key like this: In your configuration, locate
    the line that reads:
 
