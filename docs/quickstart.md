@@ -72,7 +72,8 @@ below.
   ```
 
   This creates the necessary configuration files under `/mnt/etc/nixos/`, which
-  you can then customize as needed.
+  you can then customize as needed and copy them to your local machine in order
+  to include them in your flake.
 
 3. **Find SSH Key Line**:\
    if you cloned
