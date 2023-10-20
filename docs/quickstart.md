@@ -32,33 +32,24 @@ below.
 
 ## Steps required to run nixos-anywhere
 
-1. **Enable Flakes and Create a Directory**:
+1. **Enable Flakes**:
 
-   - Ensure that flakes are enabled on your system. To enable flakes, refer to
-     the [NixOS Wiki](https://nixos.wiki/wiki/Flakes#enable-flakes).
-   - Create a directory to store the flake and configuration files.
+   Ensure that flakes are enabled on your system. To enable flakes, refer to the
+   [NixOS Wiki](https://nixos.wiki/wiki/Flakes#enable-flakes).
 
-2. **Initialize a Flake**: Within the newly-created directory, execute the
-   command:
+2. **Initialize a Flake**:
 
-   ```bash
-   nix flake init
-   ```
+   The easiest way to start is to copy our
+   [example flake.nix](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)
+   into a new directory. This example is tailored for a virtual machine setup
+   similar to one on [Hetzner Cloud](https://www.hetzner.com/cloud), so you
+   might need to adapt it for your setup.
 
-   This command will generate a `flake.nix` file. Modify this file according to
-   your requirements.
+   **Hardware-Specific Configuration**: If you're not using a virtual machine,
+   you'll need to generate a custom hardware configuration with
+   `nixos-generate-config`.
 
-   - **For a Minimal Setup**:\
-     You can copy and paste the example flake contents available
-     [here](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix).
-     This example is tailored for a virtual machine setup similar to one on
-     [Hetzner Cloud](https://www.hetzner.com/cloud).
-
-     **Hardware-Specific Configuration**: If you're not using a virtual machine,
-     you'll need to generate a custom hardware configuration with
-     `nixos-generate-config`.
-
-- **Getting `nixos-generate-config` on Target Machine**:
+- **Get `nixos-generate-config` onto the Target Machine**:
 
   1. **Option 1**: If NixOS is not installed, boot into an installer without
      first installing NixOS.
