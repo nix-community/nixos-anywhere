@@ -478,7 +478,7 @@ nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 if command -v zpool >/dev/null; then
   # we always want to export the zfs pools so people can boot from it without force import
   umount -Rv /mnt/
-  zpool export -a || :
+  zpool export -a || true
 fi
 # We will reboot in background so we can cleanly finish the script before the hosts go down.
 # This makes integration into scripts easier
