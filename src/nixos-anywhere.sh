@@ -476,7 +476,9 @@ if [[ ${copy_host_keys-n} == "y" ]]; then
 fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
 if command -v zpool >/dev/null; then
-  zpool export -a || : # we always want to export the zfs pools so people can boot from it without force import
+  # we always want to export the zfs pools so people can boot from it without force import
+  umount -Rv /mnt/
+  zpool export -a || :
 fi
 # We will reboot in background so we can cleanly finish the script before the hosts go down.
 # This makes integration into scripts easier
