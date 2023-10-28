@@ -407,11 +407,13 @@ for path in "${!disk_encryption_keys[@]}"; do
   ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
 done
 
-pubkey=$(ssh-keyscan -p "$ssh_port" -t ed25519 "$ssh_host" 2>/dev/null || {
-  echo "ERROR: failed to retrieve host public key for ${ssh_connection}" >&2
-  exit 1
-})
-pubkey=$(echo "$pubkey" | sed -e 's/^[^ ]* //' | base64 -w0)
+if [[ ${build_on_remote-n} == "y" ]]; then
+  pubkey=$(ssh-keyscan -p "$ssh_port" -t ed25519 "$ssh_host" 2>/dev/null || {
+    echo "ERROR: failed to retrieve host public key for ${ssh_connection}" >&2
+    exit 1
+  })
+  pubkey=$(echo "$pubkey" | sed -e 's/^[^ ]* //' | base64 -w0)
+fi
 
 if [[ -z ${disko_script-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
   step Building disko script
