@@ -17,3 +17,5 @@
 [Use without flakes](./use-without-flakes.md)
 
 [Terraform](./terraform.md)
+
+[Nix-channels / `NIX_PATH`](./nix-path.md)
