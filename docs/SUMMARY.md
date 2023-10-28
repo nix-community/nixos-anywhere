@@ -20,5 +20,6 @@ Refer to the following documentation for more information.
 - [Secrets and full disk encryption](./howtos/secrets.md)
 - [Use without flakes](./howtos/use-without-flakes.md)
 - [Terraform](./howtos/terraform.md)
+- [Nix-channels / `NIX_PATH`](./howtos/nix-path.md)
 
 [Reference](./reference.md): Reference Guide
