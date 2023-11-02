@@ -18,7 +18,6 @@
 let
   runtimeDeps = [
     gitMinimal # for git flakes
-    rsync
     # pinned because nix-copy-closure hangs if ControlPath provided for SSH: https://github.com/NixOS/nix/issues/8480
     (if lib.versionAtLeast nix.version "2.16" then nix else nixVersions.nix_2_16)
     coreutils
@@ -39,13 +38,15 @@ stdenv.mkDerivation {
 
     # We prefer the system's openssh over our own, since it might come with features not present in ours:
     # https://github.com/numtide/nixos-anywhere/issues/62
+    #
+    # We also prefer system rsync to prevent crashes between rsync and ssh.
     wrapProgram $out/bin/nixos-anywhere \
-      --prefix PATH : ${lib.makeBinPath runtimeDeps} --suffix PATH : ${lib.makeBinPath [ openssh ]}
+      --prefix PATH : ${lib.makeBinPath runtimeDeps} --suffix PATH : ${lib.makeBinPath [ openssh rsync ]}
   '';
 
   # Dependencies for our devshell
   passthru.devShell = mkShellNoCC {
-    packages = runtimeDeps ++ [ openssh terraform-docs ];
+    packages = runtimeDeps ++ [ openssh rsync terraform-docs ];
   };
 
   meta = with lib; {
