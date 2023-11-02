@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>How to Guide - nixos-anywhere - install NixOS everywhere</title>
+        <title>Nix-channels / NIX_PATH - nixos-anywhere - install NixOS everywhere</title>
 
 
         <!-- Custom HTML head -->
@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="../quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="../howtos/INDEX.html" class="active">How to Guide</a></li><li class="chapter-item expanded "><a href="../howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="../howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="../howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="../howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="../howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="../howtos/nix-path.html"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded affix "><a href="../reference.html">Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="../quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="../howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="../howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="../howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="../howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="../howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="../howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="../howtos/nix-path.html" class="active"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded affix "><a href="../reference.html">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -166,27 +166,57 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="how-to-guide-nixos-anywhere"><a class="header" href="#how-to-guide-nixos-anywhere">How To Guide: nixos-anywhere</a></h1>
-<p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
-<img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="129">
-<p><a href="./INDEX.html">Documentation Index</a></p>
-<h2 id="contents"><a class="header" href="#contents">Contents</a></h2>
-<p><a href="./no-os.html">Installing on a machine with no operating system</a></p>
-<p><a href="./custom-kexec.html">Using your own kexec image</a></p>
-<p><a href="./secrets.html">Secrets and full disk encryption</a></p>
-<p><a href="./use-without-flakes.html">Use without flakes</a></p>
-<p><a href="./terraform.html">Terraform</a></p>
-<p><a href="./nix-path.html">Nix-channels / <code>NIX_PATH</code></a></p>
+                        <h1 id="nix-channels--nix_path"><a class="header" href="#nix-channels--nix_path">Nix-channels / <code>NIX_PATH</code></a></h1>
+<p>nixos-anywhere does not install channels onto the new system by default to save
+time and disk space. This for example results in errors like:</p>
+<pre><code>(stack trace truncated; use '--show-trace' to show the full trace)
+
+error: file 'nixpkgs' was not found in the Nix search path (add it using $NIX_PATH or -I)
+
+at «none»:0: (source not available)
+</code></pre>
+<p>when using tools like nix-shell/nix-env that rely on <code>NIX_PATH</code> beeing set.</p>
+<h1 id="solution-1-set-the-nix_path-via-nixos-configuration-recommended"><a class="header" href="#solution-1-set-the-nix_path-via-nixos-configuration-recommended">Solution 1: Set the <code>NIX_PATH</code> via nixos configuration (recommended)</a></h1>
+<p>Instead of stateful channels, one can also populate the <code>NIX_PATH</code> using nixos
+configuration instead:</p>
+<pre><code class="language-nix">{
+  inputs.nixpkgs.url = &quot;github:NixOS/nixpkgs/nixpkgs-unstable&quot;;
+  # ... other inputs
+
+  outputs = { nixpkgs, ... }:
+    {
+      nixosConfigurations.yoursystem = nixpkgs.lib.nixosSystem {
+        system = &quot;x86_64-linux&quot;; # adapt to your actual system
+        modules = [
+          # This line will populate NIX_PATH
+          { nix.nixPath = [ &quot;nixpkgs=${inputs.nixpkgs}&quot; ]; }
+          # ... other modules and your configuration.nix
+        ];
+      };
+    };
+}
+</code></pre>
+<p>Advantage: This solution will be automatically kept up-to-date everytime the
+flake is updated.</p>
+<p>In your shell you will see something in your <code>$NIX_PATH</code>:</p>
+<pre><code class="language-shellSession">$ echo $NIX_PATH
+/root/.nix-defexpr/channels:nixpkgs=/nix/store/8b61j28rpy11dg8hanbs2x710d8w3v0d-source
+</code></pre>
+<h1 id="solution-2-manually-add-the-channel"><a class="header" href="#solution-2-manually-add-the-channel">Solution 2: Manually add the channel</a></h1>
+<p>On the installed machine, run:</p>
+<pre><code class="language-shellSession">$ nix-channel --add https://nixos.org/channels/nixos-unstable nixos
+$ nix-channel --update
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../quickstart.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../howtos/terraform.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../howtos/no-os.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -196,11 +226,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../quickstart.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../howtos/terraform.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../howtos/no-os.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
