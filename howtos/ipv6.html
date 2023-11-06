@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Using your own kexec image - nixos-anywhere - install NixOS everywhere</title>
+        <title>IPv6-only targets - nixos-anywhere - install NixOS everywhere</title>
 
 
         <!-- Custom HTML head -->
@@ -83,7 +83,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="../quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="../howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="../howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="../howtos/custom-kexec.html" class="active"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="../howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="../howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="../howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="../howtos/nix-path.html"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded "><a href="../howtos/ipv6.html"><strong aria-hidden="true">7.</strong> IPv6-only targets</a></li><li class="chapter-item expanded affix "><a href="../reference.html">Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="../quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="../howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="../howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="../howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="../howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="../howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="../howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="../howtos/nix-path.html"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded "><a href="../howtos/ipv6.html" class="active"><strong aria-hidden="true">7.</strong> IPv6-only targets</a></li><li class="chapter-item expanded affix "><a href="../reference.html">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -166,51 +166,31 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="using-your-own-kexec-image"><a class="header" href="#using-your-own-kexec-image">Using your own kexec image</a></h1>
-<p>By default, <code>nixos-anywhere</code> downloads the kexec image from the
-<a href="https://github.com/nix-community/nixos-images#kexec-tarballs">NixOS images repository</a>.</p>
-<p>However, you can provide your own <code>kexec</code> image file if you need to use a
-different one. This is particularly useful for architectures other than <code>x86_64</code>
-and <code>aarch64</code>, since they don't have a pre-build image.</p>
-<p>To do this, use the <code>--kexec</code> command line switch followed by the path to your
-image file. The image will be uploaded prior to execution.</p>
-<p>Here's an example command that demonstrates how to use a custom kexec image with
-<code>nixos-anywhere</code>:</p>
-<pre><code>nix run github:numtide/nixos-anywhere -- \
-  --kexec &quot;$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz&quot; \
-  --flake 'github:your-user/your-repo#your-system' \
-  root@yourip
+                        <h1 id="nixos-anywhere-on-ipv6-only-targets"><a class="header" href="#nixos-anywhere-on-ipv6-only-targets">NixOS-anywhere on Ipv6-only targets</a></h1>
+<p>As GitHub engineers still haven't enabled the ipv6 switch, the kexec image
+hosted on GitHub, cannot be used unfortunally on ipv6-only hosts. However it is
+possible to use an ipv6 proxy for github content like that:</p>
+<pre><code>nixos-anywhere \
+  --kexec https://gh-v6.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz \
+...
 </code></pre>
-<p>Make sure to replace <code>github:your-user/your-repo#your-system</code> with the
-appropriate Flake URL representing your NixOS configuration.</p>
-<p>The example above assumes that your local machine can build for aarch64 in one
-of the following ways:</p>
-<ul>
-<li>
-<p>Natively</p>
-</li>
-<li>
-<p>Through a remote builder</p>
-</li>
-<li>
-<p>By emulating the architecture with qemu using the following NixOS
-configuration:</p>
-</li>
-</ul>
-<pre><code class="language-nix">{
-  boot.binfmt.emulatedSystems = [ &quot;aarch64-linux&quot; ];
-}
+<p>This proxy is hosted by (numtide)[https://numtide.com/]. It also works for ipv4.</p>
+<p>Alternativly it is also possible to reference a local file:</p>
+<pre><code>nixos-anywhere \
+  --kexec ./nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz \
+...
 </code></pre>
+<p>This tarball will be than uploaded via sftp to the target.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../howtos/no-os.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../howtos/nix-path.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../howtos/secrets.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -220,11 +200,11 @@ configuration:</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../howtos/no-os.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../howtos/nix-path.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../howtos/secrets.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

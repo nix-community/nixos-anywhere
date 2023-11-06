@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="howtos/nix-path.html"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="howtos/nix-path.html"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded "><a href="howtos/ipv6.html"><strong aria-hidden="true">7.</strong> IPv6-only targets</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -433,6 +433,7 @@ information and explanation of known error messages, refer to the
 <p><a href="howtos/./use-without-flakes.html">Use without flakes</a></p>
 <p><a href="howtos/./terraform.html">Terraform</a></p>
 <p><a href="howtos/./nix-path.html">Nix-channels / <code>NIX_PATH</code></a></p>
+<p><a href="howtos/./ipv6.html">IPv6-only targets</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="installing-on-a-machine-with-no-operating-system"><a class="header" href="#installing-on-a-machine-with-no-operating-system">Installing on a machine with no operating system</a></h1>
 <p>If your machine doesn't currently have an operating system installed, you can
 still run <code>nixos-anywhere</code> remotely to automate the install. To do this, you
@@ -670,6 +671,21 @@ flake is updated.</p>
 <pre><code class="language-shellSession">$ nix-channel --add https://nixos.org/channels/nixos-unstable nixos
 $ nix-channel --update
 </code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="nixos-anywhere-on-ipv6-only-targets"><a class="header" href="#nixos-anywhere-on-ipv6-only-targets">NixOS-anywhere on Ipv6-only targets</a></h1>
+<p>As GitHub engineers still haven't enabled the ipv6 switch, the kexec image
+hosted on GitHub, cannot be used unfortunally on ipv6-only hosts. However it is
+possible to use an ipv6 proxy for github content like that:</p>
+<pre><code>nixos-anywhere \
+  --kexec https://gh-v6.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz \
+...
+</code></pre>
+<p>This proxy is hosted by (numtide)[https://numtide.com/]. It also works for ipv4.</p>
+<p>Alternativly it is also possible to reference a local file:</p>
+<pre><code>nixos-anywhere \
+  --kexec ./nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz \
+...
+</code></pre>
+<p>This tarball will be than uploaded via sftp to the target.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="reference-manual-nixos-anywhere"><a class="header" href="#reference-manual-nixos-anywhere">Reference Manual: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
 <img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="141">
