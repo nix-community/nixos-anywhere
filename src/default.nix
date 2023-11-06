@@ -16,6 +16,11 @@
 , mkShellNoCC
 }:
 let
+  # TODO: add this to nixpkgs
+  rsync' = rsync.overrideAttrs (old: {
+    # https://github.com/WayneD/rsync/issues/511#issuecomment-1774612577
+    patches = [ ./rsync-fortified-strlcpy-fix.patch ];
+  });
   runtimeDeps = [
     gitMinimal # for git flakes
     # pinned because nix-copy-closure hangs if ControlPath provided for SSH: https://github.com/NixOS/nix/issues/8480
@@ -26,6 +31,7 @@ let
     gawk
     findutils
     gnused # needed by ssh-copy-id
+    rsync' # used to upload extra-files
   ];
 in
 stdenv.mkDerivation {
@@ -41,12 +47,12 @@ stdenv.mkDerivation {
     #
     # We also prefer system rsync to prevent crashes between rsync and ssh.
     wrapProgram $out/bin/nixos-anywhere \
-      --prefix PATH : ${lib.makeBinPath runtimeDeps} --suffix PATH : ${lib.makeBinPath [ openssh rsync ]}
+      --prefix PATH : ${lib.makeBinPath runtimeDeps} --suffix PATH : ${lib.makeBinPath [ openssh ]}
   '';
 
   # Dependencies for our devshell
   passthru.devShell = mkShellNoCC {
-    packages = runtimeDeps ++ [ openssh rsync terraform-docs ];
+    packages = runtimeDeps ++ [ openssh terraform-docs ];
   };
 
   meta = with lib; {
