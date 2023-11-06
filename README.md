@@ -121,3 +121,4 @@ customers make their project lifecycles more efficient by:
 
 [Contact us](https://numtide.com/contact) if you have a project in mind, or if
 you need help with any of our supported tools, including this one. We'd love to
+hear from you.
