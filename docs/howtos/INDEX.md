@@ -19,3 +19,5 @@
 [Terraform](./terraform.md)
 
 [Nix-channels / `NIX_PATH`](./nix-path.md)
+
+[IPv6-only targets](./ipv6.md)

@@ -21,5 +21,6 @@ Refer to the following documentation for more information.
 - [Use without flakes](./howtos/use-without-flakes.md)
 - [Terraform](./howtos/terraform.md)
 - [Nix-channels / `NIX_PATH`](./howtos/nix-path.md)
+- [IPv6-only targets](./howtos/ipv6.md)
 
 [Reference](./reference.md): Reference Guide
