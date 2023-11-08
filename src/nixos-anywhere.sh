@@ -447,11 +447,21 @@ if [[ -n ${extra_files-} ]]; then
   if [[ -d $extra_files ]]; then
     extra_files="$extra_files/"
   fi
+  # If `ssh_host` is an IPv6 address, we need to wrap it in brackets.
+  if [[ $ssh_host =~ ^[0-9a-fA-F:]+$ ]]; then
+    # TODO: If the user changes from `root` to something else, this will fail.
+    rsync_destination="root@[${ssh_host}]:/mnt/"
+  else
+    # NOTE: Yes, `ssh_connection` is exactly `root@${ssh_host}`, but we want to show
+    # that IPv6 and IPv4 addresses differ only in whether they are wrapped in brackets.
+    # Indirection through another variable like `ssh_connection` obscures this.
+    rsync_destination="root@${ssh_host}:/mnt/"
+  fi
   step Copying extra files
   rsync -rlpv -FF \
     -e "ssh -i \"$ssh_key_dir\"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_args[*]}" \
     "$extra_files" \
-    "${ssh_connection}:/mnt/"
+    "$rsync_destination"
   ssh_ "chmod 755 /mnt" # rsync also changes permissions of /mnt
 fi
 
