@@ -16,11 +16,6 @@
 , mkShellNoCC
 }:
 let
-  # TODO: add this to nixpkgs
-  rsync' = rsync.overrideAttrs (old: {
-    # https://github.com/WayneD/rsync/issues/511#issuecomment-1774612577
-    patches = [ ./rsync-fortified-strlcpy-fix.patch ];
-  });
   runtimeDeps = [
     gitMinimal # for git flakes
     # pinned because nix-copy-closure hangs if ControlPath provided for SSH: https://github.com/NixOS/nix/issues/8480
@@ -31,7 +26,7 @@ let
     gawk
     findutils
     gnused # needed by ssh-copy-id
-    rsync' # used to upload extra-files
+    rsync # used to upload extra-files
   ];
 in
 stdenv.mkDerivation {
