@@ -14,7 +14,7 @@ Here's an example command that demonstrates how to use a custom kexec image with
 `nixos-anywhere`:
 
 ```
-nix run github:numtide/nixos-anywhere -- \
+nix run github:nix-community/nixos-anywhere -- \
   --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz" \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip

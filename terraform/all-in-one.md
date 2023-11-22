@@ -11,7 +11,7 @@ locals {
 }
 
 module "deploy" {
-  source                 = "github.com/numtide/nixos-anywhere//terraform/all-in-one"
+  source                 = "github.com/nix-community/nixos-anywhere//terraform/all-in-one"
   # with flakes
   nixos_system_attr      = ".#nixosConfigurations.mymachine.config.system.build.toplevel"
   nixos_partitioner_attr = ".#nixosConfigurations.mymachine.config.system.build.diskoScript"

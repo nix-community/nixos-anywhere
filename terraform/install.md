@@ -10,7 +10,7 @@ locals {
 }
 
 module "system-build" {
-  source            = "github.com/numtide/nixos-anywhere//terraform/nix-build"
+  source            = "github.com/nix-community/nixos-anywhere//terraform/nix-build"
   # with flakes
   attribute         = ".#nixosConfigurations.mymachine.config.system.build.toplevel"
   # without flakes
@@ -20,7 +20,7 @@ module "system-build" {
 }
 
 module "disko" {
-  source         = "github.com/numtide/nixos-anywhere//terraform/nix-build"
+  source         = "github.com/nix-community/nixos-anywhere//terraform/nix-build"
   # with flakes
   attribute      = ".#nixosConfigurations.mymachine.config.system.build.diskoScript"
   # without flakes
@@ -30,7 +30,7 @@ module "disko" {
 }
 
 module "install" {
-  source            = "github.com/numtide/nixos-anywhere//terraform/install"
+  source            = "github.com/nix-community/nixos-anywhere//terraform/install"
   nixos_system      = module.system-build.result.out
   nixos_partitioner = module.disko.result.out
   target_host       = local.ipv4

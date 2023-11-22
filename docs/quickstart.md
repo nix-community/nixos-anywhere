@@ -2,7 +2,7 @@
 
 **_Install NixOS everywhere via ssh_**
 
-<img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
+<img src="https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.png" width="150" height="150">
 
 [Documentation Index](./INDEX.md)
 
@@ -25,7 +25,7 @@ You will need:
   the privilege to either login directly as root or to use password-less sudo.
 
 **nixos-anywhere** doesn’t need to be installed. You can run it directly from
-[Numtide's repository on Github.](https://github.com/numtide/nixos-anywhere)
+[Numtide's repository on Github.](https://github.com/nix-community/nixos-anywhere)
 
 Details of the flake, the disk configuration and the CLI command are discussed
 below.
@@ -40,7 +40,7 @@ below.
 2. **Initialize a Flake**:
 
    The easiest way to start is to copy our
-   [example flake.nix](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)
+   [example flake.nix](https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix)
    into a new directory. This example is tailored for a virtual machine setup
    similar to one on [Hetzner Cloud](https://www.hetzner.com/cloud), so you
    might need to adapt it for your setup.
@@ -68,7 +68,7 @@ below.
 
 3. **Find SSH Key Line**:\
    if you cloned
-   [our nixos-anywhere-example](https://github.com/numtide/nixos-anywhere-examples/blob/main/configuration.nix)
+   [our nixos-anywhere-example](https://github.com/nix-community/nixos-anywhere-examples/blob/main/configuration.nix)
    you will also replace the SSH key like this: In your configuration, locate
    the line that reads:
 
@@ -84,7 +84,7 @@ below.
    used to specify the disk layout to the **disko** tool, which nixos-anywhere
    uses to partition, format and mount the disks. Again, for a simple
    installation you can paste the contents from the example
-   [here](https://github.com/numtide/nixos-anywhere-examples/blob/main/disk-config.nix).
+   [here](https://github.com/nix-community/nixos-anywhere-examples/blob/main/disk-config.nix).
    This configures a standard GPT (GUID Partition Table) partition compatible
    with both EFI and BIOS systems, and mounts the disk as `/dev/sda`. If this
    doesn’t meet your requirements, choose an example that suits your disk layout
@@ -117,10 +117,10 @@ below.
    - `<configuration name>` must match the name that immediately follows the
      text `nixosConfigurations.` in the flake, as indicated by the comment in
      the
-     [example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)).
+     [example](https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix)).
 
    ```
-   nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<configuration name> --vm-test
+   nix run github:nix-community/nixos-anywhere -- --flake <path to configuration>#<configuration name> --vm-test
    ```
 
 8. You can now run **nixos-anywhere** from the command line as shown below,
@@ -132,12 +132,12 @@ below.
    - `<configuration name>` must match the name that immediately follows the
      text `nixosConfigurations.` in the flake, as indicated by the comment in
      the
-     [example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)).
+     [example](https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix)).
 
    - `<ip address>` is the IP address of the target machine.
 
      ```
-     nix run github:numtide/nixos-anywhere -- --flake <path to configuration>#<configuration name> root@<ip address>
+     nix run github:nix-community/nixos-anywhere -- --flake <path to configuration>#<configuration name> root@<ip address>
      ```
 
      The command would look  like this if you had created your files in a
@@ -145,7 +145,7 @@ below.
      machine is `37.27.18.135`:
 
      ```
-     nix run github:numtide/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud root@37.27.18.135
+     nix run github:nix-community/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud root@37.27.18.135
      ```
 
      **nixos-anywhere** will then run, showing various output messages at each

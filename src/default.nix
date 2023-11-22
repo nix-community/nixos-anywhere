@@ -38,7 +38,7 @@ stdenv.mkDerivation {
     install -D -m 0755 src/nixos-anywhere.sh $out/bin/nixos-anywhere
 
     # We prefer the system's openssh over our own, since it might come with features not present in ours:
-    # https://github.com/numtide/nixos-anywhere/issues/62
+    # https://github.com/nix-community/nixos-anywhere/issues/62
     #
     # We also prefer system rsync to prevent crashes between rsync and ssh.
     wrapProgram $out/bin/nixos-anywhere \
@@ -52,7 +52,7 @@ stdenv.mkDerivation {
 
   meta = with lib; {
     description = "Install nixos everywhere via ssh";
-    homepage = "https://github.com/numtide/nixos-anywhere";
+    homepage = "https://github.com/nix-community/nixos-anywhere";
     license = licenses.mit;
     platforms = platforms.all;
   };

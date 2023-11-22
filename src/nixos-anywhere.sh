@@ -359,7 +359,7 @@ if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
       kexec_url="https://github.com/nix-community/nixos-images/releases/download/nixos-23.05/nixos-kexec-installer-noninteractive-${is_arch}-linux.tar.gz"
       ;;
     *)
-      abort "Unsupported architecture: ${is_arch}. Our default kexec images only support x86_64 and aarch64 cpus. Checkout https://github.com/numtide/nixos-anywhere/#using-your-own-kexec-image for more information."
+      abort "Unsupported architecture: ${is_arch}. Our default kexec images only support x86_64 and aarch64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information."
       ;;
     esac
   fi

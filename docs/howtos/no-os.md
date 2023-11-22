@@ -64,7 +64,7 @@ ssh -v nixos@fec0::5054:ff:fe12:3456
 You can then use the IP address to run `nixos-anywhere` like this:
 
 ```
-nix run github:numtide/nixos-anywhere -- --flake '.#myconfig' nixos@fec0::5054:ff:fe12:3456
+nix run github:nix-community/nixos-anywhere -- --flake '.#myconfig' nixos@fec0::5054:ff:fe12:3456
 ```
 
 This example assumes a flake in the curent directory containing a configuration

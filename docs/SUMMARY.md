@@ -2,7 +2,7 @@
 
 **_Install NixOS everywhere via ssh_**
 
-<img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="149">
+<img title="" src="https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.png" alt="" width="149">
 
 The **nixos-anywhere** tool allows you to pre-configure the whole process of
 installing NixOS, and run the install remotely with a single CLI command.
