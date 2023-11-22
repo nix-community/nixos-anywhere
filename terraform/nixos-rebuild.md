@@ -10,7 +10,7 @@ locals {
 }
 
 module "system-build" {
-  source              = "github.com/numtide/nixos-anywhere//terraform/nix-build"
+  source              = "github.com/nix-community/nixos-anywhere//terraform/nix-build"
   # with flakes
   attribute           = ".#nixosConfigurations.mymachine.config.system.build.toplevel"
   # without flakes
@@ -20,7 +20,7 @@ module "system-build" {
 }
 
 module "deploy" {
-  source       = "github.com/numtide/nixos-anywhere//terraform/nixos-rebuild"
+  source       = "github.com/nix-community/nixos-anywhere//terraform/nixos-rebuild"
   nixos_system = module.system-build.result.out
   target_host  = local.ipv4
 }
