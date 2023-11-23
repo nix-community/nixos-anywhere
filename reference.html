@@ -173,7 +173,7 @@
                     <main>
                         <h1 id="reference-manual-nixos-anywhere"><a class="header" href="#reference-manual-nixos-anywhere">Reference Manual: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
-<img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="141">
+<img title="" src="https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.png" alt="" width="141">
 <p><a href="./INDEX.html">Documentation Index</a></p>
 <p>TODO: Populate this guide properly</p>
 <h2 id="contents"><a class="header" href="#contents">Contents</a></h2>
@@ -233,7 +233,7 @@ Options:
 <p>TODO: Add additional error messages and meanings. Fill in missing explanations</p>
 <p>This section lists known error messages and their explanations. Some
 explanations may refer to the following CLI syntax:</p>
-<p><code>nix run github:numtide/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; root@&lt;ip address&gt;</code></p>
+<p><code>nix run github:nix-community/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; root@&lt;ip address&gt;</code></p>
 <p>This list is not comprehensive. It's possible you may encounter errors that
 originate from the underlying operating system. These should be documented in
 the relevant operating system manual.</p>
@@ -249,7 +249,7 @@ the relevant operating system manual.</p>
 <tr><td>8</td><td>no tar command found, but required to unpack kexec tarball</td><td>The destination machine does not have a <code>tar</code> command available. This is needed to unpack the <code>kexec</code>.</td></tr>
 <tr><td>9</td><td>no setsid command found, but required to run the kexec script under a new session</td><td>The destination machine does not have the <code>setsid</code> command available</td></tr>
 <tr><td>10</td><td>This script requires Linux as the operating system, but got <operating system></td><td>The destination machine is not running Linux</td></tr>
-<tr><td>11</td><td>The default kexec image only support x86_64 cpus. Checkout https://github.com/numtide/nixos-anywhere/#using-your-own-kexec-image for more information.</td><td>By default, <code>nixos-anywhere</code> uses its own <code>kexec</code> image, which will only run on x86_64 CPUs. For other CPU types, you can use your own <code>kexec</code> image instead. Refer to the <a href="./howtos#using-your-own-kexec-image">How To Guide</a> for instructions.</td></tr>
+<tr><td>11</td><td>The default kexec image only support x86_64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information.</td><td>By default, <code>nixos-anywhere</code> uses its own <code>kexec</code> image, which will only run on x86_64 CPUs. For other CPU types, you can use your own <code>kexec</code> image instead. Refer to the <a href="./howtos#using-your-own-kexec-image">How To Guide</a> for instructions.</td></tr>
 <tr><td>12</td><td>Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri.</td><td>This is a <code>disko</code> error. As for Error #2</td></tr>
 <tr><td></td><td>For example, to use the output diskoConfigurations.foo from the flake.nix, append &quot;#foo&quot; to the flake-uri.</td><td></td></tr>
 <tr><td>13</td><td>mode must be either create, mount or zap_create_mount</td><td>This is a <code>disko</code> error. The <code>disko</code> switches have not been used correctly. This could happen if you supplied your own <code>disko</code> script using the -s option</td></tr>

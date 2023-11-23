@@ -174,7 +174,7 @@
                     <main>
                         <h1 id="system-requirements-nixos-anywhere"><a class="header" href="#system-requirements-nixos-anywhere">System Requirements: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
-<img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
+<img src="https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.png" width="150" height="150">
 <p><a href="./INDEX.html">Documentation Index</a></p>
 <h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
 <h3 id="source-machine"><a class="header" href="#source-machine">Source Machine:</a></h3>
@@ -228,7 +228,7 @@ manually.</li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quickstart-guide-nixos-anywhere"><a class="header" href="#quickstart-guide-nixos-anywhere">Quickstart Guide: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
-<img src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" width="150" height="150">
+<img src="https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.png" width="150" height="150">
 <p><a href="./INDEX.html">Documentation Index</a></p>
 <h2 id="introduction"><a class="header" href="#introduction">Introduction</a></h2>
 <p>This guide documents a simple installation of NixOS using <strong>nixos-anywhere</strong> on
@@ -247,7 +247,7 @@ created on the new server.</li>
 the privilege to either login directly as root or to use password-less sudo.</li>
 </ul>
 <p><strong>nixos-anywhere</strong> doesn’t need to be installed. You can run it directly from
-<a href="https://github.com/numtide/nixos-anywhere">Numtide's repository on Github.</a></p>
+<a href="https://github.com/nix-community/nixos-anywhere">Numtide's repository on Github.</a></p>
 <p>Details of the flake, the disk configuration and the CLI command are discussed
 below.</p>
 <h2 id="steps-required-to-run-nixos-anywhere"><a class="header" href="#steps-required-to-run-nixos-anywhere">Steps required to run nixos-anywhere</a></h2>
@@ -260,7 +260,7 @@ below.</p>
 <li>
 <p><strong>Initialize a Flake</strong>:</p>
 <p>The easiest way to start is to copy our
-<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix">example flake.nix</a>
+<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example flake.nix</a>
 into a new directory. This example is tailored for a virtual machine setup
 similar to one on <a href="https://www.hetzner.com/cloud">Hetzner Cloud</a>, so you
 might need to adapt it for your setup.</p>
@@ -292,7 +292,7 @@ to include them in your flake.</p>
 <li>
 <p><strong>Find SSH Key Line</strong>:<br />
 if you cloned
-<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/configuration.nix">our nixos-anywhere-example</a>
+<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/configuration.nix">our nixos-anywhere-example</a>
 you will also replace the SSH key like this: In your configuration, locate
 the line that reads:</p>
 <pre><code class="language-bash"># change this to your ssh key
@@ -306,7 +306,7 @@ not be able to log into the target machine post-installation without it.</p>
 used to specify the disk layout to the <strong>disko</strong> tool, which nixos-anywhere
 uses to partition, format and mount the disks. Again, for a simple
 installation you can paste the contents from the example
-<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/disk-config.nix">here</a>.
+<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/disk-config.nix">here</a>.
 This configures a standard GPT (GUID Partition Table) partition compatible
 with both EFI and BIOS systems, and mounts the disk as <code>/dev/sda</code>. If this
 doesn’t meet your requirements, choose an example that suits your disk layout
@@ -340,10 +340,10 @@ containing <code>flake.nix</code> and <code>disk-config.nix</code></p>
 <p><code>&lt;configuration name&gt;</code> must match the name that immediately follows the
 text <code>nixosConfigurations.</code> in the flake, as indicated by the comment in
 the
-<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
+<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
 </li>
 </ul>
-<pre><code>nix run github:numtide/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; --vm-test
+<pre><code>nix run github:nix-community/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; --vm-test
 </code></pre>
 </li>
 <li>
@@ -358,16 +358,16 @@ containing <code>flake.nix</code> and <code>disk-config.nix</code></p>
 <p><code>&lt;configuration name&gt;</code> must match the name that immediately follows the
 text <code>nixosConfigurations.</code> in the flake, as indicated by the comment in
 the
-<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
+<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
 </li>
 <li>
 <p><code>&lt;ip address&gt;</code> is the IP address of the target machine.</p>
-<pre><code>nix run github:numtide/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; root@&lt;ip address&gt;
+<pre><code>nix run github:nix-community/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; root@&lt;ip address&gt;
 </code></pre>
 <p>The command would look  like this if you had created your files in a
 directory named <code>/home/mydir/test</code> and the IP address of your target
 machine is <code>37.27.18.135</code>:</p>
-<pre><code>nix run github:numtide/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud root@37.27.18.135
+<pre><code>nix run github:nix-community/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud root@37.27.18.135
 </code></pre>
 <p><strong>nixos-anywhere</strong> will then run, showing various output messages at each
 stage. It may take some time to complete, depending on Internet speeds. It
@@ -429,7 +429,7 @@ information and explanation of known error messages, refer to the
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="how-to-guide-nixos-anywhere"><a class="header" href="#how-to-guide-nixos-anywhere">How To Guide: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
-<img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="129">
+<img title="" src="https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.png" alt="" width="129">
 <p><a href="howtos/./INDEX.html">Documentation Index</a></p>
 <h2 id="contents"><a class="header" href="#contents">Contents</a></h2>
 <p><a href="howtos/./no-os.html">Installing on a machine with no operating system</a></p>
@@ -488,7 +488,7 @@ SSH command (replace the IP address with your own):</p>
 <pre><code>ssh -v nixos@fec0::5054:ff:fe12:3456
 </code></pre>
 <p>You can then use the IP address to run <code>nixos-anywhere</code> like this:</p>
-<pre><code>nix run github:numtide/nixos-anywhere -- --flake '.#myconfig' nixos@fec0::5054:ff:fe12:3456
+<pre><code>nix run github:nix-community/nixos-anywhere -- --flake '.#myconfig' nixos@fec0::5054:ff:fe12:3456
 </code></pre>
 <p>This example assumes a flake in the curent directory containing a configuration
 named <code>myconfig</code>.</p>
@@ -502,7 +502,7 @@ and <code>aarch64</code>, since they don't have a pre-build image.</p>
 image file. The image will be uploaded prior to execution.</p>
 <p>Here's an example command that demonstrates how to use a custom kexec image with
 <code>nixos-anywhere</code>:</p>
-<pre><code>nix run github:numtide/nixos-anywhere -- \
+<pre><code>nix run github:nix-community/nixos-anywhere -- \
   --kexec &quot;$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz&quot; \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip
@@ -633,7 +633,7 @@ provider.</p>
 <p>You can add this expression the <code>packages</code> list in your devshell in flake.nix or
 in shell.nix.</p>
 <p>Checkout out the
-<a href="https://github.com/numtide/nixos-anywhere/tree/main/terraform">module reference</a>
+<a href="https://github.com/nix-community/nixos-anywhere/tree/main/terraform">module reference</a>
 for examples and module parameter on how to use the modules.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="nix-channels--nix_path"><a class="header" href="#nix-channels--nix_path">Nix-channels / <code>NIX_PATH</code></a></h1>
 <p>nixos-anywhere does not install channels onto the new system by default to save
@@ -693,7 +693,7 @@ possible to use an ipv6 proxy for github content like that:</p>
 <p>This tarball will be than uploaded via sftp to the target.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="reference-manual-nixos-anywhere"><a class="header" href="#reference-manual-nixos-anywhere">Reference Manual: nixos-anywhere</a></h1>
 <p><strong><em>Install NixOS everywhere via ssh</em></strong></p>
-<img title="" src="https://raw.githubusercontent.com/numtide/nixos-anywhere/main/docs/logo.png" alt="" width="141">
+<img title="" src="https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.png" alt="" width="141">
 <p><a href="./INDEX.html">Documentation Index</a></p>
 <p>TODO: Populate this guide properly</p>
 <h2 id="contents-1"><a class="header" href="#contents-1">Contents</a></h2>
@@ -753,7 +753,7 @@ Options:
 <p>TODO: Add additional error messages and meanings. Fill in missing explanations</p>
 <p>This section lists known error messages and their explanations. Some
 explanations may refer to the following CLI syntax:</p>
-<p><code>nix run github:numtide/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; root@&lt;ip address&gt;</code></p>
+<p><code>nix run github:nix-community/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; root@&lt;ip address&gt;</code></p>
 <p>This list is not comprehensive. It's possible you may encounter errors that
 originate from the underlying operating system. These should be documented in
 the relevant operating system manual.</p>
@@ -769,7 +769,7 @@ the relevant operating system manual.</p>
 <tr><td>8</td><td>no tar command found, but required to unpack kexec tarball</td><td>The destination machine does not have a <code>tar</code> command available. This is needed to unpack the <code>kexec</code>.</td></tr>
 <tr><td>9</td><td>no setsid command found, but required to run the kexec script under a new session</td><td>The destination machine does not have the <code>setsid</code> command available</td></tr>
 <tr><td>10</td><td>This script requires Linux as the operating system, but got <operating system></td><td>The destination machine is not running Linux</td></tr>
-<tr><td>11</td><td>The default kexec image only support x86_64 cpus. Checkout https://github.com/numtide/nixos-anywhere/#using-your-own-kexec-image for more information.</td><td>By default, <code>nixos-anywhere</code> uses its own <code>kexec</code> image, which will only run on x86_64 CPUs. For other CPU types, you can use your own <code>kexec</code> image instead. Refer to the <a href="./howtos#using-your-own-kexec-image">How To Guide</a> for instructions.</td></tr>
+<tr><td>11</td><td>The default kexec image only support x86_64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information.</td><td>By default, <code>nixos-anywhere</code> uses its own <code>kexec</code> image, which will only run on x86_64 CPUs. For other CPU types, you can use your own <code>kexec</code> image instead. Refer to the <a href="./howtos#using-your-own-kexec-image">How To Guide</a> for instructions.</td></tr>
 <tr><td>12</td><td>Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri.</td><td>This is a <code>disko</code> error. As for Error #2</td></tr>
 <tr><td></td><td>For example, to use the output diskoConfigurations.foo from the flake.nix, append &quot;#foo&quot; to the flake-uri.</td><td></td></tr>
 <tr><td>13</td><td>mode must be either create, mount or zap_create_mount</td><td>This is a <code>disko</code> error. The <code>disko</code> switches have not been used correctly. This could happen if you supplied your own <code>disko</code> script using the -s option</td></tr>
