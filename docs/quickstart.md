@@ -40,7 +40,7 @@ below.
 2. **Initialize a Flake**:
 
    The easiest way to start is to copy our
-   [example flake.nix](https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix)
+   [example flake.nix](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)
    into a new directory. This example is tailored for a virtual machine setup
    similar to one on [Hetzner Cloud](https://www.hetzner.com/cloud), so you
    might need to adapt it for your setup.
