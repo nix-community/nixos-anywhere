@@ -292,7 +292,7 @@ to include them in your flake.</p>
 <li>
 <p><strong>Find SSH Key Line</strong>:<br />
 if you cloned
-<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/configuration.nix">our nixos-anywhere-example</a>
+<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/configuration.nix">our nixos-anywhere-example</a>
 you will also replace the SSH key like this: In your configuration, locate
 the line that reads:</p>
 <pre><code class="language-bash"># change this to your ssh key
@@ -306,7 +306,7 @@ not be able to log into the target machine post-installation without it.</p>
 used to specify the disk layout to the <strong>disko</strong> tool, which nixos-anywhere
 uses to partition, format and mount the disks. Again, for a simple
 installation you can paste the contents from the example
-<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/disk-config.nix">here</a>.
+<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/disk-config.nix">here</a>.
 This configures a standard GPT (GUID Partition Table) partition compatible
 with both EFI and BIOS systems, and mounts the disk as <code>/dev/sda</code>. If this
 doesn’t meet your requirements, choose an example that suits your disk layout
@@ -340,7 +340,7 @@ containing <code>flake.nix</code> and <code>disk-config.nix</code></p>
 <p><code>&lt;configuration name&gt;</code> must match the name that immediately follows the
 text <code>nixosConfigurations.</code> in the flake, as indicated by the comment in
 the
-<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
+<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
 </li>
 </ul>
 <pre><code>nix run github:nix-community/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; --vm-test
@@ -358,7 +358,7 @@ containing <code>flake.nix</code> and <code>disk-config.nix</code></p>
 <p><code>&lt;configuration name&gt;</code> must match the name that immediately follows the
 text <code>nixosConfigurations.</code> in the flake, as indicated by the comment in
 the
-<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
+<a href="https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
 </li>
 <li>
 <p><code>&lt;ip address&gt;</code> is the IP address of the target machine.</p>
