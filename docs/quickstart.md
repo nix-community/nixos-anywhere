@@ -68,7 +68,7 @@ below.
 
 3. **Find SSH Key Line**:\
    if you cloned
-   [our nixos-anywhere-example](https://github.com/nix-community/nixos-anywhere-examples/blob/main/configuration.nix)
+   [our nixos-anywhere-example](https://github.com/numtide/nixos-anywhere-examples/blob/main/configuration.nix)
    you will also replace the SSH key like this: In your configuration, locate
    the line that reads:
 
@@ -84,7 +84,7 @@ below.
    used to specify the disk layout to the **disko** tool, which nixos-anywhere
    uses to partition, format and mount the disks. Again, for a simple
    installation you can paste the contents from the example
-   [here](https://github.com/nix-community/nixos-anywhere-examples/blob/main/disk-config.nix).
+   [here](https://github.com/numtide/nixos-anywhere-examples/blob/main/disk-config.nix).
    This configures a standard GPT (GUID Partition Table) partition compatible
    with both EFI and BIOS systems, and mounts the disk as `/dev/sda`. If this
    doesn’t meet your requirements, choose an example that suits your disk layout
@@ -117,7 +117,7 @@ below.
    - `<configuration name>` must match the name that immediately follows the
      text `nixosConfigurations.` in the flake, as indicated by the comment in
      the
-     [example](https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix)).
+     [example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)).
 
    ```
    nix run github:nix-community/nixos-anywhere -- --flake <path to configuration>#<configuration name> --vm-test
@@ -132,7 +132,7 @@ below.
    - `<configuration name>` must match the name that immediately follows the
      text `nixosConfigurations.` in the flake, as indicated by the comment in
      the
-     [example](https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix)).
+     [example](https://github.com/numtide/nixos-anywhere-examples/blob/main/flake.nix)).
 
    - `<ip address>` is the IP address of the target machine.
 
