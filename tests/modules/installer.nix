@@ -1,4 +1,4 @@
-{ config, lib, pkgs, inputs, ... }:
+{ pkgs, inputs, ... }:
 let
   disko = inputs.disko;
   kexec-installer = inputs.kexec-installer;
