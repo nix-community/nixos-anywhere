@@ -288,6 +288,7 @@ step Uploading install SSH keys
 until
   ssh-copy-id \
     -i "$ssh_key_dir"/nixos-anywhere.pub \
+    -o BatchMode=yes \
     -o ConnectTimeout=10 \
     -o UserKnownHostsFile=/dev/null \
     -o StrictHostKeyChecking=no \
