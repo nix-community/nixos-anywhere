@@ -1,2 +1,2 @@
 cp -r /nix/store/nahpa8fnfj88ip23d6a5vd014kvbrhwq-source/* .
-/nix/store/gf0d0bykf1d1apzdgnlb5881nh0wm9fw-mdbook-0.4.35/bin/mdbook build --dest-dir "$out"
+/nix/store/gmrdg309l6w335chny5875kaxwk1l77f-mdbook-0.4.35/bin/mdbook build --dest-dir "$out"
