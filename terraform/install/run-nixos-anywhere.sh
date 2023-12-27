@@ -17,7 +17,14 @@ fi
 if [[ ${no_reboot-} == "true" ]]; then
   args+=("--no-reboot")
 fi
-args+=("--store-paths" "${nixos_partitioner}" "${nixos_system}")
+if [[ ${build_on_remote-} == "true" ]]; then
+  args+=("--build-on-remote")
+fi
+if [[ -n ${flake-} ]]; then
+  args+=("--flake" "${flake}")
+else
+  args+=("--store-paths" "${nixos_partitioner}" "${nixos_system}")
+fi
 
 tmpdir=$(mktemp -d)
 cleanup() {
