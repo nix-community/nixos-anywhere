@@ -415,15 +415,20 @@ if [[ ${build_on_remote-n} == "y" ]]; then
   pubkey=$(echo "$pubkey" | sed -e 's/^[^ ]* //' | base64 -w0)
 fi
 
-if [[ -z ${disko_script-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
+if [[ -n ${disko_script-} ]]; then
+  nix_copy --to "ssh://$ssh_connection" "$disko_script"
+elif [[ ${build_on_remote-n} == "y" ]]; then
   step Building disko script
+  # We need to do a nix copy first because nix build doesn't have --no-check-sigs
+  nix_copy --to "ssh-ng://$ssh_connection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
+    --derivation --no-check-sigs
   disko_script=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
-      --builders "ssh://$ssh_connection $is_arch-linux $ssh_key_dir/nixos-anywhere - - - - $pubkey "
+      --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere"
   )
 fi
+
 step Formatting hard drive with disko
-nix_copy --to "ssh://$ssh_connection" "$disko_script"
 ssh_ "$disko_script"
 
 if [[ ${stop_after_disko-n} == "y" ]]; then
@@ -433,15 +438,19 @@ if [[ ${stop_after_disko-n} == "y" ]]; then
   exit 0
 fi
 
-if [[ -z ${nixos_system-} ]] && [[ ${build_on_remote-n} == "y" ]]; then
+if [[ -n ${nixos_system-} ]]; then
+  step Uploading the system closure
+  nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
+elif [[ ${build_on_remote-n} == "y" ]]; then
   step Building the system closure
+  # We need to do a nix copy first because nix build doesn't have --no-check-sigs
+  nix_copy --to "ssh-ng://$ssh_connection?remote-store=local?root=/mnt" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
+    --derivation --no-check-sigs
   nixos_system=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
-      --builders "ssh://$ssh_connection?remote-store=local?root=/mnt $is_arch-linux $ssh_key_dir/nixos-anywhere - - - - $pubkey "
+      --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere&remote-store=local?root=/mnt"
   )
 fi
-step Uploading the system closure
-nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
 
 if [[ -n ${extra_files-} ]]; then
   if [[ -d $extra_files ]]; then
