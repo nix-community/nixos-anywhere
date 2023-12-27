@@ -20,9 +20,6 @@ Options:
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
   if this is give, flake is not needed
-* -t --tty
-  Force pseudo-terminal allocation in SSH sessions. Use this when you expect e.g.
-  to be asked for password entry during LUKS configuration.
 * --no-reboot
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <path>
@@ -71,7 +68,11 @@ nix_options=(
 )
 substitute_on_destination=y
 ssh_private_key_file=
-ssh_tty_param="-T"
+if [ -t 0 ]; then # stdin is a tty, we allow interactive input to ssh i.e. passwords
+  ssh_tty_param="-t"
+else
+  ssh_tty_param="-T"
+fi
 post_kexec_ssh_port=22
 
 declare -A disk_encryption_keys
@@ -107,7 +108,7 @@ while [[ $# -gt 0 ]]; do
     shift
     ;;
   -t | --tty)
-    ssh_tty_param="-t"
+    echo "the '$1' flag is deprecated, a tty is now detected automatically" >&2
     ;;
   --help)
     showUsage

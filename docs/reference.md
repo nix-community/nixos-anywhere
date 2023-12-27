@@ -36,9 +36,6 @@ Options:
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
   if this is give, flake is not needed
-* -t --tty
-  Force pseudo-terminal allocation in SSH sessions. Use this when you expect e.g.
-  to be asked for password entry during LUKS configuration.
 * --no-reboot
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <path>
