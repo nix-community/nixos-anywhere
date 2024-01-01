@@ -76,8 +76,8 @@ data has been migrated.
   - Unless you're using the option to boot from a NixOS installer image, or
     providing your own `kexec` image, it must be running x86-64 Linux with kexec
     support. Most `x86_64` Linux systems do have kexec support. By providing
-    your own [image](./docs/howtos/custom-kexec.md#using-your-own-kexec-image) you can also
-    perform kexec for other architectures eg aarch64
+    your own [image](./docs/howtos/custom-kexec.md#using-your-own-kexec-image)
+    you can also perform kexec for other architectures eg aarch64
   - The machine must be reachable over the public internet or local network.
     Nixos-anywhere does not support wifi networks. If a VPN is needed, define a
     custom installer via the --kexec flag which connects to your VPN.
