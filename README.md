@@ -54,7 +54,7 @@ Once the configuration has been created, a single command will:
 It's also possible to use **nixos-anywhere** to simplify the installation on a
 machine that has no current operating system, first booting from a NixOS
 installer image. This feature is described in the
-[how-to guide](./docs/howtos.md#installing-on-a-machine-with-no-operating-system).
+[how-to guide](./docs/howtos/no-os.md#installing-on-a-machine-with-no-operating-system).
 It's useful because you can pre-configure your required software and
 preferences, and build the new machine with a single command.
 
@@ -76,8 +76,8 @@ data has been migrated.
   - Unless you're using the option to boot from a NixOS installer image, or
     providing your own `kexec` image, it must be running x86-64 Linux with kexec
     support. Most `x86_64` Linux systems do have kexec support. By providing
-    your own [image](./docs/howtos.md#using-your-own-kexec-image) you can also
-    perform kexec for other architectures eg aarch64
+    your own [image](./docs/howtos/custom-kexec.md#using-your-own-kexec-image)
+    you can also perform kexec for other architectures eg aarch64
   - The machine must be reachable over the public internet or local network.
     Nixos-anywhere does not support wifi networks. If a VPN is needed, define a
     custom installer via the --kexec flag which connects to your VPN.
@@ -87,7 +87,7 @@ data has been migrated.
 
 The [Quickstart Guide](./docs/quickstart.md) gives more information on how to
 run **nixos-anywhere** in its simplest form. For more specific instructions to
-suit individual requirements, see the [How To Guide](./docs/howtos.md).
+suit individual requirements, see the [How To Guide](./docs/howtos/INDEX.md).
 
 ## Related Tools
 
