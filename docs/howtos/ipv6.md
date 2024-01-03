@@ -1,8 +1,8 @@
-# NixOS-anywhere on Ipv6-only targets
+# NixOS-anywhere on IPv6-only targets
 
-As GitHub engineers still haven't enabled the ipv6 switch, the kexec image
-hosted on GitHub, cannot be used unfortunally on ipv6-only hosts. However it is
-possible to use an ipv6 proxy for github content like that:
+As GitHub engineers still haven't enabled the IPv6 switch, the kexec image
+hosted on GitHub, cannot be used unfortunately on IPv6-only hosts. However it is
+possible to use an IPv6 proxy for GitHub content like that:
 
 ```
 nixos-anywhere \
@@ -10,9 +10,9 @@ nixos-anywhere \
 ...
 ```
 
-This proxy is hosted by (numtide)[https://numtide.com/]. It also works for ipv4.
+This proxy is hosted by [numtide](https://numtide.com/). It also works for IPv4.
 
-Alternativly it is also possible to reference a local file:
+Alternatively it is also possible to reference a local file:
 
 ```
 nixos-anywhere \
@@ -20,4 +20,4 @@ nixos-anywhere \
 ...
 ```
 
-This tarball will be than uploaded via sftp to the target.
+This tarball will be then uploaded via sftp to the target.
