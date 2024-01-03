@@ -171,21 +171,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="nixos-anywhere-on-ipv6-only-targets"><a class="header" href="#nixos-anywhere-on-ipv6-only-targets">NixOS-anywhere on Ipv6-only targets</a></h1>
-<p>As GitHub engineers still haven't enabled the ipv6 switch, the kexec image
-hosted on GitHub, cannot be used unfortunally on ipv6-only hosts. However it is
-possible to use an ipv6 proxy for github content like that:</p>
+                        <h1 id="nixos-anywhere-on-ipv6-only-targets"><a class="header" href="#nixos-anywhere-on-ipv6-only-targets">NixOS-anywhere on IPv6-only targets</a></h1>
+<p>As GitHub engineers still haven't enabled the IPv6 switch, the kexec image
+hosted on GitHub, cannot be used unfortunately on IPv6-only hosts. However it is
+possible to use an IPv6 proxy for GitHub content like that:</p>
 <pre><code>nixos-anywhere \
   --kexec https://gh-v6.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz \
 ...
 </code></pre>
-<p>This proxy is hosted by (numtide)[https://numtide.com/]. It also works for ipv4.</p>
-<p>Alternativly it is also possible to reference a local file:</p>
+<p>This proxy is hosted by <a href="https://numtide.com/">numtide</a>. It also works for IPv4.</p>
+<p>Alternatively it is also possible to reference a local file:</p>
 <pre><code>nixos-anywhere \
   --kexec ./nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz \
 ...
 </code></pre>
-<p>This tarball will be than uploaded via sftp to the target.</p>
+<p>This tarball will be then uploaded via sftp to the target.</p>
 
                     </main>
 
