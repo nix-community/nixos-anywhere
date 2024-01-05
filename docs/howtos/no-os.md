@@ -67,5 +67,5 @@ You can then use the IP address to run `nixos-anywhere` like this:
 nix run github:nix-community/nixos-anywhere -- --flake '.#myconfig' nixos@fec0::5054:ff:fe12:3456
 ```
 
-This example assumes a flake in the curent directory containing a configuration
+This example assumes a flake in the current directory containing a configuration
 named `myconfig`.
