@@ -313,6 +313,7 @@ is_arch=\$(uname -m)
 is_kexec=\$(if test -f /etc/is_kexec; then echo "y"; else echo "n"; fi)
 is_nixos=\$is_nixos
 is_installer=\$(if [[ "\$is_nixos" == "y" ]] && grep -q VARIANT_ID=installer /etc/os-release; then echo "y"; else echo "n"; fi)
+is_container=\$(has systemd-detect-virt && systemd-detect-virt --container || echo "none")
 has_tar=\$(has tar)
 has_sudo=\$(has sudo)
 has_wget=\$(has wget)
@@ -353,6 +354,10 @@ if [[ ${is_os-n} != "Linux" ]]; then
 fi
 
 if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
+  if [[ ${is_container-none} != "none" ]]; then
+    echo "WARNING: This script does not support running from a '${is_container}' container. kexec will likely not work" >&2
+  fi
+
   if [[ $kexec_url == "" ]]; then
     case "${is_arch-unknown}" in
     x86_64 | aarch64)
