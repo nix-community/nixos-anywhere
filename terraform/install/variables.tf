@@ -8,12 +8,14 @@ variable "kexec_tarball_url" {
 variable "nixos_partitioner" {
   type        = string
   description = "nixos partitioner and mount script"
+  default     = ""
 }
 
 # To make this re-usable we maybe should accept a store path here?
 variable "nixos_system" {
   type        = string
   description = "The nixos system to deploy"
+  default     = ""
 }
 
 variable "target_host" {
@@ -82,4 +84,16 @@ variable "no_reboot" {
   type        = bool
   description = "Do not reboot the machine after installation"
   default     = false
+}
+
+variable "build_on_remote" {
+  type        = bool
+  description = "Build the closure on the remote machine instead of building it locally and copying it over"
+  default     = false
+}
+
+variable "flake" {
+  type        = string
+  description = "The flake to install the system from"
+  default     = ""
 }
