@@ -314,7 +314,7 @@ is_arch=\$(uname -m)
 is_kexec=\$(if test -f /etc/is_kexec; then echo "y"; else echo "n"; fi)
 is_nixos=\$is_nixos
 is_installer=\$(if [[ "\$is_nixos" == "y" ]] && grep -q VARIANT_ID=installer /etc/os-release; then echo "y"; else echo "n"; fi)
-is_container=\$(has systemd-detect-virt && systemd-detect-virt --container || echo "none")
+is_container=\$(if [[ "\$(has systemd-detect-virt)" == "y" ]]; then systemd-detect-virt --container; else echo "none"; fi)
 has_tar=\$(has tar)
 has_sudo=\$(has sudo)
 has_wget=\$(has wget)
