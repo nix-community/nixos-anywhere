@@ -1,7 +1,7 @@
 # All-in-one
 
 Combines the install and nixos-rebuild module in one interface to install NixOS
-with nixos-anywhere and than keep it up-to-date with nixos-rebuild.
+with nixos-anywhere and then keep it up-to-date with nixos-rebuild.
 
 ## Example
 
@@ -122,6 +122,8 @@ No resources.
 
 ## Outputs
 
-No outputs.
+| Name                                                  | Description                                                |
+| ----------------------------------------------------- | ---------------------------------------------------------- |
+| <a name="output_result"></a> [result](#output_result) | The resulting store path from building `nixos_system_attr` |
 
 <!-- END_TF_DOCS -->
