@@ -122,6 +122,8 @@ No resources.
 
 ## Outputs
 
-No outputs.
+| Name                                                  | Description                                                |
+| ----------------------------------------------------- | ---------------------------------------------------------- |
+| <a name="output_result"></a> [result](#output_result) | The resulting store path from building `nixos_system_attr` |
 
 <!-- END_TF_DOCS -->

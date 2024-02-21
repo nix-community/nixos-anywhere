@@ -46,3 +46,7 @@ module "nixos-rebuild" {
   target_host = var.target_host
   target_user = var.target_user
 }
+
+output "result" {
+  value = module.system-build.result
+}
