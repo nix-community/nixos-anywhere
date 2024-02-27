@@ -302,7 +302,7 @@ done
 import_facts() {
   local facts filtered_facts
   if ! facts=$(
-    ssh_ -o ConnectTimeout=10 bash -- <<SSH
+    ssh_ -o ConnectTimeout=10 sh -- <<SSH
 set -efu ${enable_debug}
 has(){
   command -v "\$1" >/dev/null && echo "y" || echo "n"
@@ -371,7 +371,7 @@ if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
   fi
 
   step Switching system into kexec
-  ssh_ bash <<SSH
+  ssh_ sh <<SSH
 set -efu ${enable_debug}
 $maybe_sudo rm -rf /root/kexec
 $maybe_sudo mkdir -p /root/kexec
@@ -471,7 +471,7 @@ if [[ -n ${extra_files-} ]]; then
 fi
 
 step Installing NixOS
-ssh_ bash <<SSH
+ssh_ sh <<SSH
 set -eu ${enable_debug}
 # when running not in nixos we might miss this directory, but it's needed in the nixos chroot during installation
 export PATH="\$PATH:/run/current-system/sw/bin"
@@ -499,7 +499,7 @@ if command -v zpool >/dev/null; then
 fi
 # We will reboot in background so we can cleanly finish the script before the hosts go down.
 # This makes integration into scripts easier
-nohup bash -c '${maybe_reboot}' >/dev/null &
+nohup sh -c '${maybe_reboot}' >/dev/null &
 SSH
 
 if [[ -n ${maybe_reboot} ]]; then
