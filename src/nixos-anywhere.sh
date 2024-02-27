@@ -317,6 +317,7 @@ is_installer=\$(if [[ "\$is_nixos" == "y" ]] && grep -q VARIANT_ID=installer /et
 is_container=\$(if [[ "\$(has systemd-detect-virt)" == "y" ]]; then systemd-detect-virt --container; else echo "none"; fi)
 has_tar=\$(has tar)
 has_sudo=\$(has sudo)
+has_doas=\$(has doas)
 has_wget=\$(has wget)
 has_curl=\$(has curl)
 has_setsid=\$(has setsid)
@@ -348,6 +349,8 @@ fi
 maybe_sudo=""
 if [[ ${has_sudo-n} == "y" ]]; then
   maybe_sudo="sudo"
+elif [[ ${has_doas-n} == "y" ]]; then
+  maybe_sudo="doas"
 fi
 
 if [[ ${is_os-n} != "Linux" ]]; then
