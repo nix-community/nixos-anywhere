@@ -51,7 +51,7 @@ echo "my-super-safe-password" > /tmp/disk-1.key
 
 # Call nixos-anywhere with disk encryption keys
 nixos-anywhere \
-  --disk-encryption-keys /tmp/disk-1.key \
+  --disk-encryption-keys /tmp/disk-1.key /tmp/disk-1.key \
   --disk-encryption-keys /tmp/disk-2.key <(pass my-disk-encryption-password) \
   --flake '.#your-host' \
   root@yourip
