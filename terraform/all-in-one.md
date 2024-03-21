@@ -40,7 +40,7 @@ _Note:_ You need to mark scripts as executable (`chmod +x`)
 
 ### ./decrypt-ssh-secrets.sh
 
-```
+```bash
 #!/usr/bin/env bash
 
 mkdir -p etc/ssh var/lib/secrets
@@ -65,7 +65,7 @@ done
 
 ### ./decrypt-zfs-key.sh
 
-```
+```bash
 #!/usr/bin/env bash
 
 set -euo pipefail
