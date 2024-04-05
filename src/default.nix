@@ -35,13 +35,13 @@ stdenv.mkDerivation {
   src = ./..;
   nativeBuildInputs = [ makeWrapper ];
   installPhase = ''
-    install -D -m 0755 src/nixos-anywhere.sh $out/bin/nixos-anywhere
+    install -D --target-directory=$out/libexec/nixos-anywhere/ -m 0755 src/*.sh
 
     # We prefer the system's openssh over our own, since it might come with features not present in ours:
     # https://github.com/nix-community/nixos-anywhere/issues/62
     #
     # We also prefer system rsync to prevent crashes between rsync and ssh.
-    wrapProgram $out/bin/nixos-anywhere \
+    makeShellWrapper $out/libexec/nixos-anywhere/nixos-anywhere.sh $out/bin/nixos-anywhere \
       --prefix PATH : ${lib.makeBinPath runtimeDeps} --suffix PATH : ${lib.makeBinPath [ openssh ]}
   '';
 

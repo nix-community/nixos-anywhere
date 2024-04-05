@@ -59,6 +59,7 @@ step() {
   echo "### $* ###"
 }
 
+here=$(dirname "${BASH_SOURCE[0]}")
 kexec_url=""
 enable_debug=""
 maybe_reboot="sleep 6 && reboot"
@@ -301,29 +302,7 @@ done
 
 import_facts() {
   local facts filtered_facts
-  if ! facts=$(
-    ssh_ -o ConnectTimeout=10 sh -- <<SSH
-set -efu ${enable_debug}
-has(){
-  command -v "\$1" >/dev/null && echo "y" || echo "n"
-}
-is_nixos=\$(if test -f /etc/os-release && grep -q ID=nixos /etc/os-release; then echo "y"; else echo "n"; fi)
-cat <<FACTS
-is_os=\$(uname)
-is_arch=\$(uname -m)
-is_kexec=\$(if test -f /etc/is_kexec; then echo "y"; else echo "n"; fi)
-is_nixos=\$is_nixos
-is_installer=\$(if [[ "\$is_nixos" == "y" ]] && grep -q VARIANT_ID=installer /etc/os-release; then echo "y"; else echo "n"; fi)
-is_container=\$(if [[ "\$(has systemd-detect-virt)" == "y" ]]; then systemd-detect-virt --container; else echo "none"; fi)
-has_tar=\$(has tar)
-has_sudo=\$(has sudo)
-has_doas=\$(has doas)
-has_wget=\$(has wget)
-has_curl=\$(has curl)
-has_setsid=\$(has setsid)
-FACTS
-SSH
-  ); then
+  if ! facts=$(ssh_ -o ConnectTimeout=10 enable_debug=$enable_debug sh -- <"$here"/get-facts.sh); then
     exit 1
   fi
   filtered_facts=$(echo "$facts" | grep -E '^(has|is)_[a-z0-9_]+=\S+')
@@ -482,13 +461,13 @@ export PATH="\$PATH:/run/current-system/sw/bin"
 # needed for installation if initrd-secrets are used
 mkdir -p /mnt/tmp
 chmod 777 /mnt/tmp
-if [[ ${copy_host_keys-n} == "y" ]]; then
+if [ ${copy_host_keys-n} = "y" ]; then
   # NB we copy host keys that are in turn copied by kexec installer.
   mkdir -m 755 -p /mnt/etc/ssh
   for p in /etc/ssh/ssh_host_*; do
     # Skip if the source file does not exist (i.e. glob did not match any files)
     # or the destination already exists (e.g. copied with --extra-files).
-    if [ ! -e "\$p" -o -e "/mnt/\$p" ]; then
+    if [ ! -e "\$p" ] || [ -e "/mnt/\$p" ]; then
       continue
     fi
     cp -a "\$p" "/mnt/\$p"
