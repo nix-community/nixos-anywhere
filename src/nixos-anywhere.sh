@@ -282,6 +282,7 @@ if [[ -n ${ssh_private_key_file-} ]]; then
 fi
 
 ssh_settings=$(ssh "${ssh_args[@]}" -G "${ssh_connection}")
+ssh_user=$(echo "$ssh_settings" | awk '/^user / { print $2 }')
 ssh_host=$(echo "$ssh_settings" | awk '/^hostname / { print $2 }')
 ssh_port=$(echo "$ssh_settings" | awk '/^port / { print $2 }')
 
@@ -411,6 +412,14 @@ SSH
   # waiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
+
+# Installation will fail if non-root user is used for installer.
+# Switch to root user by copying authorized_keys.
+if [[ ${is_installer-n} == "y" ]] && [[ ${ssh_user} != "root" ]]; then
+  ssh_ "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh"
+  ssh_connection="root@${ssh_host}"
+fi
+
 for path in "${!disk_encryption_keys[@]}"; do
   step "Uploading ${disk_encryption_keys[$path]} to $path"
   ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
