@@ -195,6 +195,7 @@ ssh_() {
 
 nix_copy() {
   NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${ssh_args[*]}" nix copy \
+    "--substitute-on-destination" \
     "${nix_options[@]}" \
     "${nix_copy_options[@]}" \
     "$@"
@@ -434,7 +435,7 @@ if [[ ${build_on_remote-n} == "y" ]]; then
 fi
 
 if [[ -n ${disko_script-} ]]; then
-  nix_copy --to "ssh://$ssh_connection" "$disko_script"
+  nix_copy --to "ssh-ng://$ssh_connection" "$disko_script"
 elif [[ ${build_on_remote-n} == "y" ]]; then
   step Building disko script
   # We need to do a nix copy first because nix build doesn't have --no-check-sigs
@@ -458,7 +459,7 @@ fi
 
 if [[ -n ${nixos_system-} ]]; then
   step Uploading the system closure
-  nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
+  nix_copy --to "ssh-ng://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
 elif [[ ${build_on_remote-n} == "y" ]]; then
   step Building the system closure
   # We need to do a nix copy first because nix build doesn't have --no-check-sigs
