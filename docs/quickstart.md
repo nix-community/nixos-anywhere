@@ -17,7 +17,7 @@ in the [How To Guide](./howtos/INDEX.md) as and when they are available.
 
 You will need:
 
-- A [flake](https://nixos.wiki/wiki/Flakes) that controls the actions to be
+- A [flake](https://wiki.nixos.org/wiki/Flakes) that controls the actions to be
   performed
 - A disk configuration containing details of the file system that will be
   created on the new server.
@@ -35,7 +35,7 @@ below.
 1. **Enable Flakes**:
 
    Ensure that flakes are enabled on your system. To enable flakes, refer to the
-   [NixOS Wiki](https://nixos.wiki/wiki/Flakes#enable-flakes).
+   [NixOS Wiki](https://wiki.nixos.org/wiki/Flakes#enable-flakes).
 
 2. **Initialize a Flake**:
 
