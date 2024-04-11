@@ -16,6 +16,7 @@ resource "null_resource" "nixos-remote" {
       nixos_system = var.nixos_system
       target_user = var.target_user
       target_host = var.target_host
+      target_port = var.target_port
       extra_files_script = var.extra_files_script
       no_reboot = var.no_reboot
       build_on_remote = var.build_on_remote
