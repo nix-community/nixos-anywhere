@@ -19,7 +19,7 @@ Options:
   print full build logs
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
-  if this is give, flake is not needed
+  if this is given, flake is not needed
 * --no-reboot
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <path>
