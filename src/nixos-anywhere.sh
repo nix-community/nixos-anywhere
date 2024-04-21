@@ -18,7 +18,7 @@ Options:
 * -L, --print-build-logs
   print full build logs
 * --env-password
-  set a password used by ssh-copy-id, the password should be set by 
+  set a password used by ssh-copy-id, the password should be set by
   the environment variable SSH_PASS
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
@@ -378,6 +378,11 @@ set -efu ${enable_debug}
 $maybe_sudo rm -rf /root/kexec
 $maybe_sudo mkdir -p /root/kexec
 SSH
+
+  # no way to reach global ipv4 destinations, use gh-v6.com automatically if github url
+  if [[ ${has_ipv6_only-n} == "y" ]] && [[ $kexec_url == "https://github.com/"* ]]; then
+    kexec_url=${kexec_url/"github.com"/"gh-v6.com"}
+  fi
 
   if [[ -f $kexec_url ]]; then
     ssh_ "${maybe_sudo} tar -C /root/kexec -xvzf-" <"$kexec_url"
