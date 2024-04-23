@@ -106,6 +106,12 @@ below.
 6. On the target machine, make sure you have access as root via ssh by adding
    your SSH key to the file `authorized_keys` in the directory `/root/.ssh`
 
+   Optionally, bootstrapping can also be performed through password login. For
+   example through the `image-installer-*` provided by
+   `nix-community/nixos-images`. Assign your password to the `SSH_PASS`
+   environment variable and specify `--env-password` as an additional command
+   line option. This will provide `ssh-copy-id` with the required password.
+
 7. (Optional) Test your nixos and disko configuration:
 
    The following command will automatically test your nixos configuration and
