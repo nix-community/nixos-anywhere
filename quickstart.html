@@ -271,6 +271,11 @@ example uses a local directory on the source machine.</p>
 <li>
 <p>On the target machine, make sure you have access as root via ssh by adding
 your SSH key to the file <code>authorized_keys</code> in the directory <code>/root/.ssh</code></p>
+<p>Optionally, bootstrapping can also be performed through password login. For
+example through the <code>image-installer-*</code> provided by
+<code>nix-community/nixos-images</code>. Assign your password to the <code>SSH_PASS</code>
+environment variable and specify <code>--env-password</code> as an additional command
+line option. This will provide <code>ssh-copy-id</code> with the required password.</p>
 </li>
 <li>
 <p>(Optional) Test your nixos and disko configuration:</p>
