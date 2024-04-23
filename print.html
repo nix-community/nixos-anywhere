@@ -398,7 +398,7 @@ Please contact your system administrator.
 Add correct host key in ~/.ssh/known_hosts to get rid of this message.
 Offending ECDSA key in ~/.ssh/known_hosts:6
   remove with:
-  ssh-keygen -f ~/.ssh/known_hosts&quot; -R &quot;&lt;ip addrress&gt;&quot;
+  ssh-keygen -f ~/.ssh/known_hosts&quot; -R &quot;&lt;ip address&gt;&quot;
 Host key for &lt;ip_address&gt; has changed and you have requested strict checking.
 Host key verification failed.
 </code></pre>
@@ -420,7 +420,7 @@ nixos-rebuild command or a deployment tool of your choice i.e.
 current directory):</p>
 <pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt;
 </code></pre>
-<p>You can also run <code>nixos-rebuild</code> to update a machine remotly, if you have
+<p>You can also run <code>nixos-rebuild</code> to update a machine remotely, if you have
 set up an openssh server and your ssh key for the root user:</p>
 <pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt; --target-host &quot;root@&lt;ip address&gt;&quot;
 </code></pre>
