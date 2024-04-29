@@ -17,9 +17,12 @@ Options:
   set an ssh option
 * -L, --print-build-logs
   print full build logs
+* --env-password
+  set a password used by ssh-copy-id, the password should be set by 
+  the environment variable SSH_PASS
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
-  if this is give, flake is not needed
+  if this is given, flake is not needed
 * --no-reboot
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <path>
@@ -163,6 +166,9 @@ while [[ $# -gt 0 ]]; do
   --build-on-remote)
     build_on_remote=y
     ;;
+  --env-password)
+    env_password=y
+    ;;
   --vm-test)
     vm_test=y
     ;;
@@ -283,19 +289,33 @@ if [[ -n ${ssh_private_key_file-} ]]; then
 fi
 
 ssh_settings=$(ssh "${ssh_args[@]}" -G "${ssh_connection}")
+ssh_user=$(echo "$ssh_settings" | awk '/^user / { print $2 }')
 ssh_host=$(echo "$ssh_settings" | awk '/^hostname / { print $2 }')
 ssh_port=$(echo "$ssh_settings" | awk '/^port / { print $2 }')
 
 step Uploading install SSH keys
 until
-  ssh-copy-id \
-    -i "$ssh_key_dir"/nixos-anywhere.pub \
-    -o ConnectTimeout=10 \
-    -o UserKnownHostsFile=/dev/null \
-    -o StrictHostKeyChecking=no \
-    "${ssh_copy_id_args[@]}" \
-    "${ssh_args[@]}" \
-    "$ssh_connection"
+  if [[ -n ${env_password-} ]]; then
+    sshpass -e \
+      ssh-copy-id \
+      -i "$ssh_key_dir"/nixos-anywhere.pub \
+      -o ConnectTimeout=10 \
+      -o UserKnownHostsFile=/dev/null \
+      -o IdentitiesOnly=yes \
+      -o StrictHostKeyChecking=no \
+      "${ssh_copy_id_args[@]}" \
+      "${ssh_args[@]}" \
+      "$ssh_connection"
+  else
+    ssh-copy-id \
+      -i "$ssh_key_dir"/nixos-anywhere.pub \
+      -o ConnectTimeout=10 \
+      -o UserKnownHostsFile=/dev/null \
+      -o StrictHostKeyChecking=no \
+      "${ssh_copy_id_args[@]}" \
+      "${ssh_args[@]}" \
+      "$ssh_connection"
+  fi
 do
   sleep 3
 done
@@ -390,6 +410,14 @@ SSH
   # waiting for machine to become available again
   until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 fi
+
+# Installation will fail if non-root user is used for installer.
+# Switch to root user by copying authorized_keys.
+if [[ ${is_installer-n} == "y" ]] && [[ ${ssh_user} != "root" ]]; then
+  ssh_ "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh"
+  ssh_connection="root@${ssh_host}"
+fi
+
 for path in "${!disk_encryption_keys[@]}"; do
   step "Uploading ${disk_encryption_keys[$path]} to $path"
   ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"

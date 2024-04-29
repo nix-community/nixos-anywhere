@@ -45,6 +45,7 @@ module "nixos-rebuild" {
   ssh_private_key = var.deployment_ssh_key
   target_host = var.target_host
   target_user = var.target_user
+  target_port = var.target_port
 }
 
 output "result" {

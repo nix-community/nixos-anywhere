@@ -48,6 +48,8 @@ if [[ ${extra_files_script-} != "" ]]; then
   popd
   args+=("--extra-files" "${tmpdir}/extra-files")
 fi
+
+args+=("-p" "${target_port}")
 args+=("${target_user}@${target_host}")
 
 keyIdx=0

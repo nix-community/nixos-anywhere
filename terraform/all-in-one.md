@@ -75,6 +75,11 @@ cd "$SCRIPT_DIR"
 sops --extract '["zfs-key"]' -d "$SCRIPT_DIR/secrets.yaml" >"./etc/ssh/$keyname"
 ```
 
+## See also
+
+- [nixos-wiki setup](https://github.com/NixOS/nixos-wiki-infra/blob/main/terraform/nixos-wiki/main.tf)
+  for hetzner-cloud
+
 <!-- BEGIN_TF_DOCS -->
 
 ## Requirements

@@ -17,7 +17,7 @@ in the [How To Guide](./howtos/INDEX.md) as and when they are available.
 
 You will need:
 
-- A [flake](https://nixos.wiki/wiki/Flakes) that controls the actions to be
+- A [flake](https://wiki.nixos.org/wiki/Flakes) that controls the actions to be
   performed
 - A disk configuration containing details of the file system that will be
   created on the new server.
@@ -35,7 +35,7 @@ below.
 1. **Enable Flakes**:
 
    Ensure that flakes are enabled on your system. To enable flakes, refer to the
-   [NixOS Wiki](https://nixos.wiki/wiki/Flakes#enable-flakes).
+   [NixOS Wiki](https://wiki.nixos.org/wiki/Flakes#enable-flakes).
 
 2. **Initialize a Flake**:
 
@@ -105,6 +105,12 @@ below.
 
 6. On the target machine, make sure you have access as root via ssh by adding
    your SSH key to the file `authorized_keys` in the directory `/root/.ssh`
+
+   Optionally, bootstrapping can also be performed through password login. For
+   example through the `image-installer-*` provided by
+   `nix-community/nixos-images`. Assign your password to the `SSH_PASS`
+   environment variable and specify `--env-password` as an additional command
+   line option. This will provide `ssh-copy-id` with the required password.
 
 7. (Optional) Test your nixos and disko configuration:
 
@@ -178,7 +184,7 @@ below.
      Add correct host key in ~/.ssh/known_hosts to get rid of this message.
      Offending ECDSA key in ~/.ssh/known_hosts:6
        remove with:
-       ssh-keygen -f ~/.ssh/known_hosts" -R "<ip addrress>"
+       ssh-keygen -f ~/.ssh/known_hosts" -R "<ip address>"
      Host key for <ip_address> has changed and you have requested strict checking.
      Host key verification failed.
      ```
@@ -207,7 +213,7 @@ below.
      nixos-rebuild switch --flake <URL to your flake>
      ```
 
-     You can also run `nixos-rebuild` to update a machine remotly, if you have
+     You can also run `nixos-rebuild` to update a machine remotely, if you have
      set up an openssh server and your ssh key for the root user:
 
      ```
