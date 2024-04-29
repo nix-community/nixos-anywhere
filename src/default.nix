@@ -10,6 +10,7 @@
 , gawk
 , findutils
 , gnused
+, sshpass
 , terraform-docs
 , lib
 , makeWrapper
@@ -26,6 +27,7 @@ let
     gawk
     findutils
     gnused # needed by ssh-copy-id
+    sshpass # used to provide password for ssh-copy-id
     rsync # used to upload extra-files
   ];
 in

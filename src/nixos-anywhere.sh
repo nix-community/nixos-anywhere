@@ -17,9 +17,12 @@ Options:
   set an ssh option
 * -L, --print-build-logs
   print full build logs
+* --env-password
+  set a password used by ssh-copy-id, the password should be set by 
+  the environment variable SSH_PASS
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
-  if this is give, flake is not needed
+  if this is given, flake is not needed
 * --no-reboot
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <path>
@@ -162,6 +165,9 @@ while [[ $# -gt 0 ]]; do
   --build-on-remote)
     build_on_remote=y
     ;;
+  --env-password)
+    env_password=y
+    ;;
   --vm-test)
     vm_test=y
     ;;
@@ -288,14 +294,27 @@ ssh_port=$(echo "$ssh_settings" | awk '/^port / { print $2 }')
 
 step Uploading install SSH keys
 until
-  ssh-copy-id \
-    -i "$ssh_key_dir"/nixos-anywhere.pub \
-    -o ConnectTimeout=10 \
-    -o UserKnownHostsFile=/dev/null \
-    -o StrictHostKeyChecking=no \
-    "${ssh_copy_id_args[@]}" \
-    "${ssh_args[@]}" \
-    "$ssh_connection"
+  if [[ -n ${env_password-} ]]; then
+    sshpass -e \
+      ssh-copy-id \
+      -i "$ssh_key_dir"/nixos-anywhere.pub \
+      -o ConnectTimeout=10 \
+      -o UserKnownHostsFile=/dev/null \
+      -o IdentitiesOnly=yes \
+      -o StrictHostKeyChecking=no \
+      "${ssh_copy_id_args[@]}" \
+      "${ssh_args[@]}" \
+      "$ssh_connection"
+  else
+    ssh-copy-id \
+      -i "$ssh_key_dir"/nixos-anywhere.pub \
+      -o ConnectTimeout=10 \
+      -o UserKnownHostsFile=/dev/null \
+      -o StrictHostKeyChecking=no \
+      "${ssh_copy_id_args[@]}" \
+      "${ssh_args[@]}" \
+      "$ssh_connection"
+  fi
 do
   sleep 3
 done
