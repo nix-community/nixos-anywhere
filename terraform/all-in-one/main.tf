@@ -2,12 +2,14 @@ module "system-build" {
   source = "../nix-build"
   attribute = var.nixos_system_attr
   file = var.file
+  nix_options = var.nix_options
 }
 
 module "partitioner-build" {
   source = "../nix-build"
   attribute = var.nixos_partitioner_attr
   file = var.file
+  nix_options = var.nix_options
 }
 
 locals {
@@ -37,7 +39,7 @@ module "nixos-rebuild" {
     module.install
   ]
 
-  # Do not execute this step if var.stop_after_disko == true  
+  # Do not execute this step if var.stop_after_disko == true
   count = var.stop_after_disko ? 0 : 1
 
   source = "../nixos-rebuild"
