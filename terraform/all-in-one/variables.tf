@@ -101,3 +101,9 @@ variable "no_reboot" {
   description = "Do not reboot after installation"
   default     = false
 }
+
+variable "nix_options" {
+  type = map(string)
+  description = "the options of nix"
+  default = null
+}
