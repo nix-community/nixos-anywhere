@@ -8,3 +8,9 @@ variable "file" {
   description = "the nix file to evaluate, if not run in flake mode"
   default = null
 }
+
+variable "nix_options" {
+  type = map(string)
+  description = "the options of nix"
+  default = null
+}
