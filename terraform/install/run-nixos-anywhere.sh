@@ -62,7 +62,7 @@ while [[ $# -gt 0 ]]; do
     echo "Script file '$2' is not executable"
     exit 1
   fi
-  mkdir "${tmpdir}/keys"
+  mkdir -p "${tmpdir}/keys"
   "$2" >"${tmpdir}/keys/$keyIdx"
   args+=("--disk-encryption-keys" "$1" "${tmpdir}/keys/$keyIdx")
   shift
