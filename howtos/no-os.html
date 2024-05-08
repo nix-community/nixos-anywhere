@@ -181,7 +181,7 @@ You can either boot from a USB or use <code>netboot</code>.</p>
 has detailed instructions on how to boot the installer.</p>
 <p>When you run <code>nixos-anywhere</code>, it will determine whether a NixOS installer is
 present by checking whether the <code>/etc/os-release</code> file contains the identifier
-<code>VARIANT=installer</code>. This identifier is available on releases NixOS 23.05 or
+<code>VARIANT_ID=installer</code>. This identifier is available on releases NixOS 23.05 or
 later.</p>
 <p>If an installer is detected, <code>nixos-anywhere</code> will not attempt to <code>kexec</code> into
 its own image. This is particularly useful for targets that don't have enough
