@@ -11,7 +11,7 @@ has detailed instructions on how to boot the installer.
 
 When you run `nixos-anywhere`, it will determine whether a NixOS installer is
 present by checking whether the `/etc/os-release` file contains the identifier
-`VARIANT=installer`. This identifier is available on releases NixOS 23.05 or
+`VARIANT_ID=installer`. This identifier is available on releases NixOS 23.05 or
 later.
 
 If an installer is detected, `nixos-anywhere` will not attempt to `kexec` into
