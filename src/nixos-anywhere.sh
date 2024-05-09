@@ -479,11 +479,8 @@ if [[ -n ${extra_files-} ]]; then
     extra_files="$extra_files/"
   fi
   step Copying extra files
-  rsync -rlpv -FF \
-    -e "ssh -i \"$ssh_key_dir\"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_args[*]}" \
-    "$extra_files" \
-    "${ssh_connection}:/mnt/"
-  ssh_ "chmod 755 /mnt" # rsync also changes permissions of /mnt
+  tar -C "$extra_files" -cpf- . | ssh_ "${maybe_sudo} tar -C /mnt -xf-"
+  ssh_ "chmod 755 /mnt" # tar also changes permissions of /mnt
 fi
 
 step Installing NixOS
