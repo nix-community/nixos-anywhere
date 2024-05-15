@@ -13,6 +13,17 @@ Before you can use `nixos-anywhere` without flakes, you'll need to manually
 generate the paths for the NixOS system toplevel and disk image. The paths are
 generated using `nix-build` and are necessary for executing `nixos-anywhere`.
 
+### Generating Disk Image without Dependencies:
+
+To generate the disk image without dependencies, execute:
+
+```bash
+nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import <nixpkgs/nixos> {}).config.system.build.diskoNoDeps'
+```
+
+This will output a script path in `/nix/store` that will format your disk. Make
+note of this path for later use.
+
 ### Generating NixOS System Toplevel:
 
 Execute the following command to generate the store path for the NixOS system
@@ -23,27 +34,16 @@ nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import <nixpkgs/nixo
 ```
 
 This will output a path in `/nix/store` that corresponds to the system toplevel,
-which includes all the software and configurations for the system. Make note of
-this path for later use.
-
-### Generating Disk Image without Dependencies:
-
-To generate the disk image without dependencies, execute:
-
-```bash
-nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import <nixpkgs/nixos> {}).config.system.build.diskoNoDeps'
-```
-
-This will also output a script path in `/nix/store` that will format your disk.
-Keep this path handy as well.
+which includes all the software and configurations for the system. Keep this
+path handy as well.
 
 ## Running NixOS-Anywhere
 
 With both paths in hand, you can execute `nixos-anywhere` as follows:
 
 ```bash
-nixos-anywhere --store-paths /nix/store/[your-toplevel-path] /nix/store/[your-disk-image-path]
+nixos-anywhere --store-paths /nix/store/[your-disk-image-path] /nix/store/[your-toplevel-path]
 ```
 
-Replace `[your-toplevel-path]` and `[your-disk-image-path]` with the
+Replace `[your-disk-image-path]` and `[your-toplevel-path]` with the
 corresponding store paths you generated earlier.
