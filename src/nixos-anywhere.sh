@@ -419,7 +419,8 @@ fi
 # Installation will fail if non-root user is used for installer.
 # Switch to root user by copying authorized_keys.
 if [[ ${is_installer-n} == "y" ]] && [[ ${ssh_user} != "root" ]]; then
-  ssh_ "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh"
+  # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
+  ssh_ "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
   ssh_connection="root@${ssh_host}"
 fi
 
