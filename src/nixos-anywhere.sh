@@ -477,7 +477,7 @@ fi
 
 if [[ -n ${extra_files-} ]]; then
   step Copying extra files
-  tar -C "$extra_files" -cpf- . | ssh_ "${maybe_sudo} tar -C /mnt -xf-"
+  tar -C "$extra_files" -cpf- . | ssh_ "${maybe_sudo} tar -C /mnt -xf- --no-same-owner"
   ssh_ "chmod 755 /mnt" # tar also changes permissions of /mnt
 fi
 
