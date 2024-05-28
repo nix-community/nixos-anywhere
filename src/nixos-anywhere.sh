@@ -33,8 +33,9 @@ Options:
   copy over existing /etc/ssh/ssh_host_* host keys to the installation
 * --stop-after-disko
   exit after disko formatting, you can then proceed to install manually or some other way
-* --extra-files <file...>
-  files to copy into the new nixos installation
+* --extra-files <path>
+  path to a directory to copy into the root of the new nixos installation.
+  Copied files will be owned by root.
 * --disk-encryption-keys <remote_path> <local_path>
   copy the contents of the file or pipe in local_path to remote_path in the installer environment,
   after kexec but before installation. Can be repeated.
@@ -475,11 +476,8 @@ elif [[ ${build_on_remote-n} == "y" ]]; then
 fi
 
 if [[ -n ${extra_files-} ]]; then
-  if [[ -d $extra_files ]]; then
-    extra_files="$extra_files/"
-  fi
   step Copying extra files
-  tar -C "$extra_files" -cpf- . | ssh_ "${maybe_sudo} tar -C /mnt -xf-"
+  tar -C "$extra_files" -cpf- . | ssh_ "${maybe_sudo} tar -C /mnt -xf- --no-same-owner"
   ssh_ "chmod 755 /mnt" # tar also changes permissions of /mnt
 fi
 
