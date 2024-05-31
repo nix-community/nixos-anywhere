@@ -7,6 +7,8 @@ file.
 
 - See [install](install.md) or [nixos-rebuild](nixos-rebuild.md)
 
+<!-- BEGIN_TF_DOCS -->
+
 ## Requirements
 
 No requirements.
@@ -29,10 +31,11 @@ No modules.
 
 ## Inputs
 
-| Name                                                         | Description                                        | Type     | Default | Required |
-| ------------------------------------------------------------ | -------------------------------------------------- | -------- | ------- | :------: |
-| <a name="input_attribute"></a> [attribute](#input_attribute) | the attribute to build, can also be a flake        | `string` | n/a     |   yes    |
-| <a name="input_file"></a> [file](#input_file)                | the nix file to evaluate, if not run in flake mode | `string` | `null`  |    no    |
+| Name                                                                | Description                                        | Type          | Default | Required |
+| ------------------------------------------------------------------- | -------------------------------------------------- | ------------- | ------- | :------: |
+| <a name="input_attribute"></a> [attribute](#input_attribute)        | the attribute to build, can also be a flake        | `string`      | n/a     |   yes    |
+| <a name="input_file"></a> [file](#input_file)                       | the nix file to evaluate, if not run in flake mode | `string`      | `null`  |    no    |
+| <a name="input_nix_options"></a> [nix\_options](#input_nix_options) | the options of nix                                 | `map(string)` | `null`  |    no    |
 
 ## Outputs
 
