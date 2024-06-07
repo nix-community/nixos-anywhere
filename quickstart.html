@@ -90,7 +90,9 @@
             <div class="sidebar-scrollbox">
                 <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html" class="active">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="howtos/nix-path.html"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded "><a href="howtos/ipv6.html"><strong aria-hidden="true">7.</strong> IPv6-only targets</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
         </nav>
 
         <!-- Track and set sidebar scroll position -->
@@ -241,7 +243,7 @@ if you cloned
 you will also replace the SSH key like this: In your configuration, locate
 the line that reads:</p>
 <pre><code class="language-bash"># change this to your ssh key
-            &quot;CHANGE&quot;
+            "CHANGE"
 </code></pre>
 <p>Replace the text <code>CHANGE</code> with your own SSH key. This is crucial, as you will
 not be able to log into the target machine post-installation without it.</p>
@@ -343,7 +345,7 @@ Please contact your system administrator.
 Add correct host key in ~/.ssh/known_hosts to get rid of this message.
 Offending ECDSA key in ~/.ssh/known_hosts:6
   remove with:
-  ssh-keygen -f ~/.ssh/known_hosts&quot; -R &quot;&lt;ip address&gt;&quot;
+  ssh-keygen -f ~/.ssh/known_hosts" -R "&lt;ip address&gt;"
 Host key for &lt;ip_address&gt; has changed and you have requested strict checking.
 Host key verification failed.
 </code></pre>
@@ -367,7 +369,7 @@ current directory):</p>
 </code></pre>
 <p>You can also run <code>nixos-rebuild</code> to update a machine remotely, if you have
 set up an openssh server and your ssh key for the root user:</p>
-<pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt; --target-host &quot;root@&lt;ip address&gt;&quot;
+<pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt; --target-host "root@&lt;ip address&gt;"
 </code></pre>
 <p>For more information on different use cases of <strong>nixos-anywhere</strong> please
 refer to the <a href="./howtos/INDEX.html">How to Guide</a>, and for more technical

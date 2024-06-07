@@ -90,7 +90,9 @@
             <div class="sidebar-scrollbox">
                 <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="howtos/nix-path.html"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded "><a href="howtos/ipv6.html"><strong aria-hidden="true">7.</strong> IPv6-only targets</a></li><li class="chapter-item expanded affix "><a href="reference.html" class="active">Reference</a></li></ol>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
         </nav>
 
         <!-- Track and set sidebar scroll position -->
@@ -238,7 +240,7 @@ the relevant operating system manual.</p>
 <tr><td>1</td><td>Failure unpacking initrd</td><td>You don't have enough RAM to hold <code>kexec</code></td></tr>
 <tr><td>2</td><td>Flake &lt;flake_url&gt; does not provide attirbute</td><td>The configuration name you specified in your flake URI is not defined as a NixOS configuration in your flake eg if your URI was mydir#myconfig, then myconfig should be included in the flake as <code>nixosConfigurations.myconfig</code></td></tr>
 <tr><td>3</td><td>Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri.</td><td>As for error #2</td></tr>
-<tr><td></td><td>For example, to use the output nixosConfigurations.foo from the flake.nix, append &quot;#foo&quot; to the flake-uri</td><td></td></tr>
+<tr><td></td><td>For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri</td><td></td></tr>
 <tr><td>4</td><td>Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already</td><td>TODO: Explain</td></tr>
 <tr><td>5</td><td>ssh-host must be set</td><td>&lt;ip_address&gt; has not been supplied</td></tr>
 <tr><td>6</td><td>&lt;disko_script&gt; and &lt;nixos_system&gt; must be existing store-paths</td><td>This occurs if the -s switch has been used to specify the disko script and store path correctly, and the scripts cannot be found at the given URI</td></tr>
@@ -248,7 +250,7 @@ the relevant operating system manual.</p>
 <tr><td>10</td><td>This script requires Linux as the operating system, but got <operating system></td><td>The destination machine is not running Linux</td></tr>
 <tr><td>11</td><td>The default kexec image only support x86_64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information.</td><td>By default, <code>nixos-anywhere</code> uses its own <code>kexec</code> image, which will only run on x86_64 CPUs. For other CPU types, you can use your own <code>kexec</code> image instead. Refer to the <a href="./howtos#using-your-own-kexec-image">How To Guide</a> for instructions.</td></tr>
 <tr><td>12</td><td>Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri.</td><td>This is a <code>disko</code> error. As for Error #2</td></tr>
-<tr><td></td><td>For example, to use the output diskoConfigurations.foo from the flake.nix, append &quot;#foo&quot; to the flake-uri.</td><td></td></tr>
+<tr><td></td><td>For example, to use the output diskoConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.</td><td></td></tr>
 <tr><td>13</td><td>mode must be either create, mount or zap_create_mount</td><td>This is a <code>disko</code> error. The <code>disko</code> switches have not been used correctly. This could happen if you supplied your own <code>disko</code> script using the -s option</td></tr>
 <tr><td>14</td><td>disko config must be an existing file or flake must be set</td><td>This is a <code>disko</code> error. This will happen if the <code>disko.devices</code> entry in your flake doesn't match the name of a file in the same location as your flake.</td></tr>
 <tr><td></td><td></td><td></td></tr>

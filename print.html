@@ -91,7 +91,9 @@
             <div class="sidebar-scrollbox">
                 <ol class="chapter"><li class="chapter-item expanded affix "><a href="requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="howtos/custom-kexec.html"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="howtos/nix-path.html"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded "><a href="howtos/ipv6.html"><strong aria-hidden="true">7.</strong> IPv6-only targets</a></li><li class="chapter-item expanded affix "><a href="reference.html">Reference</a></li></ol>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
         </nav>
 
         <!-- Track and set sidebar scroll position -->
@@ -296,7 +298,7 @@ if you cloned
 you will also replace the SSH key like this: In your configuration, locate
 the line that reads:</p>
 <pre><code class="language-bash"># change this to your ssh key
-            &quot;CHANGE&quot;
+            "CHANGE"
 </code></pre>
 <p>Replace the text <code>CHANGE</code> with your own SSH key. This is crucial, as you will
 not be able to log into the target machine post-installation without it.</p>
@@ -398,7 +400,7 @@ Please contact your system administrator.
 Add correct host key in ~/.ssh/known_hosts to get rid of this message.
 Offending ECDSA key in ~/.ssh/known_hosts:6
   remove with:
-  ssh-keygen -f ~/.ssh/known_hosts&quot; -R &quot;&lt;ip address&gt;&quot;
+  ssh-keygen -f ~/.ssh/known_hosts" -R "&lt;ip address&gt;"
 Host key for &lt;ip_address&gt; has changed and you have requested strict checking.
 Host key verification failed.
 </code></pre>
@@ -422,7 +424,7 @@ current directory):</p>
 </code></pre>
 <p>You can also run <code>nixos-rebuild</code> to update a machine remotely, if you have
 set up an openssh server and your ssh key for the root user:</p>
-<pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt; --target-host &quot;root@&lt;ip address&gt;&quot;
+<pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt; --target-host "root@&lt;ip address&gt;"
 </code></pre>
 <p>For more information on different use cases of <strong>nixos-anywhere</strong> please
 refer to the <a href="./howtos/INDEX.html">How to Guide</a>, and for more technical
@@ -508,7 +510,7 @@ image file. The image will be uploaded prior to execution.</p>
 <p>Here's an example command that demonstrates how to use a custom kexec image with
 <code>nixos-anywhere</code>:</p>
 <pre><code>nix run github:nix-community/nixos-anywhere -- \
-  --kexec &quot;$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz&quot; \
+  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz" \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip
 </code></pre>
@@ -529,7 +531,7 @@ configuration:</p>
 </li>
 </ul>
 <pre><code class="language-nix">{
-  boot.binfmt.emulatedSystems = [ &quot;aarch64-linux&quot; ];
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="secrets-and-full-disk-encryption"><a class="header" href="#secrets-and-full-disk-encryption">Secrets and full disk encryption</a></h1>
@@ -550,21 +552,21 @@ temp=$(mktemp -d)
 
 # Function to cleanup temporary directory on exit
 cleanup() {
-  rm -rf &quot;$temp&quot;
+  rm -rf "$temp"
 }
 trap cleanup EXIT
 
 # Create the directory where sshd expects to find the host keys
-install -d -m755 &quot;$temp/etc/ssh&quot;
+install -d -m755 "$temp/etc/ssh"
 
 # Decrypt your private key from the password store and copy it to the temporary directory
-pass ssh_host_ed25519_key &gt; &quot;$temp/etc/ssh/ssh_host_ed25519_key&quot;
+pass ssh_host_ed25519_key &gt; "$temp/etc/ssh/ssh_host_ed25519_key"
 
 # Set the correct permissions so sshd will accept the key
-chmod 600 &quot;$temp/etc/ssh/ssh_host_ed25519_key&quot;
+chmod 600 "$temp/etc/ssh/ssh_host_ed25519_key"
 
 # Install NixOS to the host system with our secrets
-nixos-anywhere --extra-files &quot;$temp&quot; --flake '.#your-host' root@yourip
+nixos-anywhere --extra-files "$temp" --flake '.#your-host' root@yourip
 </code></pre>
 <h2 id="example-uploading-disk-encryption-secrets"><a class="header" href="#example-uploading-disk-encryption-secrets">Example: Uploading Disk Encryption Secrets</a></h2>
 <p>In a similar vein, <code>nixos-anywhere</code> can upload disk encryption secrets, which
@@ -572,7 +574,7 @@ are necessary during formatting with disko. Here's an example that demonstrates
 how to provide your disk encryption password as a file or via the <code>pass</code> utility
 to <code>nixos-anywhere</code>:</p>
 <pre><code class="language-bash"># Write your disk encryption password to a file
-echo &quot;my-super-safe-password&quot; &gt; /tmp/disk-1.key
+echo "my-super-safe-password" &gt; /tmp/disk-1.key
 
 # Call nixos-anywhere with disk encryption keys
 nixos-anywhere \
@@ -581,7 +583,7 @@ nixos-anywhere \
   --flake '.#your-host' \
   root@yourip
 </code></pre>
-<p>In the above example, replace <code>&quot;my-super-safe-password&quot;</code> with your actual
+<p>In the above example, replace <code>"my-super-safe-password"</code> with your actual
 encryption password, and <code>my-disk-encryption-password</code> with the relevant entry
 in your pass password store. Also, ensure to replace <code>'.#your-host'</code> and
 <code>root@yourip</code> with your actual flake and IP address, respectively.</p>
@@ -654,16 +656,16 @@ at «none»:0: (source not available)
 <p>Instead of stateful channels, one can also populate the <code>NIX_PATH</code> using nixos
 configuration instead:</p>
 <pre><code class="language-nix">{
-  inputs.nixpkgs.url = &quot;github:NixOS/nixpkgs/nixpkgs-unstable&quot;;
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   # ... other inputs
 
   outputs = { nixpkgs, ... }:
     {
       nixosConfigurations.yoursystem = nixpkgs.lib.nixosSystem {
-        system = &quot;x86_64-linux&quot;; # adapt to your actual system
+        system = "x86_64-linux"; # adapt to your actual system
         modules = [
           # This line will populate NIX_PATH
-          { nix.nixPath = [ &quot;nixpkgs=${inputs.nixpkgs}&quot; ]; }
+          { nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ]; }
           # ... other modules and your configuration.nix
         ];
       };
@@ -763,7 +765,7 @@ the relevant operating system manual.</p>
 <tr><td>1</td><td>Failure unpacking initrd</td><td>You don't have enough RAM to hold <code>kexec</code></td></tr>
 <tr><td>2</td><td>Flake &lt;flake_url&gt; does not provide attirbute</td><td>The configuration name you specified in your flake URI is not defined as a NixOS configuration in your flake eg if your URI was mydir#myconfig, then myconfig should be included in the flake as <code>nixosConfigurations.myconfig</code></td></tr>
 <tr><td>3</td><td>Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri.</td><td>As for error #2</td></tr>
-<tr><td></td><td>For example, to use the output nixosConfigurations.foo from the flake.nix, append &quot;#foo&quot; to the flake-uri</td><td></td></tr>
+<tr><td></td><td>For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri</td><td></td></tr>
 <tr><td>4</td><td>Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already</td><td>TODO: Explain</td></tr>
 <tr><td>5</td><td>ssh-host must be set</td><td>&lt;ip_address&gt; has not been supplied</td></tr>
 <tr><td>6</td><td>&lt;disko_script&gt; and &lt;nixos_system&gt; must be existing store-paths</td><td>This occurs if the -s switch has been used to specify the disko script and store path correctly, and the scripts cannot be found at the given URI</td></tr>
@@ -773,7 +775,7 @@ the relevant operating system manual.</p>
 <tr><td>10</td><td>This script requires Linux as the operating system, but got <operating system></td><td>The destination machine is not running Linux</td></tr>
 <tr><td>11</td><td>The default kexec image only support x86_64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information.</td><td>By default, <code>nixos-anywhere</code> uses its own <code>kexec</code> image, which will only run on x86_64 CPUs. For other CPU types, you can use your own <code>kexec</code> image instead. Refer to the <a href="./howtos#using-your-own-kexec-image">How To Guide</a> for instructions.</td></tr>
 <tr><td>12</td><td>Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri.</td><td>This is a <code>disko</code> error. As for Error #2</td></tr>
-<tr><td></td><td>For example, to use the output diskoConfigurations.foo from the flake.nix, append &quot;#foo&quot; to the flake-uri.</td><td></td></tr>
+<tr><td></td><td>For example, to use the output diskoConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.</td><td></td></tr>
 <tr><td>13</td><td>mode must be either create, mount or zap_create_mount</td><td>This is a <code>disko</code> error. The <code>disko</code> switches have not been used correctly. This could happen if you supplied your own <code>disko</code> script using the -s option</td></tr>
 <tr><td>14</td><td>disko config must be an existing file or flake must be set</td><td>This is a <code>disko</code> error. This will happen if the <code>disko.devices</code> entry in your flake doesn't match the name of a file in the same location as your flake.</td></tr>
 <tr><td></td><td></td><td></td></tr>

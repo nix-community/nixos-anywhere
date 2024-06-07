@@ -90,7 +90,9 @@
             <div class="sidebar-scrollbox">
                 <ol class="chapter"><li class="chapter-item expanded affix "><a href="../requirements.html">System Requirements</a></li><li class="chapter-item expanded affix "><a href="../quickstart.html">Quickstart</a></li><li class="chapter-item expanded affix "><a href="../howtos/INDEX.html">How to Guide</a></li><li class="chapter-item expanded "><a href="../howtos/no-os.html"><strong aria-hidden="true">1.</strong> Installing on a machine with no operating system</a></li><li class="chapter-item expanded "><a href="../howtos/custom-kexec.html" class="active"><strong aria-hidden="true">2.</strong> Using your own kexec image</a></li><li class="chapter-item expanded "><a href="../howtos/secrets.html"><strong aria-hidden="true">3.</strong> Secrets and full disk encryption</a></li><li class="chapter-item expanded "><a href="../howtos/use-without-flakes.html"><strong aria-hidden="true">4.</strong> Use without flakes</a></li><li class="chapter-item expanded "><a href="../howtos/terraform.html"><strong aria-hidden="true">5.</strong> Terraform</a></li><li class="chapter-item expanded "><a href="../howtos/nix-path.html"><strong aria-hidden="true">6.</strong> Nix-channels / NIX_PATH</a></li><li class="chapter-item expanded "><a href="../howtos/ipv6.html"><strong aria-hidden="true">7.</strong> IPv6-only targets</a></li><li class="chapter-item expanded affix "><a href="../reference.html">Reference</a></li></ol>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
         </nav>
 
         <!-- Track and set sidebar scroll position -->
@@ -182,7 +184,7 @@ image file. The image will be uploaded prior to execution.</p>
 <p>Here's an example command that demonstrates how to use a custom kexec image with
 <code>nixos-anywhere</code>:</p>
 <pre><code>nix run github:nix-community/nixos-anywhere -- \
-  --kexec &quot;$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz&quot; \
+  --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz" \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip
 </code></pre>
@@ -203,7 +205,7 @@ configuration:</p>
 </li>
 </ul>
 <pre><code class="language-nix">{
-  boot.binfmt.emulatedSystems = [ &quot;aarch64-linux&quot; ];
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 }
 </code></pre>
 
