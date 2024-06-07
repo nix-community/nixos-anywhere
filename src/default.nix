@@ -6,6 +6,7 @@
 , coreutils
 , curl
 , gnugrep
+, gnutar
 , gawk
 , findutils
 , gnused
@@ -27,6 +28,7 @@ let
     findutils
     gnused # needed by ssh-copy-id
     sshpass # used to provide password for ssh-copy-id
+    gnutar # used to upload extra-files
   ];
 in
 stdenv.mkDerivation {
