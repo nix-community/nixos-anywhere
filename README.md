@@ -81,7 +81,7 @@ data has been migrated.
   - The machine must be reachable over the public internet or local network.
     Nixos-anywhere does not support wifi networks. If a VPN is needed, define a
     custom installer via the --kexec flag which connects to your VPN.
-  - (when `kexec` is used) must have at least 1.5 GB of RAM, excluding swap.
+  - (when `kexec` is used) must have at least 1 GB of RAM, excluding swap.
 
 ## How to use nixos-anywhere
 
