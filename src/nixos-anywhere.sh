@@ -27,6 +27,8 @@ Options:
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <path>
   use another kexec tarball to bootstrap NixOS
+* --kexec-extra-flags
+  extra flags to add into the call to kexec, e.g. "--no-sync"
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
 * --copy-host-keys
@@ -65,6 +67,7 @@ step() {
 
 here=$(dirname "${BASH_SOURCE[0]}")
 kexec_url=""
+kexec_extra_flags=""
 enable_debug=""
 maybe_reboot="sleep 6 && reboot"
 nix_options=(
@@ -121,6 +124,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   --kexec)
     kexec_url=$2
+    shift
+    ;;
+  --kexec-extra-flags)
+    kexec_extra_flags=$2
     shift
     ;;
   --post-kexec-ssh-port)
@@ -396,7 +403,7 @@ SSH
   fi
 
   ssh_ <<SSH
-TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run
+TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run --kexec-extra-flags "${kexec_extra_flags}"
 SSH
 
   # use the default SSH port to connect at this point
