@@ -21,8 +21,8 @@ You will need:
   performed
 - A disk configuration containing details of the file system that will be
   created on the new server.
-- A target machine, reachable via SSH, with your SSH public key deployed and and
-  the privilege to either login directly as root or to use password-less sudo.
+- A target machine, reachable via SSH, with your SSH public key deployed and the
+  privilege to either login directly as root or to use password-less sudo.
 
 **nixos-anywhere** doesn’t need to be installed. You can run it directly from
 [Numtide's repository on Github.](https://github.com/nix-community/nixos-anywhere)
