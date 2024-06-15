@@ -1,7 +1,6 @@
 { stdenv
 , openssh
 , gitMinimal
-, rsync
 , nixVersions
 , nix
 , coreutils
@@ -28,12 +27,11 @@ let
     findutils
     gnused # needed by ssh-copy-id
     sshpass # used to provide password for ssh-copy-id
-    rsync # used to upload extra-files
   ];
 in
 stdenv.mkDerivation {
   pname = "nixos-anywhere";
-  version = "1.0.0";
+  version = "1.2.0";
   src = ./..;
   nativeBuildInputs = [ makeWrapper ];
   installPhase = ''
@@ -41,8 +39,6 @@ stdenv.mkDerivation {
 
     # We prefer the system's openssh over our own, since it might come with features not present in ours:
     # https://github.com/nix-community/nixos-anywhere/issues/62
-    #
-    # We also prefer system rsync to prevent crashes between rsync and ssh.
     makeShellWrapper $out/libexec/nixos-anywhere/nixos-anywhere.sh $out/bin/nixos-anywhere \
       --prefix PATH : ${lib.makeBinPath runtimeDeps} --suffix PATH : ${lib.makeBinPath [ openssh ]}
   '';

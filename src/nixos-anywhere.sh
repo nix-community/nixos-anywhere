@@ -33,8 +33,9 @@ Options:
   copy over existing /etc/ssh/ssh_host_* host keys to the installation
 * --stop-after-disko
   exit after disko formatting, you can then proceed to install manually or some other way
-* --extra-files <file...>
-  files to copy into the new nixos installation
+* --extra-files <path>
+  path to a directory to copy into the root of the new nixos installation.
+  Copied files will be owned by root.
 * --disk-encryption-keys <remote_path> <local_path>
   copy the contents of the file or pipe in local_path to remote_path in the installer environment,
   after kexec but before installation. Can be repeated.
@@ -419,7 +420,8 @@ fi
 # Installation will fail if non-root user is used for installer.
 # Switch to root user by copying authorized_keys.
 if [[ ${is_installer-n} == "y" ]] && [[ ${ssh_user} != "root" ]]; then
-  ssh_ "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh"
+  # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
+  ssh_ "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
   ssh_connection="root@${ssh_host}"
 fi
 
@@ -474,15 +476,9 @@ elif [[ ${build_on_remote-n} == "y" ]]; then
 fi
 
 if [[ -n ${extra_files-} ]]; then
-  if [[ -d $extra_files ]]; then
-    extra_files="$extra_files/"
-  fi
   step Copying extra files
-  rsync -rlpv -FF \
-    -e "ssh -i \"$ssh_key_dir\"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_args[*]}" \
-    "$extra_files" \
-    "${ssh_connection}:/mnt/"
-  ssh_ "chmod 755 /mnt" # rsync also changes permissions of /mnt
+  tar -C "$extra_files" -cpf- . | ssh_ "${maybe_sudo} tar -C /mnt -xf- --no-same-owner"
+  ssh_ "chmod 755 /mnt" # tar also changes permissions of /mnt
 fi
 
 step Installing NixOS
