@@ -1,5 +1,5 @@
 locals {
-  nix_options = var.nix_options == null ? "" : join(" ", [for k, v in var.nix_options :  "--option ${k} ${v}"])
+nix_options = "{\"options\": {${join(", ", [for k, v in var.nix_options :  "\"${k}\": \"${v}\""])} } }"
 }
 data "external" "nix-build" {
   program = [ "${path.module}/nix-build.sh" ]

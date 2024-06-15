@@ -12,5 +12,5 @@ variable "file" {
 variable "nix_options" {
   type = map(string)
   description = "the options of nix"
-  default = null
+  default = {}
 }
