@@ -25,7 +25,7 @@ You will need:
   privilege to either login directly as root or to use password-less sudo.
 
 **nixos-anywhere** doesn’t need to be installed. You can run it directly from
-[Numtide's repository on Github.](https://github.com/nix-community/nixos-anywhere)
+[the Github repository.](https://github.com/nix-community/nixos-anywhere)
 
 Details of the flake, the disk configuration and the CLI command are discussed
 below.
