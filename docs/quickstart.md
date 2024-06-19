@@ -59,7 +59,7 @@ below.
 - **Generate Configuration**: Run the following command on the target machine:
 
   ```bash
-  nixos-generate-config --no-filesystems --root /mnt
+  nixos-generate-config --no-filesystems --dir /mnt
   ```
 
   This creates the necessary configuration files under `/mnt/etc/nixos/`, which
