@@ -283,7 +283,7 @@ first installing NixOS.</li>
 </li>
 <li>
 <p><strong>Generate Configuration</strong>: Run the following command on the target machine:</p>
-<pre><code class="language-bash">nixos-generate-config --no-filesystems --root /mnt
+<pre><code class="language-bash">nixos-generate-config --no-filesystems --dir /mnt
 </code></pre>
 <p>This creates the necessary configuration files under <code>/mnt/etc/nixos/</code>, which
 you can then customize as needed and copy them to your local machine in order
@@ -596,36 +596,72 @@ installation and system activation.</p>
 <p>This would copy <code>/etc/ssh/ssh_host_*</code> to <code>/mnt</code> after kexec but before
 installation, ignoring files that already exist in destination.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="use-without-flakes"><a class="header" href="#use-without-flakes">Use without flakes</a></h1>
-<p>While <code>nixos-anywhere</code> is designed to work optimally with Nix Flakes, it also
-supports the traditional approach without flakes. This document outlines how to
-use <code>nixos-anywhere</code> without relying on flakes. You will need to
-<a href="https://github.com/nix-community/disko/blob/master/docs/HowTo.md#installing-nixos-module">import the disko nixos module</a>
+<p>First,
+<a href="https://github.com/nix-community/disko/blob/master/docs/HowTo.md#installing-nixos-module">import the disko NixOS module</a>
 in your NixOS configuration and define disko devices as described in the
 <a href="https://github.com/nix-community/disko/tree/master/example">examples</a>.</p>
-<h2 id="generate-required-store-paths"><a class="header" href="#generate-required-store-paths">Generate Required Store Paths</a></h2>
-<p>Before you can use <code>nixos-anywhere</code> without flakes, you'll need to manually
-generate the paths for the NixOS system toplevel and disk image. The paths are
-generated using <code>nix-build</code> and are necessary for executing <code>nixos-anywhere</code>.</p>
-<h3 id="generating-disk-image-without-dependencies"><a class="header" href="#generating-disk-image-without-dependencies">Generating Disk Image without Dependencies:</a></h3>
-<p>To generate the disk image without dependencies, execute:</p>
-<pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.diskoNoDeps'
+<p>Let's assume that your NixOS configuration lives in <code>configuration.nix</code> and your
+target machine is called <code>machine</code>:</p>
+<h2 id="1-download-your-favourite-disk-layout"><a class="header" href="#1-download-your-favourite-disk-layout">1. Download your favourite disk layout:</a></h2>
+<p>See https://github.com/nix-community/disko-templates/ for more examples:</p>
+<p>The example below will work with both UEFI and BIOS-based systems.</p>
+<pre><code class="language-bash">curl https://raw.githubusercontent.com/nix-community/disko-templates/main/single-disk-ext4/disko-config.nix &gt; ./disko-config.nix
 </code></pre>
-<p>This will output a script path in <code>/nix/store</code> that will format your disk. Make
-note of this path for later use.</p>
-<h3 id="generating-nixos-system-toplevel"><a class="header" href="#generating-nixos-system-toplevel">Generating NixOS System Toplevel:</a></h3>
-<p>Execute the following command to generate the store path for the NixOS system
-toplevel:</p>
-<pre><code class="language-bash">nix-build -I nixos-config=/etc/nixos/configuration.nix -E '(import &lt;nixpkgs/nixos&gt; {}).config.system.build.toplevel'
+<h2 id="2-get-a-hardware-configurationnix-from-on-the-target-machine"><a class="header" href="#2-get-a-hardware-configurationnix-from-on-the-target-machine">2. Get a hardware-configuration.nix from on the target machine</a></h2>
+<ul>
+<li>
+<p><strong>Option 1</strong>: If NixOS is not installed, boot into an installer without first
+installing NixOS.</p>
+</li>
+<li>
+<p><strong>Option 2</strong>: Use the kexec tarball method, as described
+<a href="https://github.com/nix-community/nixos-images#kexec-tarballs">here</a>.</p>
+</li>
+<li>
+<p><strong>Generate Configuration</strong>: Run the following command on the target machine:</p>
+<pre><code class="language-bash">nixos-generate-config --no-filesystems --dir /tmp/config
 </code></pre>
-<p>This will output a path in <code>/nix/store</code> that corresponds to the system toplevel,
-which includes all the software and configurations for the system. Keep this
-path handy as well.</p>
-<h2 id="running-nixos-anywhere"><a class="header" href="#running-nixos-anywhere">Running NixOS-Anywhere</a></h2>
-<p>With both paths in hand, you can execute <code>nixos-anywhere</code> as follows:</p>
-<pre><code class="language-bash">nixos-anywhere --store-paths /nix/store/[your-disk-image-path] /nix/store/[your-toplevel-path]
+</li>
+</ul>
+<p>This creates the necessary configuration files under <code>/tmp/config/</code>. Copy
+<code>/tmp/config/nixos/hardware-configuration.nix</code> to your local machine into the
+same directory as <code>disko-config.nix</code>.</p>
+<h2 id="3-set-nixos-version-to-use"><a class="header" href="#3-set-nixos-version-to-use">3. Set NixOS version to use</a></h2>
+<pre><code class="language-nix"># default.nix
+let
+  # replace nixos-24.05 with your preferred nixos version or revision from here: https://status.nixos.org/
+  nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/archive/refs/heads/nixos-24.05.tar.gz";
+in
+import (nixpkgs + "/nixos/lib/eval-config.nix") {
+  modules = [ ./configuration.nix ];
+}
 </code></pre>
-<p>Replace <code>[your-disk-image-path]</code> and <code>[your-toplevel-path]</code> with the
-corresponding store paths you generated earlier.</p>
+<h2 id="4-write-a-nixos-configuration"><a class="header" href="#4-write-a-nixos-configuration">4. Write a NixOS configuration</a></h2>
+<pre><code class="language-nix"># configuration.nix
+{
+  imports = [
+   "${fetchTarball "https://github.com/nix-community/disko/tarball/master"}/module.nix"
+    ./disko-config.nix
+    ./hardware-configuration.nix
+  ];
+  # Replace this with the system of the installation target you want to install!!!
+  disko.devices.disk.main.device = "/dev/sda";
+
+  # Set this to the NixOS version that you have set in the previous step.
+  # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
+  system.stateVersion = "24.05";
+}
+</code></pre>
+<h2 id="5-build-and-deploy-with-nixos-anywhere"><a class="header" href="#5-build-and-deploy-with-nixos-anywhere">5. Build and deploy with nixos-anywhere</a></h2>
+<p>Your current directory now should contain the following files from the previous
+step:</p>
+<ul>
+<li><code>configuration.nix</code>, <code>default.nix</code>, <code>disko-config.nix</code> and
+<code>hardware-configuration.nix</code></li>
+</ul>
+<p>Run <code>nixos-anywhere</code> as follows:</p>
+<pre><code class="language-bash">nixos-anywhere --store-paths $(nix-build -A config.system.build.disko -A config.system.build.toplevel --no-out-link) root@machine
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="terraform"><a class="header" href="#terraform">Terraform</a></h1>
 <p>The nixos-anywhere terraform modules allow you to use Terraform for installing
 and updating NixOS. It simplifies the deployment process by integrating
