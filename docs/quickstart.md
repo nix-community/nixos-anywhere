@@ -191,8 +191,9 @@ below.
 
      This is because the `known_hosts` file in the `.ssh` directory now contains
      a mismatch, since the server has been overwritten. To solve this, use a
-     text editor to remove the old entry from the `known_hosts` file. The next
-     connection attempt will then treat this as a new server.
+     text editor to remove the old entry from the `known_hosts` file (or use the
+     command `ssh-keygen -R <ip_address>`). The next connection attempt will
+     then treat this as a new server.
 
      The error message line `Offending ECDSA key in ~/.ssh/known_hosts:` gives
      the line number that needs to be removed from the `known_hosts` file.
