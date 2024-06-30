@@ -351,8 +351,9 @@ Host key verification failed.
 </code></pre>
 <p>This is because the <code>known_hosts</code> file in the <code>.ssh</code> directory now contains
 a mismatch, since the server has been overwritten. To solve this, use a
-text editor to remove the old entry from the <code>known_hosts</code> file. The next
-connection attempt will then treat this as a new server.</p>
+text editor to remove the old entry from the <code>known_hosts</code> file (or use the
+command <code>ssh-keygen -R &lt;ip_address&gt;</code>). The next connection attempt will
+then treat this as a new server.</p>
 <p>The error message line <code>Offending ECDSA key in ~/.ssh/known_hosts:</code> gives
 the line number that needs to be removed from the <code>known_hosts</code> file.</p>
 <p>The new server's configurations are defined in the flake. <code>nixos-anywhere</code>
