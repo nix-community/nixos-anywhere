@@ -510,7 +510,7 @@ if [ ${copy_host_keys-n} = "y" ]; then
   done
 fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
-if command -v zpool >/dev/null; then
+if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
   # we always want to export the zfs pools so people can boot from it without force import
   umount -Rv /mnt/
   zpool export -a || true
