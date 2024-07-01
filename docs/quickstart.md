@@ -21,11 +21,11 @@ You will need:
   performed
 - A disk configuration containing details of the file system that will be
   created on the new server.
-- A target machine, reachable via SSH, with your SSH public key deployed and and
-  the privilege to either login directly as root or to use password-less sudo.
+- A target machine, reachable via SSH, with your SSH public key deployed and the
+  privilege to either login directly as root or to use password-less sudo.
 
 **nixos-anywhere** doesn’t need to be installed. You can run it directly from
-[Numtide's repository on Github.](https://github.com/nix-community/nixos-anywhere)
+[the Github repository.](https://github.com/nix-community/nixos-anywhere)
 
 Details of the flake, the disk configuration and the CLI command are discussed
 below.
@@ -59,7 +59,7 @@ below.
 - **Generate Configuration**: Run the following command on the target machine:
 
   ```bash
-  nixos-generate-config --no-filesystems --root /mnt
+  nixos-generate-config --no-filesystems --dir /mnt
   ```
 
   This creates the necessary configuration files under `/mnt/etc/nixos/`, which
@@ -191,8 +191,9 @@ below.
 
      This is because the `known_hosts` file in the `.ssh` directory now contains
      a mismatch, since the server has been overwritten. To solve this, use a
-     text editor to remove the old entry from the `known_hosts` file. The next
-     connection attempt will then treat this as a new server.
+     text editor to remove the old entry from the `known_hosts` file (or use the
+     command `ssh-keygen -R <ip_address>`). The next connection attempt will
+     then treat this as a new server.
 
      The error message line `Offending ECDSA key in ~/.ssh/known_hosts:` gives
      the line number that needs to be removed from the `known_hosts` file.

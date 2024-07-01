@@ -10,7 +10,7 @@
         kexec-installer = "${inputs'.nixos-images.packages.kexec-installer-nixos-unstable-noninteractive}/nixos-kexec-installer-noninteractive-${system}.tar.gz";
       };
       testInputsStable = testInputsUnstable // {
-        kexec-installer = "${inputs'.nixos-images.packages.kexec-installer-nixos-2311-noninteractive}/nixos-kexec-installer-noninteractive-${system}.tar.gz";
+        kexec-installer = "${inputs'.nixos-images.packages.kexec-installer-nixos-stable-noninteractive}/nixos-kexec-installer-noninteractive-${system}.tar.gz";
       };
     in
     {

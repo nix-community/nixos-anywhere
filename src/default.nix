@@ -6,6 +6,7 @@
 , coreutils
 , curl
 , gnugrep
+, gnutar
 , gawk
 , findutils
 , gnused
@@ -27,11 +28,12 @@ let
     findutils
     gnused # needed by ssh-copy-id
     sshpass # used to provide password for ssh-copy-id
+    gnutar # used to upload extra-files
   ];
 in
 stdenv.mkDerivation {
   pname = "nixos-anywhere";
-  version = "1.2.0";
+  version = "1.3.0";
   src = ./..;
   nativeBuildInputs = [ makeWrapper ];
   installPhase = ''

@@ -27,6 +27,8 @@ Options:
   do not reboot after installation, allowing further customization of the target installation.
 * --kexec <path>
   use another kexec tarball to bootstrap NixOS
+* --kexec-extra-flags
+  extra flags to add into the call to kexec, e.g. "--no-sync"
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
 * --copy-host-keys
@@ -65,6 +67,7 @@ step() {
 
 here=$(dirname "${BASH_SOURCE[0]}")
 kexec_url=""
+kexec_extra_flags=""
 enable_debug=""
 maybe_reboot="sleep 6 && reboot"
 nix_options=(
@@ -121,6 +124,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   --kexec)
     kexec_url=$2
+    shift
+    ;;
+  --kexec-extra-flags)
+    kexec_extra_flags=$2
     shift
     ;;
   --post-kexec-ssh-port)
@@ -365,7 +372,7 @@ if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
   if [[ $kexec_url == "" ]]; then
     case "${is_arch-unknown}" in
     x86_64 | aarch64)
-      kexec_url="https://github.com/nix-community/nixos-images/releases/download/nixos-23.11/nixos-kexec-installer-noninteractive-${is_arch}-linux.tar.gz"
+      kexec_url="https://github.com/nix-community/nixos-images/releases/download/nixos-24.05/nixos-kexec-installer-noninteractive-${is_arch}-linux.tar.gz"
       ;;
     *)
       abort "Unsupported architecture: ${is_arch}. Our default kexec images only support x86_64 and aarch64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information."
@@ -396,7 +403,7 @@ SSH
   fi
 
   ssh_ <<SSH
-TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run
+TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run --kexec-extra-flags "${kexec_extra_flags}"
 SSH
 
   # use the default SSH port to connect at this point
@@ -503,7 +510,7 @@ if [ ${copy_host_keys-n} = "y" ]; then
   done
 fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
-if command -v zpool >/dev/null; then
+if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
   # we always want to export the zfs pools so people can boot from it without force import
   umount -Rv /mnt/
   zpool export -a || true

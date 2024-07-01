@@ -4,7 +4,7 @@
     installer = ./modules/installer.nix;
     installed = {
       services.openssh.enable = true;
-      virtualisation.memorySize = 1512;
+      virtualisation.memorySize = 1024;
 
       users.users.nixos = {
         isNormalUser = true;
