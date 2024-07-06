@@ -521,7 +521,7 @@ nohup sh -c '${maybe_reboot}' >/dev/null &
 SSH
 
 if [[ -n ${maybe_reboot} ]]; then
-  step Waiting for the machine to become reachable again
+  step Waiting for the machine to become unreachable due to reboot
   while timeout_ssh_ -- exit 0; do sleep 1; done
 fi
 
