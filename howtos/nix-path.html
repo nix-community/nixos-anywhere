@@ -190,7 +190,7 @@ configuration instead:</p>
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   # ... other inputs
 
-  outputs = { nixpkgs, ... }:
+  outputs = inputs@{ nixpkgs, ... }:
     {
       nixosConfigurations.yoursystem = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux"; # adapt to your actual system
