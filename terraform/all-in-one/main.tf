@@ -14,6 +14,7 @@ module "partitioner-build" {
 
 locals {
   install_user = var.install_user == null ? var.target_user : var.install_user
+  install_port = var.install_port == null ? var.target_port : var.install_port
 }
 
 module "install" {
@@ -21,7 +22,7 @@ module "install" {
   kexec_tarball_url            = var.kexec_tarball_url
   target_user                  = local.install_user
   target_host                  = var.target_host
-  target_port                  = var.target_port
+  target_port                  = local.install_port
   nixos_partitioner            = module.partitioner-build.result.out
   nixos_system                 = module.system-build.result.out
   ssh_private_key              = var.install_ssh_key
