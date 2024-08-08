@@ -53,6 +53,10 @@ Options:
   build the closure on the remote machine instead of locally and copy-closuring it
 * --vm-test
   build the system and test the disk configuration inside a VM without installing it to the target.
+* --ssh-retry-limit <limit>
+  set the number of times to retry the ssh connection before giving up
+* --reboot-retry-limit <limit>
+  set the number of times to wait for the reboot before giving up.
 USAGE
 }
 
@@ -180,6 +184,14 @@ while [[ $# -gt 0 ]]; do
   --vm-test)
     vm_test=y
     ;;
+  --ssh-retry-limit)
+    ssh_retry_limit=$2
+    shift
+    ;;
+  --reboot-retry-limit)
+    reboot_retry_limit=$2
+    shift
+    ;;
   *)
     if [[ -z ${ssh_connection-} ]]; then
       ssh_connection="$1"
@@ -191,6 +203,10 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+# Set default retry limits to -1 (infinite retries)
+ssh_retry_limit=${ssh_retry_limit:--1}
+reboot_retry_limit=${reboot_retry_limit:--1}
 
 if [[ ${print_build_logs-n} == "y" ]]; then
   nix_options+=("-L")
@@ -302,6 +318,7 @@ ssh_host=$(echo "$ssh_settings" | awk '/^hostname / { print $2 }')
 ssh_port=$(echo "$ssh_settings" | awk '/^port / { print $2 }')
 
 step Uploading install SSH keys
+retry_count=0
 until
   if [[ -n ${env_password-} ]]; then
     sshpass -e \
@@ -325,7 +342,12 @@ until
       "$ssh_connection"
   fi
 do
-  sleep 3
+  sleep 5
+  retry_count=$((retry_count + 1))
+  echo "Retrying ssh-copy-id: count $retry_count"
+  if [[ $ssh_retry_limit -ne -1 && $retry_count -ge $ssh_retry_limit ]]; then
+    abort "Reached ssh retry limit of $ssh_retry_limit"
+  fi
 done
 
 import_facts() {
@@ -421,7 +443,15 @@ SSH
   ssh_connection="root@${ssh_host}"
 
   # waiting for machine to become available again
-  until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
+  retry_count=0
+  until ssh_ -o ConnectTimeout=10 -- exit 0; do
+    sleep 5
+    retry_count=$((retry_count + 1))
+    echo "Waiting for reboot count $retry_count"
+    if [[ $reboot_retry_limit -ne -1 && $retry_count -ge $reboot_retry_limit ]]; then
+      abort "Machine didn't come online after reboot connection limit of $reboot_retry_limit retries"
+    fi
+  done
 fi
 
 # Installation will fail if non-root user is used for installer.
