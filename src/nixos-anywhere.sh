@@ -53,6 +53,10 @@ Options:
   build the closure on the remote machine instead of locally and copy-closuring it
 * --vm-test
   build the system and test the disk configuration inside a VM without installing it to the target.
+* --ssh-retry-limit <limit>
+  set the number of times to retry the ssh connection before giving up
+* --reboot-retry-limit <limit>
+  set the number of times to wait for the reboot before giving up.
 USAGE
 }
 
@@ -180,6 +184,14 @@ while [[ $# -gt 0 ]]; do
   --vm-test)
     vm_test=y
     ;;
+  --ssh-retry-limit)
+    ssh_retry_limit=$2
+    shift
+    ;;
+  --reboot-retry-limit)
+    reboot_retry_limit=$2
+    shift
+    ;;
   *)
     if [[ -z ${ssh_connection-} ]]; then
       ssh_connection="$1"
@@ -301,7 +313,9 @@ ssh_user=$(echo "$ssh_settings" | awk '/^user / { print $2 }')
 ssh_host=$(echo "$ssh_settings" | awk '/^hostname / { print $2 }')
 ssh_port=$(echo "$ssh_settings" | awk '/^port / { print $2 }')
 
+
 step Uploading install SSH keys
+retry_count=0
 until
   if [[ -n ${env_password-} ]]; then
     sshpass -e \
@@ -325,9 +339,12 @@ until
       "$ssh_connection"
   fi
 do
-  sleep 3
+  sleep 5
+  ((retry_count++))
+  if [[ -n $ssh_retry_limit && $retry_count -ge $ssh_retry_limit ]]; then
+    abort "Reached retry limit of $ssh_retry_limit"
+  fi
 done
-
 import_facts() {
   local facts filtered_facts
   if ! facts=$(ssh_ -o ConnectTimeout=10 enable_debug=$enable_debug sh -- <"$here"/get-facts.sh); then
@@ -421,7 +438,15 @@ SSH
   ssh_connection="root@${ssh_host}"
 
   # waiting for machine to become available again
-  until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
+  retry_count=0
+  until ssh_ -o ConnectTimeout=10 -- exit 0; do
+    sleep 5
+    ((retry_count++))
+
+    if [[ -n $reboot_retry_limit && $retry_count -ge $reboot_retry_limit ]]; then
+      abort "Machine didn't come online after retry limit of $reboot_retry_limit"
+    fi
+  done
 fi
 
 # Installation will fail if non-root user is used for installer.
