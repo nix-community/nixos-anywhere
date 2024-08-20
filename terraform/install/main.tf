@@ -9,6 +9,7 @@ resource "null_resource" "nixos-remote" {
   provisioner "local-exec" {
     environment = merge({
       SSH_PRIVATE_KEY = var.ssh_private_key
+      SSH_PASS = var.target_pass
       stop_after_disko = var.stop_after_disko
       debug_logging = var.debug_logging
       kexec_tarball_url = var.kexec_tarball_url
