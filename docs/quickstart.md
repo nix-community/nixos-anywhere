@@ -21,8 +21,9 @@ You will need:
   performed
 - A disk configuration containing details of the file system that will be
   created on the new server.
-- A target machine, reachable via SSH, with your SSH public key deployed and the
-  privilege to either login directly as root or to use password-less sudo.
+- A target machine that is reachable via SSH, either using keys or a password,
+  and the privilege to either log in directly as root or a user with
+  password-less sudo.
 
 **nixos-anywhere** doesn’t need to be installed. You can run it directly from
 [the Github repository.](https://github.com/nix-community/nixos-anywhere)
@@ -103,14 +104,14 @@ below.
    simply reference your local directory when you run **nixos-anywhere**. This
    example uses a local directory on the source machine.
 
-6. On the target machine, make sure you have access as root via ssh by adding
-   your SSH key to the file `authorized_keys` in the directory `/root/.ssh`
+6. **Connectivity to the Target Machine**:
 
-   Optionally, bootstrapping can also be performed through password login. For
-   example through the `image-installer-*` provided by
-   `nix-community/nixos-images`. Assign your password to the `SSH_PASS`
-   environment variable and specify `--env-password` as an additional command
-   line option. This will provide `ssh-copy-id` with the required password.
+   **nixos-anywhere** will create a temporary SSH key to use for the
+   installation. If your SSH key is not found, you will be asked for your
+   password. If you are using a non-root user, you must have access to sudo
+   without a password. To avoid SSH password prompts, set the `SSHPASS`
+   environment variable to your password and add `--env-password` to the
+   `nixos-anywhere` command.
 
 7. (Optional) Test your nixos and disko configuration:
 
