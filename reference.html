@@ -238,7 +238,7 @@ originate from the underlying operating system. These should be documented in
 the relevant operating system manual.</p>
 <div class="table-wrapper"><table><thead><tr><th>Id</th><th>Message</th><th>Explanation</th></tr></thead><tbody>
 <tr><td>1</td><td>Failure unpacking initrd</td><td>You don't have enough RAM to hold <code>kexec</code></td></tr>
-<tr><td>2</td><td>Flake &lt;flake_url&gt; does not provide attirbute</td><td>The configuration name you specified in your flake URI is not defined as a NixOS configuration in your flake eg if your URI was mydir#myconfig, then myconfig should be included in the flake as <code>nixosConfigurations.myconfig</code></td></tr>
+<tr><td>2</td><td>Flake &lt;flake_url&gt; does not provide attribute</td><td>The configuration name you specified in your flake URI is not defined as a NixOS configuration in your flake eg if your URI was mydir#myconfig, then myconfig should be included in the flake as <code>nixosConfigurations.myconfig</code></td></tr>
 <tr><td>3</td><td>Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri.</td><td>As for error #2</td></tr>
 <tr><td></td><td>For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri</td><td></td></tr>
 <tr><td>4</td><td>Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already</td><td>TODO: Explain</td></tr>

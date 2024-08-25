@@ -199,141 +199,124 @@ password-less sudo.</li>
 <p>Details of the flake, the disk configuration and the CLI command are discussed
 below.</p>
 <h2 id="steps-required-to-run-nixos-anywhere"><a class="header" href="#steps-required-to-run-nixos-anywhere">Steps required to run nixos-anywhere</a></h2>
-<ol>
-<li>
-<p><strong>Enable Flakes</strong>:</p>
-<p>Ensure that flakes are enabled on your system. To enable flakes, refer to the
+<h3 id="1-enable-flakes"><a class="header" href="#1-enable-flakes">1. Enable Flakes</a></h3>
+<p>Check if your nix has flakes enabled by running <code>nix flake</code>. It will tell you if
+it's not. To enable flakes, refer to the
 <a href="https://wiki.nixos.org/wiki/Flakes#enable-flakes">NixOS Wiki</a>.</p>
-</li>
-<li>
-<p><strong>Initialize a Flake</strong>:</p>
+<h3 id="2-initialize-a-flake"><a class="header" href="#2-initialize-a-flake">2. Initialize a Flake</a></h3>
 <p>The easiest way to start is to copy our
 <a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example flake.nix</a>
 into a new directory. This example is tailored for a virtual machine setup
-similar to one on <a href="https://www.hetzner.com/cloud">Hetzner Cloud</a>, so you
-might need to adapt it for your setup.</p>
+similar to one on <a href="https://www.hetzner.com/cloud">Hetzner Cloud</a>, so you might
+need to adapt it for your setup.</p>
 <p><strong>Hardware-Specific Configuration</strong>: If you're not using a virtual machine,
 you'll need to generate a custom hardware configuration with
 <code>nixos-generate-config</code>.</p>
-</li>
-</ol>
-<ul>
-<li>
-<p><strong>Get <code>nixos-generate-config</code> onto the Target Machine</strong>:</p>
+<p>If you already have a flake, you can use it by adding
+<a href="https://github.com/nix-community/disko?tab=readme-ov-file#how-to-use-disko">disko configuration</a>
+to it.</p>
+<h4 id="get-nixos-generate-config-onto-the-target-machine"><a class="header" href="#get-nixos-generate-config-onto-the-target-machine">Get <code>nixos-generate-config</code> onto the Target Machine</a></h4>
 <ol>
-<li><strong>Option 1</strong>: If NixOS is not installed, boot into an installer without
-first installing NixOS.</li>
+<li><strong>Option 1</strong>: If NixOS is not installed, boot into an installer without first
+installing NixOS.</li>
 <li><strong>Option 2</strong>: Use the kexec tarball method, as described
 <a href="https://github.com/nix-community/nixos-images#kexec-tarballs">here</a>.</li>
 </ol>
-</li>
-<li>
-<p><strong>Generate Configuration</strong>: Run the following command on the target machine:</p>
+<h4 id="generate-configuration"><a class="header" href="#generate-configuration">Generate Configuration</a></h4>
+<p>Run the following command on the target machine:</p>
 <pre><code class="language-bash">nixos-generate-config --no-filesystems --dir /mnt
 </code></pre>
 <p>This creates the necessary configuration files under <code>/mnt/etc/nixos/</code>, which
-you can then customize as needed and copy them to your local machine in order
-to include them in your flake.</p>
-</li>
-</ul>
-<ol start="3">
-<li>
-<p><strong>Find SSH Key Line</strong>:<br />
-if you cloned
+you can then customize as needed and copy them to your local machine in order to
+include them in your flake.</p>
+<h3 id="3-configure-your-ssh-key"><a class="header" href="#3-configure-your-ssh-key">3. Configure your SSH key</a></h3>
+<p>If you cloned
 <a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/configuration.nix">our nixos-anywhere-example</a>
-you will also replace the SSH key like this: In your configuration, locate
-the line that reads:</p>
+you will also replace the SSH key like this: In your configuration, locate the
+line that reads:</p>
 <pre><code class="language-bash"># change this to your ssh key
             "CHANGE"
 </code></pre>
 <p>Replace the text <code>CHANGE</code> with your own SSH key. This is crucial, as you will
 not be able to log into the target machine post-installation without it.</p>
-</li>
-<li>
-<p>In the same directory, create a file named <code>disk-config.nix</code>. This will be
-used to specify the disk layout to the <strong>disko</strong> tool, which nixos-anywhere
-uses to partition, format and mount the disks. Again, for a simple
-installation you can paste the contents from the example
+<h3 id="4-configure-storage"><a class="header" href="#4-configure-storage">4. Configure Storage</a></h3>
+<p>In the same directory, create a file named <code>disk-config.nix</code>. This will be used
+to specify the disk layout to the
+<a href="https://github.com/nix-community/disko/blob/master/docs/INDEX.md">disko</a> tool,
+which nixos-anywhere uses to partition, format and mount the disks.</p>
+<p>For a simple installation you can paste the contents from the example
 <a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/disk-config.nix">here</a>.
-This configures a standard GPT (GUID Partition Table) partition compatible
-with both EFI and BIOS systems, and mounts the disk as <code>/dev/sda</code>. If this
-doesn’t meet your requirements, choose an example that suits your disk layout
-from the
+This configures a standard GPT (GUID Partition Table) partition compatible with
+both EFI and BIOS systems, and mounts the disk as <code>/dev/sda</code>. If this doesn’t
+meet your requirements, choose an example that suits your disk layout from the
 <a href="https://github.com/nix-community/disko/tree/master/example">disko examples</a>.
 For more information about this configuration, refer to the
 <a href="https://github.com/nix-community/disko">disko documentation.</a></p>
-</li>
-<li>
-<p>Run the following command to create the <code>flake.lock</code> file:</p>
+<h3 id="5-lock-your-flake"><a class="header" href="#5-lock-your-flake">5. Lock your Flake</a></h3>
 <pre><code>nix flake lock
 </code></pre>
+<p>This will download your flake dependencies and make a <code>flake.lock</code> file that
+describes how to reproducably build your system.</p>
 <p>Optionally, you can commit these files to a repo such as Github, or you can
 simply reference your local directory when you run <strong>nixos-anywhere</strong>. This
 example uses a local directory on the source machine.</p>
-</li>
-<li>
-<p><strong>Connectivity to the Target Machine</strong>:</p>
-<p><strong>nixos-anywhere</strong> will create a temporary SSH key to use for the
-installation. If your SSH key is not found, you will be asked for your
-password. If you are using a non-root user, you must have access to sudo
-without a password. To avoid SSH password prompts, set the <code>SSHPASS</code>
-environment variable to your password and add <code>--env-password</code> to the
-<code>nixos-anywhere</code> command.</p>
-</li>
-<li>
-<p>(Optional) Test your nixos and disko configuration:</p>
-<p>The following command will automatically test your nixos configuration and
-run disko inside a virtual machine, where</p>
+<h3 id="6-connectivity-to-the-target-machine"><a class="header" href="#6-connectivity-to-the-target-machine">6. Connectivity to the Target Machine</a></h3>
+<p>On the target machine, make sure you have access as root via ssh by adding your
+SSH key to the file <code>authorized_keys</code> in the directory <code>/root/.ssh</code></p>
+<p>Optionally, bootstrapping can also be performed through password login. For
+example through the <code>image-installer-*</code> provided by
+<code>nix-community/nixos-images</code>. Assign your password to the <code>SSH_PASS</code> environment
+variable and specify <code>--env-password</code> as an additional command line option. This
+will provide <code>ssh-copy-id</code> with the required password.</p>
+<h3 id="7-optional-test-your-nixos-and-disko-configuration"><a class="header" href="#7-optional-test-your-nixos-and-disko-configuration">7. (Optional) Test your NixOS and Disko configuration</a></h3>
+<p>The following command will automatically test your nixos configuration and run
+disko inside a virtual machine, where</p>
 <ul>
 <li>
 <p><code>&lt;path to configuration&gt;</code> is the path to the directory or repository
 containing <code>flake.nix</code> and <code>disk-config.nix</code></p>
 </li>
 <li>
-<p><code>&lt;configuration name&gt;</code> must match the name that immediately follows the
-text <code>nixosConfigurations.</code> in the flake, as indicated by the comment in
-the
-<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
+<p><code>&lt;configuration name&gt;</code> must match the name that immediately follows the text
+<code>nixosConfigurations.</code> in the flake, as indicated by the comment in the
+<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example</a>.</p>
 </li>
 </ul>
 <pre><code>nix run github:nix-community/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; --vm-test
 </code></pre>
-</li>
-<li>
-<p>You can now run <strong>nixos-anywhere</strong> from the command line as shown below,
-where:</p>
+<h3 id="8-run-it"><a class="header" href="#8-run-it">8. Run it</a></h3>
+<p>You can now run <strong>nixos-anywhere</strong> from the command line as shown below, where:</p>
 <ul>
 <li>
 <p><code>&lt;path to configuration&gt;</code> is the path to the directory or repository
 containing <code>flake.nix</code> and <code>disk-config.nix</code></p>
 </li>
 <li>
-<p><code>&lt;configuration name&gt;</code> must match the name that immediately follows the
-text <code>nixosConfigurations.</code> in the flake, as indicated by the comment in
-the
-<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example</a>).</p>
+<p><code>&lt;configuration name&gt;</code> must match the name that immediately follows the text
+<code>nixosConfigurations.</code> in the flake, as indicated by the comment in the
+<a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/flake.nix">example</a>.</p>
 </li>
 <li>
 <p><code>&lt;ip address&gt;</code> is the IP address of the target machine.</p>
+</li>
+</ul>
 <pre><code>nix run github:nix-community/nixos-anywhere -- --flake &lt;path to configuration&gt;#&lt;configuration name&gt; root@&lt;ip address&gt;
 </code></pre>
-<p>The command would look  like this if you had created your files in a
-directory named <code>/home/mydir/test</code> and the IP address of your target
-machine is <code>37.27.18.135</code>:</p>
+<p>The command would look  like this if you had created your files in a directory
+named <code>/home/mydir/test</code> and the IP address of your target machine is
+<code>37.27.18.135</code>:</p>
 <pre><code>nix run github:nix-community/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud root@37.27.18.135
 </code></pre>
-<p><strong>nixos-anywhere</strong> will then run, showing various output messages at each
-stage. It may take some time to complete, depending on Internet speeds. It
-should finish by showing the messages below before returning to the command
-prompt.</p>
+<p><strong>nixos-anywhere</strong> will then run, showing various output messages at each stage.
+It may take some time to complete, depending on Internet speeds. It should
+finish by showing the messages below before returning to the command prompt.</p>
 <pre><code>Installation finished. No error reported.
 Warning: Permanently added '&lt;ip-address&gt;' (ED25519) to the list of known hosts
 </code></pre>
 <p>When this happens, the target server will have been overwritten with a new
-installation of NixOS. Note that the server's public SSH key will have
-changed.</p>
-<p>If you have previously accessed this server using SSH, you may see the
-following message the next time you try to log in to the target.</p>
+installation of NixOS. Note that the server's public SSH key will have changed.</p>
+<p>If you have previously accessed this server using SSH, you may see the following
+message the next time you try to log in to the target.</p>
 <pre><code>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -350,37 +333,39 @@ Offending ECDSA key in ~/.ssh/known_hosts:6
 Host key for &lt;ip_address&gt; has changed and you have requested strict checking.
 Host key verification failed.
 </code></pre>
-<p>This is because the <code>known_hosts</code> file in the <code>.ssh</code> directory now contains
-a mismatch, since the server has been overwritten. To solve this, use a
-text editor to remove the old entry from the <code>known_hosts</code> file (or use the
-command <code>ssh-keygen -R &lt;ip_address&gt;</code>). The next connection attempt will
-then treat this as a new server.</p>
-<p>The error message line <code>Offending ECDSA key in ~/.ssh/known_hosts:</code> gives
-the line number that needs to be removed from the <code>known_hosts</code> file.</p>
-<p>The new server's configurations are defined in the flake. <code>nixos-anywhere</code>
-does not create <code>etc/nixos/configuration.nix</code>, since it expects the server
-to be administered remotely. Any future changes to the configuration should
-be made to the flake, and you would reference this flake when doing the
-nixos-rebuild command or a deployment tool of your choice i.e.
+<p>This is because the <code>known_hosts</code> file in the <code>.ssh</code> directory now contains a
+mismatch, since the server has been overwritten. To solve this, use a text
+editor to remove the old entry from the <code>known_hosts</code> file (or use the command
+<code>ssh-keygen -R &lt;ip_address&gt;</code>). The next connection attempt will then treat this
+as a new server.</p>
+<p>The error message line <code>Offending ECDSA key in ~/.ssh/known_hosts:6</code> gives the
+line number that needs to be removed from the <code>known_hosts</code> file (line 6 in this
+example).</p>
+<h1 id="finished"><a class="header" href="#finished">Finished!</a></h1>
+<p><strong>nixos-anywhere</strong>'s job is now done, as it is a tool to install NixOS onto the
+target machine.</p>
+<p>Any future changes to the configuration should be made to your flake. You would
+reference this flake when using the NixOS <code>nixos-rebuild</code> command or a separate
+3rd party deployment tool of your choice i.e.
+<a href="https://github.com/serokell/deploy-rs">deploy-rs</a>,
 <a href="https://github.com/zhaofengli/colmena">colmena</a>,
 <a href="https://github.com/MatthewCroughan/nixinate">nixinate</a>.</p>
-<p>This example can be run from the machine itself for updating (replace
-<code>&lt;URL to your flake&gt;</code> with your flake i.e. <code>.#</code> if your flake is in the
-current directory):</p>
+<p>To update on the machine locally (replace <code>&lt;URL to your flake&gt;</code> with your flake
+i.e. <code>.#</code> if your flake is in the current directory):</p>
 <pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt;
 </code></pre>
-<p>You can also run <code>nixos-rebuild</code> to update a machine remotely, if you have
-set up an openssh server and your ssh key for the root user:</p>
+<p>To update remotely you will need to have configured an
+<a href="https://search.nixos.org/options?show=services.sshd.enable">ssh server</a> and
+your ssh key for the
+<a href="https://search.nixos.org/options?show=users.users.%3Cname%3E.openssh.authorizedKeys.keys">root user</a>:</p>
 <pre><code>nixos-rebuild switch --flake &lt;URL to your flake&gt; --target-host "root@&lt;ip address&gt;"
 </code></pre>
-<p>For more information on different use cases of <strong>nixos-anywhere</strong> please
-refer to the <a href="./howtos/INDEX.html">How to Guide</a>, and for more technical
-information and explanation of known error messages, refer to the
+<p>See the Nix documentation for use of the flake
+<a href="https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake#url-like-syntax">URL-like syntax</a>.</p>
+<p>For more information on different use cases of <strong>nixos-anywhere</strong> please refer
+to the <a href="./howtos/INDEX.html">How to Guide</a>, and for more technical information and
+explanation of known error messages, refer to the
 <a href="./reference.html">Reference Manual</a>.</p>
-</li>
-</ul>
-</li>
-</ol>
 
                     </main>
 
