@@ -92,7 +92,7 @@ variable "disk_encryption_key_scripts" {
 
 variable "extra_environment" {
   type        = map(string)
-  description = "Extra environment variables to be set during installation. This can be usefull to set extra variables for the extra_files_script or disk_encryption_key_scripts"
+  description = "Extra environment variables to be set during installation. This can be useful to set extra variables for the extra_files_script or disk_encryption_key_scripts"
   default     = {}
 }
 

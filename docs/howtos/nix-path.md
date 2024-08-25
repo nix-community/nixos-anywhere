@@ -37,7 +37,7 @@ configuration instead:
 }
 ```
 
-Advantage: This solution will be automatically kept up-to-date everytime the
+Advantage: This solution will be automatically kept up-to-date every time the
 flake is updated.
 
 In your shell you will see something in your `$NIX_PATH`:
