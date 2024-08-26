@@ -316,13 +316,11 @@ describes how to reproducably build your system.</p>
 simply reference your local directory when you run <strong>nixos-anywhere</strong>. This
 example uses a local directory on the source machine.</p>
 <h3 id="6-connectivity-to-the-target-machine"><a class="header" href="#6-connectivity-to-the-target-machine">6. Connectivity to the Target Machine</a></h3>
-<p>On the target machine, make sure you have access as root via ssh by adding your
-SSH key to the file <code>authorized_keys</code> in the directory <code>/root/.ssh</code></p>
-<p>Optionally, bootstrapping can also be performed through password login. For
-example through the <code>image-installer-*</code> provided by
-<code>nix-community/nixos-images</code>. Assign your password to the <code>SSH_PASS</code> environment
-variable and specify <code>--env-password</code> as an additional command line option. This
-will provide <code>ssh-copy-id</code> with the required password.</p>
+<p><strong>nixos-anywhere</strong> will create a temporary SSH key to use for the installation.
+If your SSH key is not found, you will be asked for your password. If you are
+using a non-root user, you must have access to sudo without a password. To avoid
+SSH password prompts, set the <code>SSHPASS</code> environment variable to your password
+and add <code>--env-password</code> to the <code>nixos-anywhere</code> command.</p>
 <h3 id="7-optional-test-your-nixos-and-disko-configuration"><a class="header" href="#7-optional-test-your-nixos-and-disko-configuration">7. (Optional) Test your NixOS and Disko configuration</a></h3>
 <p>The following command will automatically test your nixos configuration and run
 disko inside a virtual machine, where</p>
