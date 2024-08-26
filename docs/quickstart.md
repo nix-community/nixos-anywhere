@@ -120,14 +120,11 @@ example uses a local directory on the source machine.
 
 ### 6. Connectivity to the Target Machine
 
-On the target machine, make sure you have access as root via ssh by adding your
-SSH key to the file `authorized_keys` in the directory `/root/.ssh`
-
-Optionally, bootstrapping can also be performed through password login. For
-example through the `image-installer-*` provided by
-`nix-community/nixos-images`. Assign your password to the `SSH_PASS` environment
-variable and specify `--env-password` as an additional command line option. This
-will provide `ssh-copy-id` with the required password.
+**nixos-anywhere** will create a temporary SSH key to use for the installation.
+If your SSH key is not found, you will be asked for your password. If you are
+using a non-root user, you must have access to sudo without a password. To avoid
+SSH password prompts, set the `SSHPASS` environment variable to your password
+and add `--env-password` to the `nixos-anywhere` command.
 
 ### 7. (Optional) Test your NixOS and Disko configuration
 
