@@ -2,28 +2,36 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
+
+declare -A input
+
+while IFS= read -r -d '' key && IFS= read -r -d '' value; do
+  input[$key]=$value
+done < <(jq -j 'to_entries[] | (.key, "\u0000", .value, "\u0000")' <<<"${ARGUMENTS}")
+
 args=()
 
-if [[ ${debug_logging-} == "true" ]]; then
+if [[ ${input[debug_logging]} == "true" ]]; then
   set -x
+  declare -p input
   args+=("--debug")
 fi
-if [[ ${stop_after_disko-} == "true" ]]; then
+if [[ ${input[stop_after_disko]} == "true" ]]; then
   args+=("--stop-after-disko")
 fi
-if [[ ${kexec_tarball_url-} != "" ]]; then
-  args+=("--kexec" "${kexec_tarball_url}")
+if [[ ${input[kexec_tarball_url]} != "null" ]]; then
+  args+=("--kexec" "${input[kexec_tarball_url]}")
 fi
-if [[ ${no_reboot-} == "true" ]]; then
+if [[ ${input[no_reboot]} == "true" ]]; then
   args+=("--no-reboot")
 fi
-if [[ ${build_on_remote-} == "true" ]]; then
+if [[ ${input[build_on_remote]} == "true" ]]; then
   args+=("--build-on-remote")
 fi
-if [[ -n ${flake-} ]]; then
-  args+=("--flake" "${flake}")
+if [[ -n ${input[flake]} ]]; then
+  args+=("--flake" "${input[flake]}")
 else
-  args+=("--store-paths" "${nixos_partitioner}" "${nixos_system}")
+  args+=("--store-paths" "${input[nixos_partitioner]}" "${input[nixos_system]}")
 fi
 if [[ -n ${SSHPASS-} ]]; then
   args+=("--env-password")
@@ -35,16 +43,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if [[ ${extra_files_script-} != "" ]]; then
-  if [[ ! -f ${extra_files_script} ]]; then
-    echo "extra_files_script '${extra_files_script}' does not exist"
+if [[ ${input[extra_files_script]} != "null" ]]; then
+  if [[ ! -f ${input[extra_files_script]} ]]; then
+    echo "extra_files_script '${input[extra_files_script]}' does not exist"
     exit 1
   fi
-  if [[ ! -x ${extra_files_script} ]]; then
-    echo "extra_files_script '${extra_files_script}' is not executable"
+  if [[ ! -x ${input[extra_files_script]} ]]; then
+    echo "extra_files_script '${input[extra_files_script]}' is not executable"
     exit 1
   fi
-  extra_files_script=$(realpath "${extra_files_script}")
+  extra_files_script=$(realpath "${input[extra_files_script]}")
   mkdir "${tmpdir}/extra-files"
   pushd "${tmpdir}/extra-files"
   $extra_files_script
@@ -52,8 +60,8 @@ if [[ ${extra_files_script-} != "" ]]; then
   args+=("--extra-files" "${tmpdir}/extra-files")
 fi
 
-args+=("-p" "${target_port}")
-args+=("${target_user}@${target_host}")
+args+=("-p" "${input[target_port]}")
+args+=("${input[target_user]}@${input[target_host]}")
 
 keyIdx=0
 while [[ $# -gt 0 ]]; do
@@ -73,4 +81,4 @@ while [[ $# -gt 0 ]]; do
   keyIdx=$((keyIdx + 1))
 done
 
-nix run --extra-experimental-features 'nix-command flakes' "path:${SCRIPT_DIR}/../..#nixos-anywhere" -- "${args[@]}"
+SSHPASS=${input[target_pass]} SSH_PRIVATE_KEY="${input[ssh_private_key]}" nix run --extra-experimental-features 'nix-command flakes' "path:${SCRIPT_DIR}/../..#nixos-anywhere" -- "${args[@]}"
