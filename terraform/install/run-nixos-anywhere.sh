@@ -6,8 +6,8 @@ SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 declare -A input
 
 while IFS= read -r -d '' key && IFS= read -r -d '' value; do
-    input[$key]=$value
-done < <(jq -j 'to_entries[] | (.key, "\u0000", .value, "\u0000")' <<< "$ARGUMENTS")
+  input[$key]=$value
+done < <(jq -j 'to_entries[] | (.key, "\u0000", .value, "\u0000")' <<<"$ARGUMENTS")
 
 args=()
 
