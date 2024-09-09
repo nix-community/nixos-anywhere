@@ -330,34 +330,37 @@ ssh_settings=$(ssh "${ssh_args[@]}" -G "${ssh_connection}")
 ssh_user=$(echo "$ssh_settings" | awk '/^user / { print $2 }')
 ssh_host=$(echo "$ssh_settings" | awk '/^hostname / { print $2 }')
 
-step Uploading install SSH keys
-until
-  if [[ -n ${env_password-} ]]; then
-    sshpass -e \
+uploadSSHKey() {
+  step Uploading install SSH keys
+  until
+    if [[ -n ${env_password-} ]]; then
+      sshpass -e \
+        ssh-copy-id \
+        -i "$ssh_key_dir"/nixos-anywhere.pub \
+        -o ConnectTimeout=10 \
+        -o UserKnownHostsFile=/dev/null \
+        -o IdentitiesOnly=yes \
+        -o StrictHostKeyChecking=no \
+        "${ssh_copy_id_args[@]}" \
+        "${ssh_args[@]}" \
+        "$ssh_connection"
+    else
       ssh-copy-id \
-      -i "$ssh_key_dir"/nixos-anywhere.pub \
-      -o ConnectTimeout=10 \
-      -o UserKnownHostsFile=/dev/null \
-      -o IdentitiesOnly=yes \
-      -o StrictHostKeyChecking=no \
-      "${ssh_copy_id_args[@]}" \
-      "${ssh_args[@]}" \
-      "$ssh_connection"
-  else
-    ssh-copy-id \
-      -i "$ssh_key_dir"/nixos-anywhere.pub \
-      -o ConnectTimeout=10 \
-      -o UserKnownHostsFile=/dev/null \
-      -o StrictHostKeyChecking=no \
-      "${ssh_copy_id_args[@]}" \
-      "${ssh_args[@]}" \
-      "$ssh_connection"
-  fi
-do
-  sleep 3
-done
+        -i "$ssh_key_dir"/nixos-anywhere.pub \
+        -o ConnectTimeout=10 \
+        -o UserKnownHostsFile=/dev/null \
+        -o StrictHostKeyChecking=no \
+        "${ssh_copy_id_args[@]}" \
+        "${ssh_args[@]}" \
+        "$ssh_connection"
+    fi
+  do
+    sleep 3
+  done
+}
 
 importFacts() {
+  step Gathering machine facts
   local facts filtered_facts
   if ! facts=$(ssh_ -o ConnectTimeout=10 enable_debug=$enable_debug sh -- <"$here"/get-facts.sh); then
     exit 1
@@ -370,28 +373,6 @@ importFacts() {
   # shellcheck disable=SC2046
   export $(echo "$filtered_facts" | xargs)
 }
-
-step Gathering machine facts
-importFacts
-
-if [[ ${has_tar-n} == "n" ]]; then
-  abort "no tar command found, but required to unpack kexec tarball"
-fi
-
-if [[ ${has_setsid-n} == "n" ]]; then
-  abort "no setsid command found, but required to run the kexec script under a new session"
-fi
-
-maybe_sudo=""
-if [[ ${has_sudo-n} == "y" ]]; then
-  maybe_sudo="sudo"
-elif [[ ${has_doas-n} == "y" ]]; then
-  maybe_sudo="doas"
-fi
-
-if [[ ${is_os-n} != "Linux" ]]; then
-  abort "This script requires Linux as the operating system, but got $is_os"
-fi
 
 runKexec() {
   if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
@@ -534,6 +515,29 @@ ${maybeReboot}
 SSH
 
 }
+
+uploadSSHKey
+
+importFacts
+
+if [[ ${has_tar-n} == "n" ]]; then
+  abort "no tar command found, but required to unpack kexec tarball"
+fi
+
+if [[ ${has_setsid-n} == "n" ]]; then
+  abort "no setsid command found, but required to run the kexec script under a new session"
+fi
+
+maybe_sudo=""
+if [[ ${has_sudo-n} == "y" ]]; then
+  maybe_sudo="sudo"
+elif [[ ${has_doas-n} == "y" ]]; then
+  maybe_sudo="doas"
+fi
+
+if [[ ${is_os-n} != "Linux" ]]; then
+  abort "This script requires Linux as the operating system, but got $is_os"
+fi
 
 if [[ ${phases[kexec]-} == 1 ]]; then
   runKexec
