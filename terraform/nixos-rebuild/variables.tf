@@ -22,7 +22,7 @@ variable "target_port" {
 
 variable "ssh_private_key" {
   type        = string
-  description = "Content of private key used to connect to the target_host. If set to - no key is passed to openssh and ssh will back to its own configuration"
+  description = "Content of private key used to connect to the target_host. If set to - no key is passed to openssh and ssh will use its own configuration"
   default     = "-"
 }
 

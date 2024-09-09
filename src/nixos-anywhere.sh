@@ -19,7 +19,7 @@ Options:
   print full build logs
 * --env-password
   set a password used by ssh-copy-id, the password should be set by
-  the environment variable SSH_PASS
+  the environment variable SSHPASS
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
   if this is given, flake is not needed

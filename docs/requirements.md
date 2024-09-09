@@ -8,7 +8,7 @@
 
 ## Requirements
 
-### Source Machine:
+### Source Machine
 
 1. **Supported Systems:**
    - Linux or macOS computers with Nix installed.
@@ -21,7 +21,7 @@
 2. **Nix Installation:** If Nix is not yet installed on your system, refer to
    the [nix installation page](https://nixos.org/download#download-nix).
 
-### Destination Machine:
+### Destination Machine
 
 The machine must be reachable over the public internet or local network.
 Nixos-anywhere does not support wifi networks. If a VPN is needed, define a
