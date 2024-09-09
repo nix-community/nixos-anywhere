@@ -68,10 +68,10 @@ step() {
 }
 
 here=$(dirname "${BASH_SOURCE[0]}")
-kexec_url=""
-kexec_extra_flags=""
-enable_debug=""
-nix_options=(
+kexecUrl=""
+kexecExtraFlags=""
+enableDebug=""
+nixOptions=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
 )
@@ -82,19 +82,19 @@ phases[disko]=1
 phases[install]=1
 phases[reboot]=1
 
-substitute_on_destination=y
-ssh_private_key_file=
+substituteOnDestination=y
+sshPrivateKeyFile=
 if [ -t 0 ]; then # stdin is a tty, we allow interactive input to ssh i.e. passwords
-  ssh_tty_param="-t"
+  sshTtyParam="-t"
 else
-  ssh_tty_param="-T"
+  sshTtyParam="-T"
 fi
-post_kexec_ssh_port=22
+postKexecSshPort=22
 
-declare -A disk_encryption_keys
-declare -a nix_copy_options
-declare -a ssh_copy_id_args
-declare -a ssh_args
+declare -A diskEncryptionKeys
+declare -a nixCopyOptions
+declare -a sshCopyIdArgs
+declare -a sshArgs
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -103,23 +103,23 @@ while [[ $# -gt 0 ]]; do
     shift
     ;;
   -i)
-    ssh_private_key_file=$2
+    sshPrivateKeyFile=$2
     shift
     ;;
   -p | --ssh-port)
-    ssh_args+=("-p" "$2")
+    sshArgs+=("-p" "$2")
     shift
     ;;
   --ssh-option)
-    ssh_args+=("-o" "$2")
+    sshArgs+=("-o" "$2")
     shift
     ;;
   -L | --print-build-logs)
-    print_build_logs=y
+    printBuildLogs=y
     ;;
   -s | --store-paths)
-    disko_script=$(readlink -f "$2")
-    nixos_system=$(readlink -f "$3")
+    diskoScript=$(readlink -f "$2")
+    nixosSystem=$(readlink -f "$3")
     shift
     shift
     ;;
@@ -131,31 +131,31 @@ while [[ $# -gt 0 ]]; do
     exit 0
     ;;
   --kexec)
-    kexec_url=$2
+    kexecUrl=$2
     shift
     ;;
   --kexec-extra-flags)
-    kexec_extra_flags=$2
+    kexecExtraFlags=$2
     shift
     ;;
   --post-kexec-ssh-port)
-    post_kexec_ssh_port=$2
+    postKexecSshPort=$2
     shift
     ;;
   --copy-host-keys)
-    copy_host_keys=y
+    copyHostKeys=y
     ;;
   --debug)
-    enable_debug="-x"
-    print_build_logs=y
+    enableDebug="-x"
+    printBuildLogs=y
     set -x
     ;;
   --extra-files)
-    extra_files=$2
+    extraFiles=$2
     shift
     ;;
   --disk-encryption-keys)
-    disk_encryption_keys["$2"]="$3"
+    diskEncryptionKeys["$2"]="$3"
     shift
     shift
     ;;
@@ -188,7 +188,7 @@ while [[ $# -gt 0 ]]; do
     phases[reboot]=0
     ;;
   --from)
-    nix_copy_options+=("--from" "$2")
+    nixCopyOptions+=("--from" "$2")
     shift
     ;;
   --option)
@@ -196,23 +196,23 @@ while [[ $# -gt 0 ]]; do
     shift
     value=$2
     shift
-    nix_options+=("--option" "$key" "$value")
+    nixOptions+=("--option" "$key" "$value")
     ;;
   --no-substitute-on-destination)
-    substitute_on_destination=n
+    substituteOnDestination=n
     ;;
   --build-on-remote)
-    build_on_remote=y
+    buildOnRemote=y
     ;;
   --env-password)
-    env_password=y
+    envPassword=y
     ;;
   --vm-test)
-    vm_test=y
+    vmTest=y
     ;;
   *)
     if [[ -z ${ssh_connection-} ]]; then
-      ssh_connection="$1"
+      sshConnection="$1"
     else
       showUsage
       exit 1
@@ -222,38 +222,38 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-if [[ ${print_build_logs-n} == "y" ]]; then
-  nix_options+=("-L")
+if [[ ${printBuildLogs-n} == "y" ]]; then
+  nixOptions+=("-L")
 fi
 
-if [[ ${substitute_on_destination-n} == "y" ]]; then
-  nix_copy_options+=("--substitute-on-destination")
+if [[ ${substituteOnDestination-n} == "y" ]]; then
+  nixCopyOptions+=("--substitute-on-destination")
 fi
 
 # ssh wrapper
-runSSHTimeout() {
-  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${ssh_args[@]}" "$ssh_connection" "$@"
+runSshTimeout() {
+  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
 }
-runSSH() {
-  ssh "$ssh_tty_param" -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${ssh_args[@]}" "$ssh_connection" "$@"
+runSsh() {
+  ssh "$sshTtyParam" -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
 }
 
 nixCopy() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${ssh_args[*]}" nix copy \
-    "${nix_options[@]}" \
-    "${nix_copy_options[@]}" \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${sshArgs[*]}" nix copy \
+    "${nixOptions[@]}" \
+    "${nixCopyOptions[@]}" \
     "$@"
 }
 nixBuild() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${ssh_args[*]}" nix build \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${sshArgs[*]}" nix build \
     --print-out-paths \
     --no-link \
-    "${nix_options[@]}" \
+    "${nixOptions[@]}" \
     "$@"
 }
 
-if [[ -z ${vm_test-} ]]; then
-  if [[ -z ${ssh_connection-} ]]; then
+if [[ -z ${vmTest-} ]]; then
+  if [[ -z ${sshConnection-} ]]; then
     abort "ssh-host must be set"
   fi
 
@@ -277,13 +277,13 @@ if [[ -n ${flake-} ]]; then
     echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
     exit 1
   fi
-  if [[ ${build_on_remote-n} == "n" ]]; then
-    if [[ -n ${vm_test-} ]]; then
-      if [[ -n ${extra_files-} ]]; then
+  if [[ ${buildOnRemote-n} == "n" ]]; then
+    if [[ -n ${vmTest-} ]]; then
+      if [[ -n ${extraFiles-} ]]; then
         echo "--vm-test is not supported with --extra-files" >&2
         exit 1
       fi
-      if [[ -n ${disk_encryption_keys-} ]]; then
+      if [[ -n ${diskEncryptionKeys-} ]]; then
         echo "--vm-test is not supported with --disk-encryption-keys" >&2
         exit 1
       fi
@@ -291,20 +291,20 @@ if [[ -n ${flake-} ]]; then
         --print-out-paths \
         --no-link \
         -L \
-        "${nix_options[@]}" \
+        "${nixOptions[@]}" \
         "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.installTest"
     fi
-    disko_script=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
-    nixos_system=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
+    diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
+    nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
   fi
-elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
-  if [[ -n ${vm_test-} ]]; then
+elif [[ -n ${diskoScript-} ]] && [[ -n ${nixosSystem-} ]]; then
+  if [[ -n ${vmTest-} ]]; then
     echo "vm-test is not supported with --store-paths" >&2
     echo "Please use --flake instead or build config.system.build.installTest of your nixos configuration manually" >&2
     exit 1
   fi
-  if [[ ! -e ${disko_script} ]] || [[ ! -e ${nixos_system} ]]; then
-    abort "${disko_script} and ${nixos_system} must be existing store-paths"
+  if [[ ! -e ${diskoScript} ]] || [[ ! -e ${nixosSystem} ]]; then
+    abort "${diskoScript} and ${nixosSystem} must be existing store-paths"
   fi
 else
   abort "flake must be set"
@@ -313,27 +313,27 @@ fi
 # overrides -i if passed as an env var
 if [[ -n ${SSH_PRIVATE_KEY-} ]]; then
   # $ssh_key_dir is getting deleted on trap EXIT
-  ssh_private_key_file="$ssh_key_dir/from-env"
+  sshPrivateKeyFile="$ssh_key_dir/from-env"
   (
     umask 077
-    printf '%s\n' "$SSH_PRIVATE_KEY" >"$ssh_private_key_file"
+    printf '%s\n' "$SSH_PRIVATE_KEY" >"$sshPrivateKeyFile"
   )
 fi
 
-if [[ -n ${ssh_private_key_file-} ]]; then
+if [[ -n ${sshPrivateKeyFile-} ]]; then
   unset SSH_AUTH_SOCK # don't use system agent if key was supplied
-  ssh_copy_id_args+=(-o "IdentityFile=${ssh_private_key_file}")
-  ssh_copy_id_args+=(-f)
+  sshCopyIdArgs+=(-o "IdentityFile=${sshPrivateKeyFile}")
+  sshCopyIdArgs+=(-f)
 fi
 
-ssh_settings=$(ssh "${ssh_args[@]}" -G "${ssh_connection}")
-ssh_user=$(echo "$ssh_settings" | awk '/^user / { print $2 }')
-ssh_host=$(echo "$ssh_settings" | awk '/^hostname / { print $2 }')
+sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
+sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
+sshHost=$(echo "$sshSettings" | awk '/^hostname / { print $2 }')
 
-uploadSSHKey() {
+uploadSshKey() {
   step Uploading install SSH keys
   until
-    if [[ -n ${env_password-} ]]; then
+    if [[ -n ${envPassword-} ]]; then
       sshpass -e \
         ssh-copy-id \
         -i "$ssh_key_dir"/nixos-anywhere.pub \
@@ -341,18 +341,18 @@ uploadSSHKey() {
         -o UserKnownHostsFile=/dev/null \
         -o IdentitiesOnly=yes \
         -o StrictHostKeyChecking=no \
-        "${ssh_copy_id_args[@]}" \
-        "${ssh_args[@]}" \
-        "$ssh_connection"
+        "${sshCopyIdArgs[@]}" \
+        "${sshArgs[@]}" \
+        "$sshConnection"
     else
       ssh-copy-id \
         -i "$ssh_key_dir"/nixos-anywhere.pub \
         -o ConnectTimeout=10 \
         -o UserKnownHostsFile=/dev/null \
         -o StrictHostKeyChecking=no \
-        "${ssh_copy_id_args[@]}" \
-        "${ssh_args[@]}" \
-        "$ssh_connection"
+        "${sshCopyIdArgs[@]}" \
+        "${sshArgs[@]}" \
+        "$sshConnection"
     fi
   do
     sleep 3
@@ -362,10 +362,10 @@ uploadSSHKey() {
 importFacts() {
   step Gathering machine facts
   local facts filtered_facts
-  if ! facts=$(runSSH -o ConnectTimeout=10 enable_debug=$enable_debug sh -- <"$here"/get-facts.sh); then
+  if ! facts=$(runSsh -o ConnectTimeout=10 enableDebug=$enableDebug sh -- <"$here"/get-facts.sh); then
     exit 1
   fi
-  filtered_facts=$(echo "$facts" | grep -E '^(has|is)_[a-z0-9_]+=\S+')
+  filtered_facts=$(echo "$facts" | grep -E '^(has|is)[A-Za-z0-9_]+=\S+')
   if [[ -z $filtered_facts ]]; then
     abort "Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already"
   fi
@@ -375,52 +375,52 @@ importFacts() {
 }
 
 runKexec() {
-  if [[ ${is_kexec-n} == "n" ]] && [[ ${is_installer-n} == "n" ]]; then
-    if [[ ${is_container-none} != "none" ]]; then
-      echo "WARNING: This script does not support running from a '${is_container}' container. kexec will likely not work" >&2
+  if [[ ${isKexec-n} == "n" ]] && [[ ${isInstaller-n} == "n" ]]; then
+    if [[ ${isContainer-none} != "none" ]]; then
+      echo "WARNING: This script does not support running from a '${isContainer}' container. kexec will likely not work" >&2
     fi
 
-    if [[ $kexec_url == "" ]]; then
-      case "${is_arch-unknown}" in
+    if [[ $kexecUrl == "" ]]; then
+      case "${isArch-unknown}" in
       x86_64 | aarch64)
-        kexec_url="https://github.com/nix-community/nixos-images/releases/download/nixos-24.05/nixos-kexec-installer-noninteractive-${is_arch}-linux.tar.gz"
+        kexecUrl="https://github.com/nix-community/nixos-images/releases/download/nixos-24.05/nixos-kexec-installer-noninteractive-${isArch}-linux.tar.gz"
         ;;
       *)
-        abort "Unsupported architecture: ${is_arch}. Our default kexec images only support x86_64 and aarch64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information."
+        abort "Unsupported architecture: ${isArch}. Our default kexec images only support x86_64 and aarch64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information."
         ;;
       esac
     fi
 
     step Switching system into kexec
-    runSSH sh <<SSH
-set -efu ${enable_debug}
-$maybe_sudo rm -rf /root/kexec
-$maybe_sudo mkdir -p /root/kexec
+    runSsh sh <<SSH
+set -efu ${enableDebug}
+$maybeSudo rm -rf /root/kexec
+$maybeSudo mkdir -p /root/kexec
 SSH
 
     # no way to reach global ipv4 destinations, use gh-v6.com automatically if github url
-    if [[ ${has_ipv6_only-n} == "y" ]] && [[ $kexec_url == "https://github.com/"* ]]; then
-      kexec_url=${kexec_url/"github.com"/"gh-v6.com"}
+    if [[ ${hasIpv6_only-n} == "y" ]] && [[ $kexecUrl == "https://github.com/"* ]]; then
+      kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
     fi
 
-    if [[ -f $kexec_url ]]; then
-      runSSH "${maybe_sudo} tar -C /root/kexec -xvzf-" <"$kexec_url"
-    elif [[ ${has_curl-n} == "y" ]]; then
-      runSSH "curl --fail -Ss -L '${kexec_url}' | ${maybe_sudo} tar -C /root/kexec -xvzf-"
-    elif [[ ${has_wget-n} == "y" ]]; then
-      runSSH "wget '${kexec_url}' -O- | ${maybe_sudo} tar -C /root/kexec -xvzf-"
+    if [[ -f $kexecUrl ]]; then
+      runSsh "${maybeSudo} tar -C /root/kexec -xvzf-" <"$kexecUrl"
+    elif [[ ${hasCurl-n} == "y" ]]; then
+      runSsh "curl --fail -Ss -L '${kexecUrl}' | ${maybeSudo} tar -C /root/kexec -xvzf-"
+    elif [[ ${hasWget-n} == "y" ]]; then
+      runSsh "wget '${kexecUrl}' -O- | ${maybeSudo} tar -C /root/kexec -xvzf-"
     else
-      curl --fail -Ss -L "${kexec_url}" | runSSH "${maybe_sudo} tar -C /root/kexec -xvzf-"
+      curl --fail -Ss -L "${kexecUrl}" | runSsh "${maybeSudo} tar -C /root/kexec -xvzf-"
     fi
 
-    runSSH <<SSH
-TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run --kexec-extra-flags "${kexec_extra_flags}"
+    runSsh <<SSH
+TMPDIR=/root/kexec setsid ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags "${kexecExtraFlags}"
 SSH
 
     # use the default SSH port to connect at this point
-    for i in "${!ssh_args[@]}"; do
-      if [[ ${ssh_args[i]} == "-p" ]]; then
-        ssh_args[i + 1]=$post_kexec_ssh_port
+    for i in "${!sshArgs[@]}"; do
+      if [[ ${sshArgs[i]} == "-p" ]]; then
+        sshArgs[i + 1]=$postKexecSshPort
         break
       fi
     done
@@ -429,55 +429,55 @@ SSH
     while runSshTimeout -- exit 0; do sleep 1; done
 
     # After kexec we explicitly set the user to root@
-    ssh_connection="root@${ssh_host}"
+    sshConnection="root@${sshHost}"
 
     # waiting for machine to become available again
-    until runSSH -o ConnectTimeout=10 -- exit 0; do sleep 5; done
+    until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
   fi
 }
 
 runDisko() {
-  local disko_script=$1
-  for path in "${!disk_encryption_keys[@]}"; do
-    step "Uploading ${disk_encryption_keys[$path]} to $path"
-    runSSH "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
+  local diskoScript=$1
+  for path in "${!diskEncryptionKeys[@]}"; do
+    step "Uploading ${diskEncryptionKeys[$path]} to $path"
+    runSsh "umask 077; cat > $path" <"${diskEncryptionKeys[$path]}"
   done
-  if [[ -n ${disko_script-} ]]; then
-    nixCopy --to "ssh://$ssh_connection" "$disko_script"
-  elif [[ ${build_on_remote-n} == "y" ]]; then
+  if [[ -n ${diskoScript-} ]]; then
+    nixCopy --to "ssh://$sshConnection" "$diskoScript"
+  elif [[ ${buildOnRemote-n} == "y" ]]; then
     step Building disko script
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
-    nixCopy --to "ssh-ng://$ssh_connection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
+    nixCopy --to "ssh-ng://$sshConnection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
       --derivation --no-check-sigs
-    disko_script=$(
+    diskoScript=$(
       nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
-        --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere"
+        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$ssh_key_dir/nixos-anywhere"
     )
   fi
 
   step Formatting hard drive with disko
-  runSSH "$disko_script"
+  runSsh "$diskoScript"
 }
 
 nixosInstall() {
-  if [[ -n ${nixos_system-} ]]; then
+  if [[ -n ${nixosSystem-} ]]; then
     step Uploading the system closure
-    nixCopy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
-  elif [[ ${build_on_remote-n} == "y" ]]; then
+    nixCopy --to "ssh://$sshConnection?remote-store=local?root=/mnt" "$nixosSystem"
+  elif [[ ${buildOnRemote-n} == "y" ]]; then
     step Building the system closure
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
-    nixCopy --to "ssh-ng://$ssh_connection?remote-store=local?root=/mnt" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
+    nixCopy --to "ssh-ng://$sshConnection?remote-store=local?root=/mnt" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
       --derivation --no-check-sigs
-    nixos_system=$(
+    nixosSystem=$(
       nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
-        --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere&remote-store=local?root=/mnt"
+        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$ssh_key_dir/nixos-anywhere&remote-store=local?root=/mnt"
     )
   fi
 
-  if [[ -n ${extra_files-} ]]; then
+  if [[ -n ${extraFiles-} ]]; then
     step Copying extra files
-    tar -C "$extra_files" -cpf- . | runSSH "${maybe_sudo} tar -C /mnt -xf- --no-same-owner"
-    runSSH "chmod 755 /mnt" # tar also changes permissions of /mnt
+    tar -C "$extraFiles" -cpf- . | runSsh "${maybeSudo} tar -C /mnt -xf- --no-same-owner"
+    runSsh "chmod 755 /mnt" # tar also changes permissions of /mnt
   fi
 
   step Installing NixOS
@@ -485,15 +485,15 @@ nixosInstall() {
   if [[ ${phases[reboot]-} == 1 ]]; then
     maybeReboot="nohup sh -c 'sleep 6 && reboot' >/dev/null &"
   fi
-  runSSH sh <<SSH
-set -eu ${enable_debug}
+  runSsh sh <<SSH
+set -eu ${enableDebug}
 # when running not in nixos we might miss this directory, but it's needed in the nixos chroot during installation
 export PATH="\$PATH:/run/current-system/sw/bin"
 
 # needed for installation if initrd-secrets are used
 mkdir -p /mnt/tmp
 chmod 777 /mnt/tmp
-if [ ${copy_host_keys-n} = "y" ]; then
+if [ ${copyHostKeys-n} = "y" ]; then
   # NB we copy host keys that are in turn copied by kexec installer.
   mkdir -m 755 -p /mnt/etc/ssh
   for p in /etc/ssh/ssh_host_*; do
@@ -505,7 +505,7 @@ if [ ${copy_host_keys-n} = "y" ]; then
     cp -a "\$p" "/mnt/\$p"
   done
 fi
-nixos-install --no-root-passwd --no-channel-copy --system "$nixos_system"
+nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem"
 if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
   # we always want to export the zfs pools so people can boot from it without force import
   umount -Rv /mnt/
@@ -516,27 +516,27 @@ SSH
 
 }
 
-uploadSSHKey
+uploadSshKey
 
 importFacts
 
-if [[ ${has_tar-n} == "n" ]]; then
+if [[ ${hasTar-n} == "n" ]]; then
   abort "no tar command found, but required to unpack kexec tarball"
 fi
 
-if [[ ${has_setsid-n} == "n" ]]; then
+if [[ ${hasSetsid-n} == "n" ]]; then
   abort "no setsid command found, but required to run the kexec script under a new session"
 fi
 
-maybe_sudo=""
-if [[ ${has_sudo-n} == "y" ]]; then
-  maybe_sudo="sudo"
-elif [[ ${has_doas-n} == "y" ]]; then
-  maybe_sudo="doas"
+maybeSudo=""
+if [[ ${hasSudo-n} == "y" ]]; then
+  maybeSudo="sudo"
+elif [[ ${hasDoas-n} == "y" ]]; then
+  maybeSudo="doas"
 fi
 
-if [[ ${is_os-n} != "Linux" ]]; then
-  abort "This script requires Linux as the operating system, but got $is_os"
+if [[ ${isOs-n} != "Linux" ]]; then
+  abort "This script requires Linux as the operating system, but got $isOs"
 fi
 
 if [[ ${phases[kexec]-} == 1 ]]; then
@@ -545,14 +545,14 @@ fi
 
 # Installation will fail if non-root user is used for installer.
 # Switch to root user by copying authorized_keys.
-if [[ ${is_installer-n} == "y" ]] && [[ ${ssh_user} != "root" ]]; then
+if [[ ${isInstaller-n} == "y" ]] && [[ ${sshUser} != "root" ]]; then
   # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
-  runSSH "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
-  ssh_connection="root@${ssh_host}"
+  runSsh "${maybeSudo} mkdir -p /root/.ssh; ${maybeSudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
+  sshConnection="root@${sshHost}"
 fi
 
 if [[ ${phases[disko]-} == 1 ]]; then
-  runDisko "$disko_script"
+  runDisko "$diskoScript"
 fi
 
 if [[ ${phases[install]-} == 1 ]]; then
