@@ -33,6 +33,9 @@ if [[ -n ${input[flake]} ]]; then
 else
   args+=("--store-paths" "${input[nixos_partitioner]}" "${input[nixos_system]}")
 fi
+if [[ ${SSH_PASS} ]]; then
+  args+=("--env-password")
+fi
 
 tmpdir=$(mktemp -d)
 cleanup() {

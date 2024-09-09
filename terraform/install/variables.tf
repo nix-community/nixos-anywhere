@@ -35,6 +35,12 @@ variable "target_port" {
   default     = 22
 }
 
+variable "target_pass" {
+  type       = string
+  description = "Password used to connect to the target_host"
+  default    = null
+}
+
 variable "ssh_private_key" {
   type        = string
   description = "Content of private key used to connect to the target_host"

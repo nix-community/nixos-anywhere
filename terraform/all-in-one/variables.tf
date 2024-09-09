@@ -33,6 +33,12 @@ variable "install_user" {
   default     = null
 }
 
+variable "install_port" {
+  type        = string
+  description = "SSH port used to connect to the target_host, before installing NixOS. If null than the value of `target_port` is used"
+  default     = null
+}
+
 variable "target_user" {
   type        = string
   description = "SSH user used to connect to the target_host after installing NixOS. If install_user is not set than this user is also used before installing."
@@ -41,7 +47,7 @@ variable "target_user" {
 
 variable "target_port" {
   type        = number
-  description = "SSH port used to connect to the target_host, before installing NixOS"
+  description = "SSH port used to connect to the target_host after installing NixOS. If install_port is not set than this port is also used before installing."
   default     = 22
 }
 
@@ -77,7 +83,7 @@ variable "stop_after_disko" {
 
 variable "extra_files_script" {
   type        = string
-  description = "A script file that prepares extra files to be copied to the target host during installation. The script expected to write all its files to the current directory. This directory is copied to the target host during installation to the / directory."
+  description = "A script that should place files in the current directory that will be copied to the targets / directory"
   default     = null
 }
 
@@ -86,7 +92,7 @@ variable "disk_encryption_key_scripts" {
     path = string
     script = string
   }))
-  description = "Each of these script files will be executed locally and the output of each of them will be made present at the given path to disko during installation. The keys will be not copied to the final system"
+  description = "Each script will be executed locally. Output of each will be created at the given path to disko during installation. The keys will be not copied to the final system"
   default     = []
 }
 
