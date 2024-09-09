@@ -501,6 +501,10 @@ nixosInstall() {
   fi
 
   step Installing NixOS
+  maybeReboot=""
+  if [[ ${phases[reboot]-} == 1 ]]; then
+    maybeReboot="nohup sh -c 'sleep 6 && reboot' >/dev/null &"
+  fi
   ssh_ sh <<SSH
 set -eu ${enable_debug}
 # when running not in nixos we might miss this directory, but it's needed in the nixos chroot during installation
@@ -527,6 +531,7 @@ if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; 
   umount -Rv /mnt/
   zpool export -a || true
 fi
+${maybeReboot}
 SSH
 
 }
