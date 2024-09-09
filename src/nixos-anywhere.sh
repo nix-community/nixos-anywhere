@@ -231,20 +231,20 @@ if [[ ${substitute_on_destination-n} == "y" ]]; then
 fi
 
 # ssh wrapper
-timeout_ssh_() {
+runSSHTimeout() {
   timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${ssh_args[@]}" "$ssh_connection" "$@"
 }
-ssh_() {
+runSSH() {
   ssh "$ssh_tty_param" -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${ssh_args[@]}" "$ssh_connection" "$@"
 }
 
-nix_copy() {
+nixCopy() {
   NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${ssh_args[*]}" nix copy \
     "${nix_options[@]}" \
     "${nix_copy_options[@]}" \
     "$@"
 }
-nix_build() {
+nixBuild() {
   NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${ssh_args[*]}" nix build \
     --print-out-paths \
     --no-link \
@@ -294,8 +294,8 @@ if [[ -n ${flake-} ]]; then
         "${nix_options[@]}" \
         "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.installTest"
     fi
-    disko_script=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
-    nixos_system=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
+    disko_script=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
+    nixos_system=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
   fi
 elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
   if [[ -n ${vm_test-} ]]; then
@@ -362,7 +362,7 @@ uploadSSHKey() {
 importFacts() {
   step Gathering machine facts
   local facts filtered_facts
-  if ! facts=$(ssh_ -o ConnectTimeout=10 enable_debug=$enable_debug sh -- <"$here"/get-facts.sh); then
+  if ! facts=$(runSSH -o ConnectTimeout=10 enable_debug=$enable_debug sh -- <"$here"/get-facts.sh); then
     exit 1
   fi
   filtered_facts=$(echo "$facts" | grep -E '^(has|is)_[a-z0-9_]+=\S+')
@@ -392,7 +392,7 @@ runKexec() {
     fi
 
     step Switching system into kexec
-    ssh_ sh <<SSH
+    runSSH sh <<SSH
 set -efu ${enable_debug}
 $maybe_sudo rm -rf /root/kexec
 $maybe_sudo mkdir -p /root/kexec
@@ -404,16 +404,16 @@ SSH
     fi
 
     if [[ -f $kexec_url ]]; then
-      ssh_ "${maybe_sudo} tar -C /root/kexec -xvzf-" <"$kexec_url"
+      runSSH "${maybe_sudo} tar -C /root/kexec -xvzf-" <"$kexec_url"
     elif [[ ${has_curl-n} == "y" ]]; then
-      ssh_ "curl --fail -Ss -L '${kexec_url}' | ${maybe_sudo} tar -C /root/kexec -xvzf-"
+      runSSH "curl --fail -Ss -L '${kexec_url}' | ${maybe_sudo} tar -C /root/kexec -xvzf-"
     elif [[ ${has_wget-n} == "y" ]]; then
-      ssh_ "wget '${kexec_url}' -O- | ${maybe_sudo} tar -C /root/kexec -xvzf-"
+      runSSH "wget '${kexec_url}' -O- | ${maybe_sudo} tar -C /root/kexec -xvzf-"
     else
-      curl --fail -Ss -L "${kexec_url}" | ssh_ "${maybe_sudo} tar -C /root/kexec -xvzf-"
+      curl --fail -Ss -L "${kexec_url}" | runSSH "${maybe_sudo} tar -C /root/kexec -xvzf-"
     fi
 
-    ssh_ <<SSH
+    runSSH <<SSH
 TMPDIR=/root/kexec setsid ${maybe_sudo} /root/kexec/kexec/run --kexec-extra-flags "${kexec_extra_flags}"
 SSH
 
@@ -426,13 +426,13 @@ SSH
     done
 
     # wait for machine to become unreachable.
-    while timeout_ssh_ -- exit 0; do sleep 1; done
+    while runSshTimeout -- exit 0; do sleep 1; done
 
     # After kexec we explicitly set the user to root@
     ssh_connection="root@${ssh_host}"
 
     # waiting for machine to become available again
-    until ssh_ -o ConnectTimeout=10 -- exit 0; do sleep 5; done
+    until runSSH -o ConnectTimeout=10 -- exit 0; do sleep 5; done
   fi
 }
 
@@ -440,44 +440,44 @@ runDisko() {
   local disko_script=$1
   for path in "${!disk_encryption_keys[@]}"; do
     step "Uploading ${disk_encryption_keys[$path]} to $path"
-    ssh_ "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
+    runSSH "umask 077; cat > $path" <"${disk_encryption_keys[$path]}"
   done
   if [[ -n ${disko_script-} ]]; then
-    nix_copy --to "ssh://$ssh_connection" "$disko_script"
+    nixCopy --to "ssh://$ssh_connection" "$disko_script"
   elif [[ ${build_on_remote-n} == "y" ]]; then
     step Building disko script
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
-    nix_copy --to "ssh-ng://$ssh_connection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
+    nixCopy --to "ssh-ng://$ssh_connection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
       --derivation --no-check-sigs
     disko_script=$(
-      nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
+      nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
         --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere"
     )
   fi
 
   step Formatting hard drive with disko
-  ssh_ "$disko_script"
+  runSSH "$disko_script"
 }
 
 nixosInstall() {
   if [[ -n ${nixos_system-} ]]; then
     step Uploading the system closure
-    nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
+    nixCopy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
   elif [[ ${build_on_remote-n} == "y" ]]; then
     step Building the system closure
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
-    nix_copy --to "ssh-ng://$ssh_connection?remote-store=local?root=/mnt" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
+    nixCopy --to "ssh-ng://$ssh_connection?remote-store=local?root=/mnt" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
       --derivation --no-check-sigs
     nixos_system=$(
-      nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
+      nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
         --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere&remote-store=local?root=/mnt"
     )
   fi
 
   if [[ -n ${extra_files-} ]]; then
     step Copying extra files
-    tar -C "$extra_files" -cpf- . | ssh_ "${maybe_sudo} tar -C /mnt -xf- --no-same-owner"
-    ssh_ "chmod 755 /mnt" # tar also changes permissions of /mnt
+    tar -C "$extra_files" -cpf- . | runSSH "${maybe_sudo} tar -C /mnt -xf- --no-same-owner"
+    runSSH "chmod 755 /mnt" # tar also changes permissions of /mnt
   fi
 
   step Installing NixOS
@@ -485,7 +485,7 @@ nixosInstall() {
   if [[ ${phases[reboot]-} == 1 ]]; then
     maybeReboot="nohup sh -c 'sleep 6 && reboot' >/dev/null &"
   fi
-  ssh_ sh <<SSH
+  runSSH sh <<SSH
 set -eu ${enable_debug}
 # when running not in nixos we might miss this directory, but it's needed in the nixos chroot during installation
 export PATH="\$PATH:/run/current-system/sw/bin"
@@ -547,7 +547,7 @@ fi
 # Switch to root user by copying authorized_keys.
 if [[ ${is_installer-n} == "y" ]] && [[ ${ssh_user} != "root" ]]; then
   # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
-  ssh_ "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
+  runSSH "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
   ssh_connection="root@${ssh_host}"
 fi
 
@@ -561,7 +561,7 @@ fi
 
 if [[ ${phases[reboot]-} == 1 ]]; then
   step Waiting for the machine to become unreachable due to reboot
-  while timeout_ssh_ -- exit 0; do sleep 1; done
+  while runSshTimeout -- exit 0; do sleep 1; done
 fi
 
 step "Done!"
