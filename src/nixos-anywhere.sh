@@ -329,7 +329,6 @@ fi
 ssh_settings=$(ssh "${ssh_args[@]}" -G "${ssh_connection}")
 ssh_user=$(echo "$ssh_settings" | awk '/^user / { print $2 }')
 ssh_host=$(echo "$ssh_settings" | awk '/^hostname / { print $2 }')
-ssh_port=$(echo "$ssh_settings" | awk '/^port / { print $2 }')
 
 step Uploading install SSH keys
 until
@@ -546,14 +545,6 @@ if [[ ${is_installer-n} == "y" ]] && [[ ${ssh_user} != "root" ]]; then
   # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
   ssh_ "${maybe_sudo} mkdir -p /root/.ssh; ${maybe_sudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
   ssh_connection="root@${ssh_host}"
-fi
-
-if [[ ${build_on_remote-n} == "y" ]]; then
-  pubkey=$(ssh-keyscan -p "$ssh_port" -t ed25519 "$ssh_host" 2>/dev/null || {
-    echo "ERROR: failed to retrieve host public key for ${ssh_connection}" >&2
-    exit 1
-  })
-  pubkey=$(echo "$pubkey" | sed -e 's/^[^ ]* //' | base64 -w0)
 fi
 
 if [[ ${phases[disko]-} == 1 ]]; then
