@@ -29,6 +29,8 @@ Options:
   use another kexec tarball to bootstrap NixOS
 * --kexec-extra-flags
   extra flags to add into the call to kexec, e.g. "--no-sync"
+* --ssh-store-settings
+  extra ssh store settings appended to the store URI e.g. "compress=true&max-connections=10"
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
 * --copy-host-keys
@@ -68,6 +70,7 @@ step() {
 here=$(dirname "${BASH_SOURCE[0]}")
 kexec_url=""
 kexec_extra_flags=""
+ssh_store_settings=""
 enable_debug=""
 maybe_reboot="sleep 6 && reboot"
 nix_options=(
@@ -128,6 +131,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   --kexec-extra-flags)
     kexec_extra_flags=$2
+    shift
+    ;;
+  --ssh-store-settings)
+    ssh_store_settings=$2
     shift
     ;;
   --post-kexec-ssh-port)
@@ -446,15 +453,15 @@ if [[ ${build_on_remote-n} == "y" ]]; then
 fi
 
 if [[ -n ${disko_script-} ]]; then
-  nix_copy --to "ssh://$ssh_connection" "$disko_script"
+  nix_copy --to "ssh://$ssh_connection?$ssh_store_settings" "$disko_script"
 elif [[ ${build_on_remote-n} == "y" ]]; then
   step Building disko script
   # We need to do a nix copy first because nix build doesn't have --no-check-sigs
-  nix_copy --to "ssh-ng://$ssh_connection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
+  nix_copy --to "ssh-ng://$ssh_connection?$ssh_store_settings" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
     --derivation --no-check-sigs
   disko_script=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
-      --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere"
+      --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir%2Fnixos-anywhere&$ssh_store_settings"
   )
 fi
 
@@ -470,15 +477,15 @@ fi
 
 if [[ -n ${nixos_system-} ]]; then
   step Uploading the system closure
-  nix_copy --to "ssh://$ssh_connection?remote-store=local?root=/mnt" "$nixos_system"
+  nix_copy --to "ssh://$ssh_connection?remote-store=local%3Froot=%2Fmnt&$ssh_store_settings" "$nixos_system"
 elif [[ ${build_on_remote-n} == "y" ]]; then
   step Building the system closure
   # We need to do a nix copy first because nix build doesn't have --no-check-sigs
-  nix_copy --to "ssh-ng://$ssh_connection?remote-store=local?root=/mnt" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
+  nix_copy --to "ssh-ng://$ssh_connection?remote-store=local%3Froot=%2Fmnt&$ssh_store_settings" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
     --derivation --no-check-sigs
   nixos_system=$(
     nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
-      --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere&remote-store=local?root=/mnt"
+      --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir%2Fnixos-anywhere&remote-store=local%3Froot=%2Fmnt&$ssh_store_settings"
   )
 fi
 
