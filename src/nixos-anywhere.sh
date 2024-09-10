@@ -527,52 +527,56 @@ SSH
 
 }
 
-uploadSshKey
+main() {
+  uploadSshKey
 
-importFacts
+  importFacts
 
-if [[ ${hasTar-n} == "n" ]]; then
-  abort "no tar command found, but required to unpack kexec tarball"
-fi
+  if [[ ${hasTar-n} == "n" ]]; then
+    abort "no tar command found, but required to unpack kexec tarball"
+  fi
 
-if [[ ${hasSetsid-n} == "n" ]]; then
-  abort "no setsid command found, but required to run the kexec script under a new session"
-fi
+  if [[ ${hasSetsid-n} == "n" ]]; then
+    abort "no setsid command found, but required to run the kexec script under a new session"
+  fi
 
-maybeSudo=""
-if [[ ${hasSudo-n} == "y" ]]; then
-  maybeSudo="sudo"
-elif [[ ${hasDoas-n} == "y" ]]; then
-  maybeSudo="doas"
-fi
+  maybeSudo=""
+  if [[ ${hasSudo-n} == "y" ]]; then
+    maybeSudo="sudo"
+  elif [[ ${hasDoas-n} == "y" ]]; then
+    maybeSudo="doas"
+  fi
 
-if [[ ${isOs-n} != "Linux" ]]; then
-  abort "This script requires Linux as the operating system, but got $isOs"
-fi
+  if [[ ${isOs-n} != "Linux" ]]; then
+    abort "This script requires Linux as the operating system, but got $isOs"
+  fi
 
-if [[ ${phases[kexec]-} == 1 ]]; then
-  runKexec
-fi
+  if [[ ${phases[kexec]-} == 1 ]]; then
+    runKexec
+  fi
 
-# Installation will fail if non-root user is used for installer.
-# Switch to root user by copying authorized_keys.
-if [[ ${isInstaller-n} == "y" ]] && [[ ${sshUser} != "root" ]]; then
-  # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
-  runSsh "${maybeSudo} mkdir -p /root/.ssh; ${maybeSudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
-  sshConnection="root@${sshHost}"
-fi
+  # Installation will fail if non-root user is used for installer.
+  # Switch to root user by copying authorized_keys.
+  if [[ ${isInstaller-n} == "y" ]] && [[ ${sshUser} != "root" ]]; then
+    # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
+    runSsh "${maybeSudo} mkdir -p /root/.ssh; ${maybeSudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
+    sshConnection="root@${sshHost}"
+  fi
 
-if [[ ${phases[disko]-} == 1 ]]; then
-  runDisko "$diskoScript"
-fi
+  if [[ ${phases[disko]-} == 1 ]]; then
+    runDisko "$diskoScript"
+  fi
 
-if [[ ${phases[install]-} == 1 ]]; then
-  nixosInstall
-fi
+  if [[ ${phases[install]-} == 1 ]]; then
+    nixosInstall
+  fi
 
-if [[ ${phases[reboot]-} == 1 ]]; then
-  step Waiting for the machine to become unreachable due to reboot
-  while runSshTimeout -- exit 0; do sleep 1; done
-fi
+  if [[ ${phases[reboot]-} == 1 ]]; then
+    step Waiting for the machine to become unreachable due to reboot
+    while runSshTimeout -- exit 0; do sleep 1; done
+  fi
 
-step "Done!"
+  step "Done!"
+}
+
+main
