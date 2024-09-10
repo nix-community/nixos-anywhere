@@ -75,6 +75,7 @@ nixOptions=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
 )
+SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY-}
 
 declare -A phases
 phases[kexec]=1
@@ -319,8 +320,7 @@ else
   abort "flake must be set"
 fi
 
-# overrides -i if passed as an env var
-if [[ -n ${SSH_PRIVATE_KEY-} ]]; then
+if [[ -n ${SSH_PRIVATE_KEY} ]] && [[ -z ${sshPrivateKeyFile-} ]]; then
   # $ssh_key_dir is getting deleted on trap EXIT
   sshPrivateKeyFile="$ssh_key_dir/from-env"
   (
@@ -329,10 +329,9 @@ if [[ -n ${SSH_PRIVATE_KEY-} ]]; then
   )
 fi
 
-if [[ -n ${sshPrivateKeyFile-} ]]; then
+if [[ -n ${sshPrivateKeyFile} ]]; then
   unset SSH_AUTH_SOCK # don't use system agent if key was supplied
-  sshCopyIdArgs+=(-o "IdentityFile=${sshPrivateKeyFile}")
-  sshCopyIdArgs+=(-f)
+  sshCopyIdArgs+=(-o "IdentityFile=${sshPrivateKeyFile}" -f)
 fi
 
 sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
