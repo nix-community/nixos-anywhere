@@ -92,6 +92,7 @@ else
 fi
 postKexecSshPort=22
 buildOnRemote=n
+envPassword=
 
 declare -A diskEncryptionKeys
 declare -a nixCopyOptions
@@ -341,7 +342,7 @@ uploadSshKey() {
 
   step Uploading install SSH keys
   until
-    if [[ -n ${envPassword-} ]]; then
+    if [[ -n ${envPassword} ]]; then
       sshpass -e \
         ssh-copy-id \
         -i "$sshKeyDir"/nixos-anywhere.pub \
