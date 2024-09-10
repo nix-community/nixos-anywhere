@@ -95,7 +95,6 @@ buildOnRemote=n
 
 declare -A diskEncryptionKeys
 declare -a nixCopyOptions
-declare -a sshCopyIdArgs
 declare -a sshArgs
 
 while [[ $# -gt 0 ]]; do
@@ -286,14 +285,6 @@ if [[ -z ${sshConnection-} ]]; then
   abort "ssh-host must be set"
 fi
 
-# we generate a temporary ssh keypair that we can use during nixos-anywhere
-ssh_key_dir=$(mktemp -d)
-trap 'rm -rf "$ssh_key_dir"' EXIT
-mkdir -p "$ssh_key_dir"
-# ssh-copy-id requires this directory
-mkdir -p "$HOME/.ssh/"
-ssh-keygen -t ed25519 -f "$ssh_key_dir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
-
 # parse flake nixos-install style syntax, get the system attr
 if [[ -n ${flake-} ]]; then
   if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
@@ -329,22 +320,31 @@ if [[ -n ${SSH_PRIVATE_KEY} ]] && [[ -z ${sshPrivateKeyFile-} ]]; then
   )
 fi
 
-if [[ -n ${sshPrivateKeyFile} ]]; then
-  unset SSH_AUTH_SOCK # don't use system agent if key was supplied
-  sshCopyIdArgs+=(-o "IdentityFile=${sshPrivateKeyFile}" -f)
-fi
-
 sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
 sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
 sshHost=$(echo "$sshSettings" | awk '/^hostname / { print $2 }')
 
 uploadSshKey() {
+  # we generate a temporary ssh keypair that we can use during nixos-anywhere
+  sshKeyDir=$(mktemp -d)
+  trap 'rm -rf "$ssh_key_dir"' EXIT
+  mkdir -p "$sshKeyDir"
+  # ssh-copy-id requires this directory
+  mkdir -p "$HOME/.ssh/"
+  ssh-keygen -t ed25519 -f "$sshKeyDir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
+
+  declare -a sshCopyIdArgs
+  if [[ -n ${sshPrivateKeyFile} ]]; then
+    unset SSH_AUTH_SOCK # don't use system agent if key was supplied
+    sshCopyIdArgs+=(-o "IdentityFile=${sshPrivateKeyFile}" -f)
+  fi
+
   step Uploading install SSH keys
   until
     if [[ -n ${envPassword-} ]]; then
       sshpass -e \
         ssh-copy-id \
-        -i "$ssh_key_dir"/nixos-anywhere.pub \
+        -i "$sshKeyDir"/nixos-anywhere.pub \
         -o ConnectTimeout=10 \
         -o UserKnownHostsFile=/dev/null \
         -o IdentitiesOnly=yes \
@@ -354,7 +354,7 @@ uploadSshKey() {
         "$sshConnection"
     else
       ssh-copy-id \
-        -i "$ssh_key_dir"/nixos-anywhere.pub \
+        -i "$sshKeyDir"/nixos-anywhere.pub \
         -o ConnectTimeout=10 \
         -o UserKnownHostsFile=/dev/null \
         -o StrictHostKeyChecking=no \
@@ -461,7 +461,7 @@ runDisko() {
       --derivation --no-check-sigs
     diskoScript=$(
       nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
-        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$ssh_key_dir/nixos-anywhere"
+        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$sshKeyDir/nixos-anywhere"
     )
   fi
 
@@ -480,7 +480,7 @@ nixosInstall() {
       --derivation --no-check-sigs
     nixosSystem=$(
       nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
-        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$ssh_key_dir/nixos-anywhere&remote-store=local?root=/mnt"
+        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$sshKeyDir/nixos-anywhere&remote-store=local?root=/mnt"
     )
   fi
 
