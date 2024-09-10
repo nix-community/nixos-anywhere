@@ -90,6 +90,7 @@ else
   sshTtyParam="-T"
 fi
 postKexecSshPort=22
+buildOnRemote=n
 
 declare -A diskEncryptionKeys
 declare -a nixCopyOptions
@@ -252,19 +253,45 @@ nixBuild() {
     "$@"
 }
 
-if [[ -z ${vmTest-} ]]; then
-  if [[ -z ${sshConnection-} ]]; then
-    abort "ssh-host must be set"
+runVmTest() {
+  if [[ -n ${diskoScript-} ]] && [[ -n ${nixosSystem-} ]]; then
+    echo "--vm-test is not supported with --store-paths" >&2
+    echo "Please use --flake instead or build config.system.build.installTest of your nixos configuration manually" >&2
+    exit 1
   fi
 
-  # we generate a temporary ssh keypair that we can use during nixos-anywhere
-  ssh_key_dir=$(mktemp -d)
-  trap 'rm -rf "$ssh_key_dir"' EXIT
-  mkdir -p "$ssh_key_dir"
-  # ssh-copy-id requires this directory
-  mkdir -p "$HOME/.ssh/"
-  ssh-keygen -t ed25519 -f "$ssh_key_dir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
+  if [[ ${buildOnRemote} == "y" ]]; then
+    echo "--vm-test is not supported with --build-on-remote" >&2
+    exit 1
+  fi
+  if [[ -n ${extraFiles-} ]]; then
+    echo "--vm-test is not supported with --extra-files" >&2
+    exit 1
+  fi
+  if [[ -n ${diskEncryptionKeys-} ]]; then
+    echo "--vm-test is not supported with --disk-encryption-keys" >&2
+    exit 1
+  fi
+  exec nix build \
+    --print-out-paths \
+    --no-link \
+    -L \
+    "${nixOptions[@]}" \
+    "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.installTest"
+}
+
+
+if [[ -z ${sshConnection-} ]]; then
+  abort "ssh-host must be set"
 fi
+
+# we generate a temporary ssh keypair that we can use during nixos-anywhere
+ssh_key_dir=$(mktemp -d)
+trap 'rm -rf "$ssh_key_dir"' EXIT
+mkdir -p "$ssh_key_dir"
+# ssh-copy-id requires this directory
+mkdir -p "$HOME/.ssh/"
+ssh-keygen -t ed25519 -f "$ssh_key_dir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
 
 # parse flake nixos-install style syntax, get the system attr
 if [[ -n ${flake-} ]]; then
@@ -277,32 +304,14 @@ if [[ -n ${flake-} ]]; then
     echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
     exit 1
   fi
-  if [[ ${buildOnRemote-n} == "n" ]]; then
-    if [[ -n ${vmTest-} ]]; then
-      if [[ -n ${extraFiles-} ]]; then
-        echo "--vm-test is not supported with --extra-files" >&2
-        exit 1
-      fi
-      if [[ -n ${diskEncryptionKeys-} ]]; then
-        echo "--vm-test is not supported with --disk-encryption-keys" >&2
-        exit 1
-      fi
-      exec nix build \
-        --print-out-paths \
-        --no-link \
-        -L \
-        "${nixOptions[@]}" \
-        "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.installTest"
-    fi
+  if [[ -n $vmTest ]]; then
+    runVmTest
+  fi
+  if [[ ${buildOnRemote} == "n" ]]; then
     diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
     nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
   fi
 elif [[ -n ${diskoScript-} ]] && [[ -n ${nixosSystem-} ]]; then
-  if [[ -n ${vmTest-} ]]; then
-    echo "vm-test is not supported with --store-paths" >&2
-    echo "Please use --flake instead or build config.system.build.installTest of your nixos configuration manually" >&2
-    exit 1
-  fi
   if [[ ! -e ${diskoScript} ]] || [[ ! -e ${nixosSystem} ]]; then
     abort "${diskoScript} and ${nixosSystem} must be existing store-paths"
   fi
@@ -446,7 +455,7 @@ runDisko() {
   done
   if [[ -n ${diskoScript-} ]]; then
     nixCopy --to "ssh://$sshConnection" "$diskoScript"
-  elif [[ ${buildOnRemote-n} == "y" ]]; then
+  elif [[ ${buildOnRemote} == "y" ]]; then
     step Building disko script
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     nixCopy --to "ssh-ng://$sshConnection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
@@ -465,7 +474,7 @@ nixosInstall() {
   if [[ -n ${nixosSystem-} ]]; then
     step Uploading the system closure
     nixCopy --to "ssh://$sshConnection?remote-store=local?root=/mnt" "$nixosSystem"
-  elif [[ ${buildOnRemote-n} == "y" ]]; then
+  elif [[ ${buildOnRemote} == "y" ]]; then
     step Building the system closure
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     nixCopy --to "ssh-ng://$sshConnection?remote-store=local?root=/mnt" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
