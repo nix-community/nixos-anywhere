@@ -27,6 +27,8 @@ fi
 postKexecSshPort=22
 buildOnRemote=n
 envPassword=
+sshRetryLimit=-1
+rebootRetryLimit=-1
 
 declare -A diskEncryptionKeys
 declare -a nixCopyOptions
@@ -86,6 +88,10 @@ Options:
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
   install: install the system
   reboot: reboot the machine
+* --ssh-retry-limit <limit>
+  set the number of times to retry the ssh connection before giving up
+* --reboot-retry-limit <limit>
+  set the number of times to wait for the reboot before giving up.
 USAGE
 }
 
@@ -213,6 +219,14 @@ parseArgs() {
     --vm-test)
       vmTest=y
       ;;
+    --ssh-retry-limit)
+      sshRetryLimit=$2
+      shift
+      ;;
+    --reboot-retry-limit)
+      rebootRetryLimit=$2
+      shift
+      ;;
     *)
       if [[ -z ${sshConnection-} ]]; then
         sshConnection="$1"
@@ -316,6 +330,7 @@ uploadSshKey() {
   fi
 
   step Uploading install SSH keys
+  local retryCount=0
   until
     if [[ -n ${envPassword} ]]; then
       sshpass -e \
@@ -339,7 +354,11 @@ uploadSshKey() {
         "$sshConnection"
     fi
   do
-    sleep 3
+    sleep 5
+    retryCount=$((retryCount + 1))
+    if [[ $sshRetryLimit -ne -1 ]] && [[ $retryCount -ge $sshRetryLimit ]]; then
+      abort "Reached ssh retry limit of $sshRetryLimit"
+    fi
   done
 }
 
@@ -581,7 +600,14 @@ main() {
 
   if [[ ${phases[reboot]-} == 1 ]]; then
     step Waiting for the machine to become unreachable due to reboot
-    while runSshTimeout -- exit 0; do sleep 1; done
+    retryCount=0
+    until runSsh -o ConnectTimeout=10 -- exit 0; do
+      sleep 5
+      retryCount=$((retryCount + 1))
+      if [[ $rebootRetryLimit -ne -1 ]] && [[ $retryCount -ge $rebootRetryLimit ]]; then
+        abort "Machine didn't come online after reboot connection limit of $rebootRetryLimit retries"
+      fi
+    done
   fi
 
   step "Done!"
