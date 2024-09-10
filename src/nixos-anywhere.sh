@@ -234,20 +234,20 @@ fi
 
 # ssh wrapper
 runSshTimeout() {
-  timeout 10 ssh -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
+  timeout 10 ssh -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
 }
 runSsh() {
-  ssh "$sshTtyParam" -i "$ssh_key_dir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
+  ssh "$sshTtyParam" -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
 }
 
 nixCopy() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${sshArgs[*]}" nix copy \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere ${sshArgs[*]}" nix copy \
     "${nixOptions[@]}" \
     "${nixCopyOptions[@]}" \
     "$@"
 }
 nixBuild() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $ssh_key_dir/nixos-anywhere ${sshArgs[*]}" nix build \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere ${sshArgs[*]}" nix build \
     --print-out-paths \
     --no-link \
     "${nixOptions[@]}" \
@@ -281,58 +281,10 @@ runVmTest() {
     "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.installTest"
 }
 
-
-if [[ -z ${sshConnection-} ]]; then
-  abort "ssh-host must be set"
-fi
-
-if [[ -n ${flake-} ]]; then
-  if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
-    flake="${BASH_REMATCH[1]}"
-    flakeAttr="${BASH_REMATCH[2]}"
-  fi
-  if [[ -z ${flakeAttr-} ]]; then
-    echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri." >&2
-    echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
-    exit 1
-  fi
-fi
-
-if [[ -n ${vmTest-} ]]; then
-  runVmTest
-fi
-
-# parse flake nixos-install style syntax, get the system attr
-if [[ -n ${flake-} ]]; then
-  if [[ ${buildOnRemote} == "n" ]]; then
-    diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
-    nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
-  fi
-elif [[ -n ${diskoScript-} ]] && [[ -n ${nixosSystem-} ]]; then
-  if [[ ! -e ${diskoScript} ]] || [[ ! -e ${nixosSystem} ]]; then
-    abort "${diskoScript} and ${nixosSystem} must be existing store-paths"
-  fi
-else
-  abort "--flake or --store-paths must be set"
-fi
-
-if [[ -n ${SSH_PRIVATE_KEY} ]] && [[ -z ${sshPrivateKeyFile-} ]]; then
-  # $ssh_key_dir is getting deleted on trap EXIT
-  sshPrivateKeyFile="$ssh_key_dir/from-env"
-  (
-    umask 077
-    printf '%s\n' "$SSH_PRIVATE_KEY" >"$sshPrivateKeyFile"
-  )
-fi
-
-sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
-sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
-sshHost=$(echo "$sshSettings" | awk '/^hostname / { print $2 }')
-
 uploadSshKey() {
   # we generate a temporary ssh keypair that we can use during nixos-anywhere
   sshKeyDir=$(mktemp -d)
-  trap 'rm -rf "$ssh_key_dir"' EXIT
+  trap 'rm -rf "$sshKeyDir"' EXIT
   mkdir -p "$sshKeyDir"
   # ssh-copy-id requires this directory
   mkdir -p "$HOME/.ssh/"
@@ -532,6 +484,53 @@ SSH
 }
 
 main() {
+  if [[ -z ${sshConnection-} ]]; then
+    abort "ssh-host must be set"
+  fi
+
+  if [[ -n ${flake-} ]]; then
+    if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
+      flake="${BASH_REMATCH[1]}"
+      flakeAttr="${BASH_REMATCH[2]}"
+    fi
+    if [[ -z ${flakeAttr-} ]]; then
+      echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri." >&2
+      echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
+      exit 1
+    fi
+  fi
+
+  if [[ -n ${vmTest-} ]]; then
+    runVmTest
+  fi
+
+  # parse flake nixos-install style syntax, get the system attr
+  if [[ -n ${flake-} ]]; then
+    if [[ ${buildOnRemote} == "n" ]]; then
+      diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
+      nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
+    fi
+  elif [[ -n ${diskoScript-} ]] && [[ -n ${nixosSystem-} ]]; then
+    if [[ ! -e ${diskoScript} ]] || [[ ! -e ${nixosSystem} ]]; then
+      abort "${diskoScript} and ${nixosSystem} must be existing store-paths"
+    fi
+  else
+    abort "--flake or --store-paths must be set"
+  fi
+
+  if [[ -n ${SSH_PRIVATE_KEY} ]] && [[ -z ${sshPrivateKeyFile-} ]]; then
+    # $sshKeyDir is getting deleted on trap EXIT
+    sshPrivateKeyFile="$sshKeyDir/from-env"
+    (
+      umask 077
+      printf '%s\n' "$SSH_PRIVATE_KEY" >"$sshPrivateKeyFile"
+    )
+  fi
+
+  sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
+  sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
+  sshHost=$(echo "$sshSettings" | awk '/^hostname / { print $2 }')
+
   uploadSshKey
 
   importFacts
