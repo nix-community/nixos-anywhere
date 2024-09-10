@@ -213,7 +213,7 @@ while [[ $# -gt 0 ]]; do
     vmTest=y
     ;;
   *)
-    if [[ -z ${ssh_connection-} ]]; then
+    if [[ -z ${sshConnection-} ]]; then
       sshConnection="$1"
     else
       showUsage
@@ -367,7 +367,7 @@ $maybeSudo mkdir -p /root/kexec
 SSH
 
   # no way to reach global ipv4 destinations, use gh-v6.com automatically if github url
-  if [[ ${hasIpv6_only-n} == "y" ]] && [[ $kexecUrl == "https://github.com/"* ]]; then
+  if [[ ${hasIpv6Only-n} == "y" ]] && [[ $kexecUrl == "https://github.com/"* ]]; then
     kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
   fi
 
