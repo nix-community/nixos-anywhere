@@ -1,6 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+here=$(dirname "${BASH_SOURCE[0]}")
+kexecUrl=""
+kexecExtraFlags=""
+enableDebug=""
+nixOptions=(
+  --extra-experimental-features 'nix-command flakes'
+  "--no-write-lock-file"
+)
+SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY-}
+
+declare -A phases
+phases[kexec]=1
+phases[disko]=1
+phases[install]=1
+phases[reboot]=1
+
+substituteOnDestination=y
+sshPrivateKeyFile=
+if [ -t 0 ]; then # stdin is a tty, we allow interactive input to ssh i.e. passwords
+  sshTtyParam="-t"
+else
+  sshTtyParam="-T"
+fi
+postKexecSshPort=22
+buildOnRemote=n
+envPassword=
+
+declare -A diskEncryptionKeys
+declare -a nixCopyOptions
+declare -a sshArgs
+
 showUsage() {
   cat <<USAGE
 Usage: nixos-anywhere [options] <ssh-host>
@@ -67,170 +98,158 @@ step() {
   echo "### $* ###"
 }
 
-here=$(dirname "${BASH_SOURCE[0]}")
-kexecUrl=""
-kexecExtraFlags=""
-enableDebug=""
-nixOptions=(
-  --extra-experimental-features 'nix-command flakes'
-  "--no-write-lock-file"
-)
-SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY-}
-
-declare -A phases
-phases[kexec]=1
-phases[disko]=1
-phases[install]=1
-phases[reboot]=1
-
-substituteOnDestination=y
-sshPrivateKeyFile=
-if [ -t 0 ]; then # stdin is a tty, we allow interactive input to ssh i.e. passwords
-  sshTtyParam="-t"
-else
-  sshTtyParam="-T"
-fi
-postKexecSshPort=22
-buildOnRemote=n
-envPassword=
-
-declare -A diskEncryptionKeys
-declare -a nixCopyOptions
-declare -a sshArgs
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-  -f | --flake)
-    flake=$2
-    shift
-    ;;
-  -i)
-    sshPrivateKeyFile=$2
-    shift
-    ;;
-  -p | --ssh-port)
-    sshArgs+=("-p" "$2")
-    shift
-    ;;
-  --ssh-option)
-    sshArgs+=("-o" "$2")
-    shift
-    ;;
-  -L | --print-build-logs)
-    printBuildLogs=y
-    ;;
-  -s | --store-paths)
-    diskoScript=$(readlink -f "$2")
-    nixosSystem=$(readlink -f "$3")
-    shift
-    shift
-    ;;
-  -t | --tty)
-    echo "the '$1' flag is deprecated, a tty is now detected automatically" >&2
-    ;;
-  --help)
-    showUsage
-    exit 0
-    ;;
-  --kexec)
-    kexecUrl=$2
-    shift
-    ;;
-  --kexec-extra-flags)
-    kexecExtraFlags=$2
-    shift
-    ;;
-  --post-kexec-ssh-port)
-    postKexecSshPort=$2
-    shift
-    ;;
-  --copy-host-keys)
-    copyHostKeys=y
-    ;;
-  --debug)
-    enableDebug="-x"
-    printBuildLogs=y
-    set -x
-    ;;
-  --extra-files)
-    extraFiles=$2
-    shift
-    ;;
-  --disk-encryption-keys)
-    diskEncryptionKeys["$2"]="$3"
-    shift
-    shift
-    ;;
-  --phases)
-    phases[kexec]=0
-    phases[disko]=0
-    phases[install]=0
-    phases[reboot]=0
-    IFS=, read -r -a phaseList <<<"$2"
-    for phase in "${phaseList[@]}"; do
-      if [[ ${phases[$phase]:-unset} == unset ]]; then
-        abort "Unknown phase: $phase"
-      fi
-      phases[$phase]=1
-    done
-    shift
-    ;;
-  --stop-after-disko)
-    echo "WARNING: --stop-after-disko is deprecated, use --phases=kexec,disko instead" 2>&1
-    phases[kexec]=1
-    phases[disko]=1
-    phases[install]=0
-    phases[reboot]=0
-    ;;
-  --no-reboot)
-    echo "WARNING: --no-reboot is deprecated, use --phases=kexec,disko,install instead" 2>&1
-    phases[kexec]=1
-    phases[disko]=1
-    phases[install]=1
-    phases[reboot]=0
-    ;;
-  --from)
-    nixCopyOptions+=("--from" "$2")
-    shift
-    ;;
-  --option)
-    key=$2
-    shift
-    value=$2
-    shift
-    nixOptions+=("--option" "$key" "$value")
-    ;;
-  --no-substitute-on-destination)
-    substituteOnDestination=n
-    ;;
-  --build-on-remote)
-    buildOnRemote=y
-    ;;
-  --env-password)
-    envPassword=y
-    ;;
-  --vm-test)
-    vmTest=y
-    ;;
-  *)
-    if [[ -z ${sshConnection-} ]]; then
-      sshConnection="$1"
-    else
+parseArgs() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -f | --flake)
+      flake=$2
+      shift
+      ;;
+    -i)
+      sshPrivateKeyFile=$2
+      shift
+      ;;
+    -p | --ssh-port)
+      sshArgs+=("-p" "$2")
+      shift
+      ;;
+    --ssh-option)
+      sshArgs+=("-o" "$2")
+      shift
+      ;;
+    -L | --print-build-logs)
+      printBuildLogs=y
+      ;;
+    -s | --store-paths)
+      diskoScript=$(readlink -f "$2")
+      nixosSystem=$(readlink -f "$3")
+      shift
+      shift
+      ;;
+    -t | --tty)
+      echo "the '$1' flag is deprecated, a tty is now detected automatically" >&2
+      ;;
+    --help)
       showUsage
+      exit 0
+      ;;
+    --kexec)
+      kexecUrl=$2
+      shift
+      ;;
+    --kexec-extra-flags)
+      kexecExtraFlags=$2
+      shift
+      ;;
+    --post-kexec-ssh-port)
+      postKexecSshPort=$2
+      shift
+      ;;
+    --copy-host-keys)
+      copyHostKeys=y
+      ;;
+    --debug)
+      enableDebug="-x"
+      printBuildLogs=y
+      set -x
+      ;;
+    --extra-files)
+      extraFiles=$2
+      shift
+      ;;
+    --disk-encryption-keys)
+      diskEncryptionKeys["$2"]="$3"
+      shift
+      shift
+      ;;
+    --phases)
+      phases[kexec]=0
+      phases[disko]=0
+      phases[install]=0
+      phases[reboot]=0
+      IFS=, read -r -a phaseList <<<"$2"
+      for phase in "${phaseList[@]}"; do
+        if [[ ${phases[$phase]:-unset} == unset ]]; then
+          abort "Unknown phase: $phase"
+        fi
+        phases[$phase]=1
+      done
+      shift
+      ;;
+    --stop-after-disko)
+      echo "WARNING: --stop-after-disko is deprecated, use --phases=kexec,disko instead" 2>&1
+      phases[kexec]=1
+      phases[disko]=1
+      phases[install]=0
+      phases[reboot]=0
+      ;;
+    --no-reboot)
+      echo "WARNING: --no-reboot is deprecated, use --phases=kexec,disko,install instead" 2>&1
+      phases[kexec]=1
+      phases[disko]=1
+      phases[install]=1
+      phases[reboot]=0
+      ;;
+    --from)
+      nixCopyOptions+=("--from" "$2")
+      shift
+      ;;
+    --option)
+      key=$2
+      shift
+      value=$2
+      shift
+      nixOptions+=("--option" "$key" "$value")
+      ;;
+    --no-substitute-on-destination)
+      substituteOnDestination=n
+      ;;
+    --build-on-remote)
+      buildOnRemote=y
+      ;;
+    --env-password)
+      envPassword=y
+      ;;
+    --vm-test)
+      vmTest=y
+      ;;
+    *)
+      if [[ -z ${sshConnection-} ]]; then
+        sshConnection="$1"
+      else
+        showUsage
+        exit 1
+      fi
+      ;;
+    esac
+    shift
+  done
+
+  if [[ ${printBuildLogs-n} == "y" ]]; then
+    nixOptions+=("-L")
+  fi
+
+  if [[ ${substituteOnDestination-n} == "y" ]]; then
+    nixCopyOptions+=("--substitute-on-destination")
+  fi
+
+  if [[ -z ${sshConnection-} ]]; then
+    abort "ssh-host must be set"
+  fi
+
+  if [[ -n ${flake-} ]]; then
+    if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
+      flake="${BASH_REMATCH[1]}"
+      flakeAttr="${BASH_REMATCH[2]}"
+    fi
+    if [[ -z ${flakeAttr-} ]]; then
+      echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri." >&2
+      echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
       exit 1
     fi
-    ;;
-  esac
-  shift
-done
+  fi
 
-if [[ ${printBuildLogs-n} == "y" ]]; then
-  nixOptions+=("-L")
-fi
-
-if [[ ${substituteOnDestination-n} == "y" ]]; then
-  nixCopyOptions+=("--substitute-on-destination")
-fi
+}
 
 # ssh wrapper
 runSshTimeout() {
@@ -484,21 +503,7 @@ SSH
 }
 
 main() {
-  if [[ -z ${sshConnection-} ]]; then
-    abort "ssh-host must be set"
-  fi
-
-  if [[ -n ${flake-} ]]; then
-    if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
-      flake="${BASH_REMATCH[1]}"
-      flakeAttr="${BASH_REMATCH[2]}"
-    fi
-    if [[ -z ${flakeAttr-} ]]; then
-      echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri." >&2
-      echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
-      exit 1
-    fi
-  fi
+  parseArgs "$@"
 
   if [[ -n ${vmTest-} ]]; then
     runVmTest
@@ -582,4 +587,4 @@ main() {
   step "Done!"
 }
 
-main
+main "$@"
