@@ -375,65 +375,67 @@ importFacts() {
 }
 
 runKexec() {
-  if [[ ${isKexec-n} == "n" ]] && [[ ${isInstaller-n} == "n" ]]; then
-    if [[ ${isContainer-none} != "none" ]]; then
-      echo "WARNING: This script does not support running from a '${isContainer}' container. kexec will likely not work" >&2
-    fi
+  if [[ ${isKexec-n} == "y" ]] || [[ ${isInstaller-n} == "y" ]]; then
+    return
+  fi
 
-    if [[ $kexecUrl == "" ]]; then
-      case "${isArch-unknown}" in
-      x86_64 | aarch64)
-        kexecUrl="https://github.com/nix-community/nixos-images/releases/download/nixos-24.05/nixos-kexec-installer-noninteractive-${isArch}-linux.tar.gz"
-        ;;
-      *)
-        abort "Unsupported architecture: ${isArch}. Our default kexec images only support x86_64 and aarch64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information."
-        ;;
-      esac
-    fi
+  if [[ ${isContainer-none} != "none" ]]; then
+    echo "WARNING: This script does not support running from a '${isContainer}' container. kexec will likely not work" >&2
+  fi
 
-    step Switching system into kexec
-    runSsh sh <<SSH
+  if [[ $kexecUrl == "" ]]; then
+    case "${isArch-unknown}" in
+    x86_64 | aarch64)
+      kexecUrl="https://github.com/nix-community/nixos-images/releases/download/nixos-24.05/nixos-kexec-installer-noninteractive-${isArch}-linux.tar.gz"
+      ;;
+    *)
+      abort "Unsupported architecture: ${isArch}. Our default kexec images only support x86_64 and aarch64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information."
+      ;;
+    esac
+  fi
+
+  step Switching system into kexec
+  runSsh sh <<SSH
 set -efu ${enableDebug}
 $maybeSudo rm -rf /root/kexec
 $maybeSudo mkdir -p /root/kexec
 SSH
 
-    # no way to reach global ipv4 destinations, use gh-v6.com automatically if github url
-    if [[ ${hasIpv6_only-n} == "y" ]] && [[ $kexecUrl == "https://github.com/"* ]]; then
-      kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
-    fi
+  # no way to reach global ipv4 destinations, use gh-v6.com automatically if github url
+  if [[ ${hasIpv6_only-n} == "y" ]] && [[ $kexecUrl == "https://github.com/"* ]]; then
+    kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
+  fi
 
-    if [[ -f $kexecUrl ]]; then
-      runSsh "${maybeSudo} tar -C /root/kexec -xvzf-" <"$kexecUrl"
-    elif [[ ${hasCurl-n} == "y" ]]; then
-      runSsh "curl --fail -Ss -L '${kexecUrl}' | ${maybeSudo} tar -C /root/kexec -xvzf-"
-    elif [[ ${hasWget-n} == "y" ]]; then
-      runSsh "wget '${kexecUrl}' -O- | ${maybeSudo} tar -C /root/kexec -xvzf-"
-    else
-      curl --fail -Ss -L "${kexecUrl}" | runSsh "${maybeSudo} tar -C /root/kexec -xvzf-"
-    fi
+  if [[ -f $kexecUrl ]]; then
+    runSsh "${maybeSudo} tar -C /root/kexec -xvzf-" <"$kexecUrl"
+  elif [[ ${hasCurl-n} == "y" ]]; then
+    runSsh "curl --fail -Ss -L '${kexecUrl}' | ${maybeSudo} tar -C /root/kexec -xvzf-"
+  elif [[ ${hasWget-n} == "y" ]]; then
+    runSsh "wget '${kexecUrl}' -O- | ${maybeSudo} tar -C /root/kexec -xvzf-"
+  else
+    curl --fail -Ss -L "${kexecUrl}" | runSsh "${maybeSudo} tar -C /root/kexec -xvzf-"
+  fi
 
-    runSsh <<SSH
+  runSsh <<SSH
 TMPDIR=/root/kexec setsid ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags "${kexecExtraFlags}"
 SSH
 
-    # use the default SSH port to connect at this point
-    for i in "${!sshArgs[@]}"; do
-      if [[ ${sshArgs[i]} == "-p" ]]; then
-        sshArgs[i + 1]=$postKexecSshPort
-        break
-      fi
-    done
+  # use the default SSH port to connect at this point
+  for i in "${!sshArgs[@]}"; do
+    if [[ ${sshArgs[i]} == "-p" ]]; then
+      sshArgs[i + 1]=$postKexecSshPort
+      break
+    fi
+  done
 
-    # wait for machine to become unreachable.
-    while runSshTimeout -- exit 0; do sleep 1; done
+  # wait for machine to become unreachable.
+  while runSshTimeout -- exit 0; do sleep 1; done
 
-    # After kexec we explicitly set the user to root@
-    sshConnection="root@${sshHost}"
+  # After kexec we explicitly set the user to root@
+  sshConnection="root@${sshHost}"
 
-    # waiting for machine to become available again
-    until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
-  fi
+  # waiting for machine to become available again
+  until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
 }
 
 runDisko() {
