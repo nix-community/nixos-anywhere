@@ -166,8 +166,8 @@ while [[ $# -gt 0 ]]; do
     phases[disko]=0
     phases[install]=0
     phases[reboot]=0
-    IFS=, read -r -a phase_list <<<"$2"
-    for phase in "${phase_list[@]}"; do
+    IFS=, read -r -a phaseList <<<"$2"
+    for phase in "${phaseList[@]}"; do
       if [[ ${phases[$phase]:-unset} == unset ]]; then
         abort "Unknown phase: $phase"
       fi
@@ -326,17 +326,17 @@ uploadSshKey() {
 
 importFacts() {
   step Gathering machine facts
-  local facts filtered_facts
+  local facts filteredFacts
   if ! facts=$(runSsh -o ConnectTimeout=10 enableDebug=$enableDebug sh -- <"$here"/get-facts.sh); then
     exit 1
   fi
-  filtered_facts=$(echo "$facts" | grep -E '^(has|is)[A-Za-z0-9_]+=\S+')
-  if [[ -z $filtered_facts ]]; then
+  filteredFacts=$(echo "$facts" | grep -E '^(has|is)[A-Za-z0-9_]+=\S+')
+  if [[ -z $filteredFacts ]]; then
     abort "Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already"
   fi
   # make facts available in script
   # shellcheck disable=SC2046
-  export $(echo "$filtered_facts" | xargs)
+  export $(echo "$filteredFacts" | xargs)
 }
 
 runKexec() {
