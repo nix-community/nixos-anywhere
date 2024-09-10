@@ -255,7 +255,7 @@ nixBuild() {
 }
 
 runVmTest() {
-  if [[ -n ${diskoScript-} ]] && [[ -n ${nixosSystem-} ]]; then
+  if [[ -z ${flakeAttr-} ]]; then
     echo "--vm-test is not supported with --store-paths" >&2
     echo "Please use --flake instead or build config.system.build.installTest of your nixos configuration manually" >&2
     exit 1
@@ -286,7 +286,6 @@ if [[ -z ${sshConnection-} ]]; then
   abort "ssh-host must be set"
 fi
 
-# parse flake nixos-install style syntax, get the system attr
 if [[ -n ${flake-} ]]; then
   if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
     flake="${BASH_REMATCH[1]}"
@@ -297,9 +296,14 @@ if [[ -n ${flake-} ]]; then
     echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
     exit 1
   fi
-  if [[ -n $vmTest ]]; then
-    runVmTest
-  fi
+fi
+
+if [[ -n ${vmTest-} ]]; then
+  runVmTest
+fi
+
+# parse flake nixos-install style syntax, get the system attr
+if [[ -n ${flake-} ]]; then
   if [[ ${buildOnRemote} == "n" ]]; then
     diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
     nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
@@ -309,7 +313,7 @@ elif [[ -n ${diskoScript-} ]] && [[ -n ${nixosSystem-} ]]; then
     abort "${diskoScript} and ${nixosSystem} must be existing store-paths"
   fi
 else
-  abort "flake must be set"
+  abort "--flake or --store-paths must be set"
 fi
 
 if [[ -n ${SSH_PRIVATE_KEY} ]] && [[ -z ${sshPrivateKeyFile-} ]]; then
