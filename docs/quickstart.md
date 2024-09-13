@@ -67,7 +67,7 @@ to it.
 Run the following command on the target machine:
 
 ```bash
-nixos-generate-config --no-filesystems --dir /mnt/etc
+nixos-generate-config --no-filesystems --dir /mnt/etc/nixos
 ```
 
 This creates the necessary configuration files under `/mnt/etc/nixos/`, which
