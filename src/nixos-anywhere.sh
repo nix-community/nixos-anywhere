@@ -292,7 +292,7 @@ runVmTest() {
     echo "--vm-test is not supported with --extra-files" >&2
     exit 1
   fi
-  if [[ -n ${diskEncryptionKeys-} ]]; then
+  if [ ${#diskEncryptionKeys[@]} -gt 0 ]; then
     echo "--vm-test is not supported with --disk-encryption-keys" >&2
     exit 1
   fi
