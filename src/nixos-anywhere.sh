@@ -5,6 +5,7 @@ here=$(dirname "${BASH_SOURCE[0]}")
 kexecUrl=""
 kexecExtraFlags=""
 enableDebug=""
+diskoScript=""
 nixOptions=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
@@ -429,7 +430,7 @@ runDisko() {
     step "Uploading ${diskEncryptionKeys[$path]} to $path"
     runSsh "umask 077; cat > $path" <"${diskEncryptionKeys[$path]}"
   done
-  if [[ -n ${diskoScript-} ]]; then
+  if [[ -n ${diskoScript} ]]; then
     nixCopy --to "ssh://$sshConnection" "$diskoScript"
   elif [[ ${buildOnRemote} == "y" ]]; then
     step Building disko script
@@ -516,7 +517,7 @@ main() {
       diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
       nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
     fi
-  elif [[ -n ${diskoScript-} ]] && [[ -n ${nixosSystem-} ]]; then
+  elif [[ -n ${diskoScript} ]] && [[ -n ${nixosSystem-} ]]; then
     if [[ ! -e ${diskoScript} ]] || [[ ! -e ${nixosSystem} ]]; then
       abort "${diskoScript} and ${nixosSystem} must be existing store-paths"
     fi
