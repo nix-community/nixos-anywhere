@@ -27,10 +27,14 @@ if [[ -n ${input[flake]} ]]; then
 else
   args+=("--store-paths" "${input[nixos_partitioner]}" "${input[nixos_system]}")
 fi
-if [[ -n ${SSHPASS-} ]]; then
+args+=(--phases "${input[phases]}")
+if [[ ${input[ssh_private_key]} != null ]]; then
+  export SSH_PRIVATE_KEY="${input[ssh_private_key]}"
+fi
+if [[ ${input[target_pass]} != null ]]; then
+  export SSHPASS=${input[target_pass]}
   args+=("--env-password")
 fi
-args+=(--phases "${input[phases]}")
 
 tmpdir=$(mktemp -d)
 cleanup() {
@@ -76,4 +80,4 @@ while [[ $# -gt 0 ]]; do
   keyIdx=$((keyIdx + 1))
 done
 
-SSHPASS=${input[target_pass]} SSH_PRIVATE_KEY="${input[ssh_private_key]}" nix run --extra-experimental-features 'nix-command flakes' "path:${SCRIPT_DIR}/../..#nixos-anywhere" -- "${args[@]}"
+nix run --extra-experimental-features 'nix-command flakes' "path:${SCRIPT_DIR}/../..#nixos-anywhere" -- "${args[@]}"
