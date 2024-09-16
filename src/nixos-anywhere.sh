@@ -2,6 +2,7 @@
 set -euo pipefail
 
 here=$(dirname "${BASH_SOURCE[0]}")
+flake=""
 kexecUrl=""
 kexecExtraFlags=""
 enableDebug=""
@@ -240,7 +241,7 @@ parseArgs() {
     abort "ssh-host must be set"
   fi
 
-  if [[ -n ${flake-} ]]; then
+  if [[ -n ${flake} ]]; then
     if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
       flake="${BASH_REMATCH[1]}"
       flakeAttr="${BASH_REMATCH[2]}"
@@ -512,7 +513,7 @@ main() {
   fi
 
   # parse flake nixos-install style syntax, get the system attr
-  if [[ -n ${flake-} ]]; then
+  if [[ -n ${flake} ]]; then
     if [[ ${buildOnRemote} == "n" ]]; then
       diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
       nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
