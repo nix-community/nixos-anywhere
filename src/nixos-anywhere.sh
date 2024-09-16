@@ -8,6 +8,7 @@ enableDebug=""
 diskoScript=""
 nixosSystem=""
 extraFiles=""
+vmTest="n"
 nixOptions=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
@@ -240,7 +241,7 @@ parseArgs() {
     nixCopyOptions+=("--substitute-on-destination")
   fi
 
-  if [[ -z ${sshConnection-} ]]; then
+  if [[ $vmTest == "n" ]] && [[ -z ${sshConnection-} ]]; then
     abort "ssh-host must be set"
   fi
 
@@ -299,7 +300,7 @@ runVmTest() {
     echo "--vm-test is not supported with --disk-encryption-keys" >&2
     exit 1
   fi
-  exec nix build \
+  nix build \
     --print-out-paths \
     --no-link \
     -L \
@@ -510,8 +511,9 @@ SSH
 main() {
   parseArgs "$@"
 
-  if [[ -n ${vmTest-} ]]; then
+  if [[ ${vmTest} == y ]]; then
     runVmTest
+    exit 0
   fi
 
   # parse flake nixos-install style syntax, get the system attr
