@@ -526,7 +526,7 @@ main() {
     abort "--flake or --store-paths must be set"
   fi
 
-  if [[ -n ${SSH_PRIVATE_KEY} ]] && [[ -z ${sshPrivateKeyFile-} ]]; then
+  if [[ -n ${SSH_PRIVATE_KEY} ]] && [[ -z ${sshPrivateKeyFile} ]]; then
     # $sshKeyDir is getting deleted on trap EXIT
     sshPrivateKeyFile="$sshKeyDir/from-env"
     (
