@@ -59,12 +59,6 @@ variable "debug_logging" {
   default     = false
 }
 
-variable "stop_after_disko" {
-  type        = bool
-  description = "Exit after disko formatting"
-  default     = false
-}
-
 variable "extra_files_script" {
   type        = string
   description = "A script that should place files in the current directory that will be copied to the targets / directory"
@@ -86,10 +80,22 @@ variable "extra_environment" {
   default     = {}
 }
 
+variable "stop_after_disko" {
+  type        = bool
+  description = "DEPRECATED: Use `phases` instead. Exit after disko formatting"
+  default     = false
+}
+
 variable "no_reboot" {
   type        = bool
-  description = "Do not reboot the machine after installation"
+  description = "DEPRECATED: Use `phases` instead. Do not reboot after installation"
   default     = false
+}
+
+variable "phases" {
+  type        = list(string)
+  description = "Phases to run"
+  default     = ["kexec", "disko", "install", "reboot"]
 }
 
 variable "build_on_remote" {

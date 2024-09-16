@@ -77,8 +77,20 @@ variable "debug_logging" {
 
 variable "stop_after_disko" {
   type        = bool
-  description = "Exit after disko formatting"
+  description = "DEPRECATED: Use `phases` instead. Exit after disko formatting"
   default     = false
+}
+
+variable "no_reboot" {
+  type        = bool
+  description = "DEPRECATED: Use `phases` instead. Do not reboot after installation"
+  default     = false
+}
+
+variable "phases" {
+  type        = set(string)
+  description = "Phases to run"
+  default     = ["kexec", "disko", "install", "reboot"]
 }
 
 variable "extra_files_script" {
@@ -100,12 +112,6 @@ variable "extra_environment" {
   type        = map(string)
   description = "Extra environment variables to be set during installation. This can be useful to set extra variables for the extra_files_script or disk_encryption_key_scripts"
   default     = {}
-}
-
-variable "no_reboot" {
-  type        = bool
-  description = "Do not reboot after installation"
-  default     = false
 }
 
 variable "nix_options" {
