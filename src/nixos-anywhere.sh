@@ -470,7 +470,7 @@ nixosInstall() {
 
   step Installing NixOS
   maybeReboot=""
-  if [[ ${phases[reboot]-} == 1 ]]; then
+  if [[ ${phases[reboot]} == 1 ]]; then
     maybeReboot="nohup sh -c 'sleep 6 && reboot' >/dev/null &"
   fi
   runSsh sh <<SSH
@@ -562,7 +562,7 @@ main() {
     abort "This script requires Linux as the operating system, but got $isOs"
   fi
 
-  if [[ ${phases[kexec]-} == 1 ]]; then
+  if [[ ${phases[kexec]} == 1 ]]; then
     runKexec
   fi
 
@@ -574,15 +574,15 @@ main() {
     sshConnection="root@${sshHost}"
   fi
 
-  if [[ ${phases[disko]-} == 1 ]]; then
+  if [[ ${phases[disko]} == 1 ]]; then
     runDisko "$diskoScript"
   fi
 
-  if [[ ${phases[install]-} == 1 ]]; then
+  if [[ ${phases[install]} == 1 ]]; then
     nixosInstall "$nixosSystem"
   fi
 
-  if [[ ${phases[reboot]-} == 1 ]]; then
+  if [[ ${phases[reboot]} == 1 ]]; then
     step Waiting for the machine to become unreachable due to reboot
     while runSshTimeout -- exit 0; do sleep 1; done
   fi
