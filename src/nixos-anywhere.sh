@@ -29,6 +29,7 @@ if [ -t 0 ]; then # stdin is a tty, we allow interactive input to ssh i.e. passw
 else
   sshTtyParam="-T"
 fi
+sshConnection=
 postKexecSshPort=22
 buildOnRemote=n
 envPassword=n
@@ -223,7 +224,7 @@ parseArgs() {
       vmTest=y
       ;;
     *)
-      if [[ -z ${sshConnection-} ]]; then
+      if [[ -z ${sshConnection} ]]; then
         sshConnection="$1"
       else
         showUsage
@@ -238,7 +239,7 @@ parseArgs() {
     nixOptions+=("-L")
   fi
 
-  if [[ $vmTest == "n" ]] && [[ -z ${sshConnection-} ]]; then
+  if [[ $vmTest == "n" ]] && [[ -z ${sshConnection} ]]; then
     abort "ssh-host must be set"
   fi
 
