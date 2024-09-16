@@ -33,21 +33,23 @@ Options:
   set an ssh option
 * -L, --print-build-logs
   print full build logs
+* --env-password
+  set a password used by ssh-copy-id, the password should be set by
+  the environment variable SSHPASS
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
-  if this is give, flake is not needed
-* --no-reboot
-  do not reboot after installation, allowing further customization of the target installation.
+  if this is given, flake is not needed
 * --kexec <path>
   use another kexec tarball to bootstrap NixOS
+* --kexec-extra-flags
+  extra flags to add into the call to kexec, e.g. "--no-sync"
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
 * --copy-host-keys
   copy over existing /etc/ssh/ssh_host_* host keys to the installation
-* --stop-after-disko
-  exit after disko formatting, you can then proceed to install manually or some other way
-* --extra-files <file...>
-  files to copy into the new nixos installation
+* --extra-files <path>
+  path to a directory to copy into the root of the new nixos installation.
+  Copied files will be owned by root.
 * --disk-encryption-keys <remote_path> <local_path>
   copy the contents of the file or pipe in local_path to remote_path in the installer environment,
   after kexec but before installation. Can be repeated.
@@ -63,6 +65,12 @@ Options:
   build the closure on the remote machine instead of locally and copy-closuring it
 * --vm-test
   build the system and test the disk configuration inside a VM without installing it to the target.
+* --phases
+  comma separated list of phases to run. Default is: kexec,disko,install,reboot
+  kexec: kexec into the nixos installer
+  disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
+  install: install the system
+  reboot: reboot the machine
 ```
 
 ## Explanation of known error messages
