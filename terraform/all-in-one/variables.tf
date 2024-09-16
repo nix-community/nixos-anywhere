@@ -89,7 +89,7 @@ variable "no_reboot" {
 
 variable "phases" {
   type        = set(string)
-  description = "Phases to run"
+  description = "Phases to run. See `nixos-anywhere --help` for more information"
   default     = ["kexec", "disko", "install", "reboot"]
 }
 
