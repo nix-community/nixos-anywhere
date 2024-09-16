@@ -21,7 +21,6 @@ phases[disko]=1
 phases[install]=1
 phases[reboot]=1
 
-substituteOnDestination=y
 sshPrivateKeyFile=
 if [ -t 0 ]; then # stdin is a tty, we allow interactive input to ssh i.e. passwords
   sshTtyParam="-t"
@@ -210,7 +209,7 @@ parseArgs() {
       nixOptions+=("--option" "$key" "$value")
       ;;
     --no-substitute-on-destination)
-      substituteOnDestination=n
+      nixCopyOptions+=("--substitute-on-destination")
       ;;
     --build-on-remote)
       buildOnRemote=y
@@ -235,10 +234,6 @@ parseArgs() {
 
   if [[ ${printBuildLogs-n} == "y" ]]; then
     nixOptions+=("-L")
-  fi
-
-  if [[ ${substituteOnDestination-n} == "y" ]]; then
-    nixCopyOptions+=("--substitute-on-destination")
   fi
 
   if [[ $vmTest == "n" ]] && [[ -z ${sshConnection-} ]]; then
