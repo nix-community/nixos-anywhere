@@ -16,14 +16,8 @@ if [[ ${input[debug_logging]} == "true" ]]; then
   declare -p input
   args+=("--debug")
 fi
-if [[ ${input[stop_after_disko]} == "true" ]]; then
-  args+=("--stop-after-disko")
-fi
 if [[ ${input[kexec_tarball_url]} != "null" ]]; then
   args+=("--kexec" "${input[kexec_tarball_url]}")
-fi
-if [[ ${input[no_reboot]} == "true" ]]; then
-  args+=("--no-reboot")
 fi
 if [[ ${input[build_on_remote]} == "true" ]]; then
   args+=("--build-on-remote")
@@ -36,6 +30,7 @@ fi
 if [[ -n ${SSHPASS-} ]]; then
   args+=("--env-password")
 fi
+args+=(--phases "${input[phases]}")
 
 tmpdir=$(mktemp -d)
 cleanup() {
