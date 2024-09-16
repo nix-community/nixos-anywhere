@@ -29,7 +29,7 @@ else
 fi
 postKexecSshPort=22
 buildOnRemote=n
-envPassword=
+envPassword=n
 
 sshKeyDir=$(mktemp -d)
 trap 'rm -rf "$sshKeyDir"' EXIT
@@ -317,7 +317,7 @@ uploadSshKey() {
 
   step Uploading install SSH keys
   until
-    if [[ -n ${envPassword} ]]; then
+    if [[ ${envPassword} == y ]]; then
       sshpass -e \
         ssh-copy-id \
         -i "$sshKeyDir"/nixos-anywhere.pub \
