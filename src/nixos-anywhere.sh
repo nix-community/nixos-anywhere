@@ -28,6 +28,10 @@ postKexecSshPort=22
 buildOnRemote=n
 envPassword=
 
+sshKeyDir=$(mktemp -d)
+trap 'rm -rf "$sshKeyDir"' EXIT
+mkdir -p "$sshKeyDir"
+
 declare -A diskEncryptionKeys
 declare -a nixCopyOptions
 declare -a sshArgs
@@ -302,9 +306,6 @@ runVmTest() {
 
 uploadSshKey() {
   # we generate a temporary ssh keypair that we can use during nixos-anywhere
-  sshKeyDir=$(mktemp -d)
-  trap 'rm -rf "$sshKeyDir"' EXIT
-  mkdir -p "$sshKeyDir"
   # ssh-copy-id requires this directory
   mkdir -p "$HOME/.ssh/"
   ssh-keygen -t ed25519 -f "$sshKeyDir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
