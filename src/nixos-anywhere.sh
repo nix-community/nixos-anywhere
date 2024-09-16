@@ -6,6 +6,7 @@ kexecUrl=""
 kexecExtraFlags=""
 enableDebug=""
 diskoScript=""
+nixosSystem=""
 nixOptions=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
@@ -448,7 +449,8 @@ runDisko() {
 }
 
 nixosInstall() {
-  if [[ -n ${nixosSystem-} ]]; then
+  local nixosSystem=$1
+  if [[ -n ${nixosSystem} ]]; then
     step Uploading the system closure
     nixCopy --to "ssh://$sshConnection?remote-store=local?root=/mnt" "$nixosSystem"
   elif [[ ${buildOnRemote} == "y" ]]; then
@@ -517,7 +519,7 @@ main() {
       diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
       nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
     fi
-  elif [[ -n ${diskoScript} ]] && [[ -n ${nixosSystem-} ]]; then
+  elif [[ -n ${diskoScript} ]] && [[ -n ${nixosSystem} ]]; then
     if [[ ! -e ${diskoScript} ]] || [[ ! -e ${nixosSystem} ]]; then
       abort "${diskoScript} and ${nixosSystem} must be existing store-paths"
     fi
@@ -578,7 +580,7 @@ main() {
   fi
 
   if [[ ${phases[install]-} == 1 ]]; then
-    nixosInstall
+    nixosInstall "$nixosSystem"
   fi
 
   if [[ ${phases[reboot]-} == 1 ]]; then
