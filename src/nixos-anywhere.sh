@@ -34,6 +34,20 @@ postKexecSshPort=22
 buildOnRemote=n
 envPassword=n
 
+# Facts set by get-facts.sh
+isOs=
+isArch=
+isKexec=
+isInstaller=
+isContainer=
+hasIpv6Only=
+hasTar=
+hasSudo=
+hasDoas=
+hasWget=
+hasCurl=
+hasSetsid=
+
 sshKeyDir=$(mktemp -d)
 trap 'rm -rf "$sshKeyDir"' EXIT
 mkdir -p "$sshKeyDir"
@@ -359,19 +373,25 @@ importFacts() {
   # make facts available in script
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
+
+  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasSudo hasDoas hasWget hasCurl hasSetsid; do
+    if [[ -z ${!var} ]]; then
+      abort "Failed to retrieve fact $var from host"
+    fi
+  done
 }
 
 runKexec() {
-  if [[ ${isKexec-n} == "y" ]] || [[ ${isInstaller-n} == "y" ]]; then
+  if [[ ${isKexec} == "y" ]] || [[ ${isInstaller} == "y" ]]; then
     return
   fi
 
-  if [[ ${isContainer-none} != "none" ]]; then
+  if [[ ${isContainer} != "none" ]]; then
     echo "WARNING: This script does not support running from a '${isContainer}' container. kexec will likely not work" >&2
   fi
 
   if [[ $kexecUrl == "" ]]; then
-    case "${isArch-unknown}" in
+    case "${isArch}" in
     x86_64 | aarch64)
       kexecUrl="https://github.com/nix-community/nixos-images/releases/download/nixos-24.05/nixos-kexec-installer-noninteractive-${isArch}-linux.tar.gz"
       ;;
@@ -389,15 +409,15 @@ $maybeSudo mkdir -p /root/kexec
 SSH
 
   # no way to reach global ipv4 destinations, use gh-v6.com automatically if github url
-  if [[ ${hasIpv6Only-n} == "y" ]] && [[ $kexecUrl == "https://github.com/"* ]]; then
+  if [[ ${hasIpv6Only} == "y" ]] && [[ $kexecUrl == "https://github.com/"* ]]; then
     kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
   fi
 
   if [[ -f $kexecUrl ]]; then
     runSsh "${maybeSudo} tar -C /root/kexec -xvzf-" <"$kexecUrl"
-  elif [[ ${hasCurl-n} == "y" ]]; then
+  elif [[ ${hasCurl} == "y" ]]; then
     runSsh "curl --fail -Ss -L '${kexecUrl}' | ${maybeSudo} tar -C /root/kexec -xvzf-"
-  elif [[ ${hasWget-n} == "y" ]]; then
+  elif [[ ${hasWget} == "y" ]]; then
     runSsh "wget '${kexecUrl}' -O- | ${maybeSudo} tar -C /root/kexec -xvzf-"
   else
     curl --fail -Ss -L "${kexecUrl}" | runSsh "${maybeSudo} tar -C /root/kexec -xvzf-"
@@ -560,7 +580,7 @@ main() {
     maybeSudo="doas"
   fi
 
-  if [[ ${isOs-n} != "Linux" ]]; then
+  if [[ ${isOs} != "Linux" ]]; then
     abort "This script requires Linux as the operating system, but got $isOs"
   fi
 
