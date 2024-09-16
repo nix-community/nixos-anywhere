@@ -1,8 +1,9 @@
 locals {
   disk_encryption_key_scripts = [for k in var.disk_encryption_key_scripts : "\"${k.path}\" \"${k.script}\""]
+  removed_phases =  setunion(var.stop_after_disko ? ["install"] : [], (var.no_reboot ? ["reboot"] : []))
+  phases = setsubstract(var.phases, removed_phases)
   arguments = jsonencode({
     ssh_private_key = var.ssh_private_key
-    stop_after_disko = var.stop_after_disko
     debug_logging = var.debug_logging
     kexec_tarball_url = var.kexec_tarball_url
     nixos_partitioner = var.nixos_partitioner
@@ -12,9 +13,9 @@ locals {
     target_port = var.target_port
     target_pass = var.target_pass
     extra_files_script = var.extra_files_script
-    no_reboot = var.no_reboot
     build_on_remote = var.build_on_remote
     flake = var.flake
+    phases = join(",", local.phases)
   })
 }
 

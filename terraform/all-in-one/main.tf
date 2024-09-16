@@ -27,11 +27,13 @@ module "install" {
   nixos_system                 = module.system-build.result.out
   ssh_private_key              = var.install_ssh_key
   debug_logging                = var.debug_logging
-  stop_after_disko             = var.stop_after_disko
   extra_files_script           = var.extra_files_script
   disk_encryption_key_scripts  = var.disk_encryption_key_scripts
   extra_environment            = var.extra_environment
   instance_id                  = var.instance_id
+  phases                       = var.phases
+  # deprecated attributes
+  stop_after_disko             = var.stop_after_disko
   no_reboot                    = var.no_reboot
 }
 
