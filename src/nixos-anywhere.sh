@@ -7,6 +7,7 @@ kexecExtraFlags=""
 enableDebug=""
 diskoScript=""
 nixosSystem=""
+extraFiles=""
 nixOptions=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
@@ -290,7 +291,7 @@ runVmTest() {
     echo "--vm-test is not supported with --build-on-remote" >&2
     exit 1
   fi
-  if [[ -n ${extraFiles-} ]]; then
+  if [[ -n ${extraFiles} ]]; then
     echo "--vm-test is not supported with --extra-files" >&2
     exit 1
   fi
@@ -464,7 +465,7 @@ nixosInstall() {
     )
   fi
 
-  if [[ -n ${extraFiles-} ]]; then
+  if [[ -n ${extraFiles} ]]; then
     step Copying extra files
     tar -C "$extraFiles" -cpf- . | runSsh "${maybeSudo} tar -C /mnt -xf- --no-same-owner"
     runSsh "chmod 755 /mnt" # tar also changes permissions of /mnt
