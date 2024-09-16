@@ -3,6 +3,7 @@ set -euo pipefail
 
 here=$(dirname "${BASH_SOURCE[0]}")
 flake=""
+flakeAttr=""
 kexecUrl=""
 kexecExtraFlags=""
 enableDebug=""
@@ -246,7 +247,7 @@ parseArgs() {
       flake="${BASH_REMATCH[1]}"
       flakeAttr="${BASH_REMATCH[2]}"
     fi
-    if [[ -z ${flakeAttr-} ]]; then
+    if [[ -z ${flakeAttr} ]]; then
       echo "Please specify the name of the NixOS configuration to be installed, as a URI fragment in the flake-uri." >&2
       echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
       exit 1
@@ -278,7 +279,7 @@ nixBuild() {
 }
 
 runVmTest() {
-  if [[ -z ${flakeAttr-} ]]; then
+  if [[ -z ${flakeAttr} ]]; then
     echo "--vm-test is not supported with --store-paths" >&2
     echo "Please use --flake instead or build config.system.build.installTest of your nixos configuration manually" >&2
     exit 1
