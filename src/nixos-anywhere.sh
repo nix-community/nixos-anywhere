@@ -52,9 +52,9 @@ sshKeyDir=$(mktemp -d)
 trap 'rm -rf "$sshKeyDir"' EXIT
 mkdir -p "$sshKeyDir"
 
-declare -A diskEncryptionKeys
-declare -a nixCopyOptions
-declare -a sshArgs
+declare -A diskEncryptionKeys=()
+declare -a nixCopyOptions=()
+declare -a sshArgs=()
 
 showUsage() {
   cat <<USAGE
