@@ -124,6 +124,7 @@ step() {
 
 parseArgs() {
   local substituteOnDestination=y
+  local printBuildLogs=n
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -f | --flake)
@@ -250,7 +251,7 @@ parseArgs() {
     shift
   done
 
-  if [[ ${printBuildLogs-n} == "y" ]]; then
+  if [[ ${printBuildLogs} == "y" ]]; then
     nixOptions+=("-L")
   fi
 
