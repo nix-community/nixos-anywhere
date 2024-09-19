@@ -1,7 +1,7 @@
 locals {
   disk_encryption_key_scripts = [for k in var.disk_encryption_key_scripts : "\"${k.path}\" \"${k.script}\""]
   removed_phases =  setunion(var.stop_after_disko ? ["install"] : [], (var.no_reboot ? ["reboot"] : []))
-  phases = setsubstract(var.phases, removed_phases)
+  phases = setsubtract(var.phases, local.removed_phases)
   arguments = jsonencode({
     ssh_private_key = var.ssh_private_key
     debug_logging = var.debug_logging
