@@ -123,6 +123,8 @@ step() {
 }
 
 parseArgs() {
+  local substituteOnDestination=y
+  local printBuildLogs=n
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -f | --flake)
@@ -226,7 +228,7 @@ parseArgs() {
       nixOptions+=("--option" "$key" "$value")
       ;;
     --no-substitute-on-destination)
-      nixCopyOptions+=("--substitute-on-destination")
+      substituteOnDestination=n
       ;;
     --build-on-remote)
       buildOnRemote=y
@@ -249,8 +251,12 @@ parseArgs() {
     shift
   done
 
-  if [[ ${printBuildLogs-n} == "y" ]]; then
+  if [[ ${printBuildLogs} == "y" ]]; then
     nixOptions+=("-L")
+  fi
+
+  if [[ $substituteOnDestination == "y" ]]; then
+    nixCopyOptions+=("--substitute-on-destination")
   fi
 
   if [[ $vmTest == "n" ]] && [[ -z ${sshConnection} ]]; then
