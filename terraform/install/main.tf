@@ -15,6 +15,8 @@ locals {
     extra_files_script = var.extra_files_script
     build_on_remote = var.build_on_remote
     flake = var.flake
+    stop_after_disko = var.stop_after_disko
+    no_reboot = var.no_reboot
     phases = join(",", local.phases)
   })
 }
