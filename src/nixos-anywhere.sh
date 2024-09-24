@@ -23,6 +23,8 @@ phases[disko]=1
 phases[install]=1
 phases[reboot]=1
 
+hardwareConfigBackend=none
+hardwareConfigPath=
 sshPrivateKeyFile=
 if [ -t 0 ]; then # stdin is a tty, we allow interactive input to ssh i.e. passwords
   sshTtyParam="-t"
@@ -47,6 +49,7 @@ hasDoas=
 hasWget=
 hasCurl=
 hasSetsid=
+hasNixOSFacter=
 
 sshKeyDir=$(mktemp -d)
 trap 'rm -rf "$sshKeyDir"' EXIT
@@ -104,6 +107,9 @@ Options:
   build the closure on the remote machine instead of locally and copy-closuring it
 * --vm-test
   build the system and test the disk configuration inside a VM without installing it to the target.
+* --generate-hardware-config facter|nixos-generate-config <path>
+  generate a hardware-configuration.nix file using the specified backend and write it to the specified path.
+  The backend can be either 'facter' or 'nixos-generate-config'.
 * --phases
   comma separated list of phases to run. Default is: kexec,disko,install,reboot
   kexec: kexec into the nixos installer
@@ -149,6 +155,22 @@ parseArgs() {
     -s | --store-paths)
       diskoScript=$(readlink -f "$2")
       nixosSystem=$(readlink -f "$3")
+      shift
+      shift
+      ;;
+    --generate-hardware-config)
+      if [[ $# -lt 3 ]]; then
+        abort "Missing arguments for --generate-hardware-config <backend> <path>"
+      fi
+      case "$2" in
+      nixos-facter | nixos-generate-config)
+        hardwareConfigBackend=$2
+        ;;
+      *)
+        abort "Unknown hardware config backend: $2"
+        ;;
+      esac
+      hardwareConfigPath=$3
       shift
       shift
       ;;
@@ -387,6 +409,39 @@ importFacts() {
   done
 }
 
+generateHardwareConfig() {
+  local maybeSudo="$maybeSudo"
+  case "$hardwareConfigBackend" in
+  nixos-facter)
+    if [[ ${isInstaller} == "y" ]]; then
+      if [[ ${hasNixOSFacter} == "n" ]]; then
+        abort "nixos-facter is not available in booted installer. You may want to boot an installer image from here instead: https://github.com/nix-community/nixos-images"
+      fi
+    else
+      maybeSudo=""
+    fi
+
+    step "Generating hardware-configuration.nix using nixos-facter"
+    # FIXME: if we take the output directly it adds some weird characters at the beginning
+    runSsh -o ConnectTimeout=10 ${maybeSudo} "nixos-facter" >"$hardwareConfigPath"
+    ;;
+  nixos-generate-config)
+    step "Generating hardware-configuration.nix using nixos-generate-config"
+    runSsh -o ConnectTimeout=10 nixos-generate-config --show-hardware-config >"$hardwareConfigPath"
+    ;;
+  *)
+    abort "Unknown hardware config backend: $hardwareConfigBackend"
+    ;;
+  esac
+
+  # to make sure nix knows about the new file
+  if command -v git >/dev/null; then
+    pushd "$(dirname "$hardwareConfigPath")"
+    git add --intent-to-add --force -- "$hardwareConfigPath" >/dev/null 2>&1 || true
+    popd
+  fi
+}
+
 runKexec() {
   if [[ ${isKexec} == "y" ]] || [[ ${isInstaller} == "y" ]]; then
     return
@@ -546,7 +601,7 @@ main() {
 
   # parse flake nixos-install style syntax, get the system attr
   if [[ -n ${flake} ]]; then
-    if [[ ${buildOnRemote} == "n" ]]; then
+    if [[ ${buildOnRemote} == "n" ]] && [[ ${hardwareConfigBackend} == "none" ]]; then
       diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
       nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
     fi
@@ -598,9 +653,18 @@ main() {
     runKexec
   fi
 
+  if [[ ${hardwareConfigBackend} != "none" ]]; then
+    generateHardwareConfig
+  fi
+
+  if [[ ${buildOnRemote} == "n" ]] && [[ -n ${flake} ]] && [[ ${hardwareConfigBackend} != "none" ]]; then
+    diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
+    nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
+  fi
+
   # Installation will fail if non-root user is used for installer.
   # Switch to root user by copying authorized_keys.
-  if [[ ${isInstaller-n} == "y" ]] && [[ ${sshUser} != "root" ]]; then
+  if [[ ${isInstaller} == "y" ]] && [[ ${sshUser} != "root" ]]; then
     # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
     runSsh "${maybeSudo} mkdir -p /root/.ssh; ${maybeSudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
     sshConnection="root@${sshHost}"
