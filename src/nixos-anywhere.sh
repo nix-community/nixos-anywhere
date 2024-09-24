@@ -203,14 +203,14 @@ parseArgs() {
       shift
       ;;
     --stop-after-disko)
-      echo "WARNING: --stop-after-disko is deprecated, use --phases=kexec,disko instead" 2>&1
+      echo "WARNING: --stop-after-disko is deprecated, use --phases kexec,disko instead" 2>&1
       phases[kexec]=1
       phases[disko]=1
       phases[install]=0
       phases[reboot]=0
       ;;
     --no-reboot)
-      echo "WARNING: --no-reboot is deprecated, use --phases=kexec,disko,install instead" 2>&1
+      echo "WARNING: --no-reboot is deprecated, use --phases kexec,disko,install instead" 2>&1
       phases[kexec]=1
       phases[disko]=1
       phases[install]=1
