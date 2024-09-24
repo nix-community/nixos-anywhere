@@ -18,4 +18,5 @@ hasDoas=$(has doas)
 hasWget=$(has wget)
 hasCurl=$(has curl)
 hasSetsid=$(has setsid)
+hasNixOSFacter=$(command -v nixos-facter >/dev/null && echo "y" || echo "n")
 FACTS
