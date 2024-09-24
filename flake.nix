@@ -27,7 +27,7 @@
         # allow to disable treefmt in downstream flakes
       ] ++ inputs.nixpkgs.lib.optional (inputs.treefmt-nix ? flakeModule) ./treefmt/flake-module.nix;
 
-      perSystem = { self', config, lib, ... }: {
+      perSystem = { self', lib, ... }: {
         checks =
           let
             packages = lib.mapAttrs' (n: lib.nameValuePair "package-${n}") self'.packages;
