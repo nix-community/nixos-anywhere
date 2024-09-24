@@ -23,7 +23,7 @@
         -i /root/.ssh/install_key \
         --debug \
         --kexec /etc/nixos-anywhere/kexec-installer \
-        --stop-after-disko \
+        --phases kexec,disko \
         --disk-encryption-keys /tmp/disk-1.key /tmp/disk-1.key \
         --disk-encryption-keys /tmp/disk-2.key <(echo another-secret) \
         --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
