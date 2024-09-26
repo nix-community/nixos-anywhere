@@ -108,9 +108,9 @@ Options:
   build the closure on the remote machine instead of locally and copy-closuring it
 * --vm-test
   build the system and test the disk configuration inside a VM without installing it to the target.
-* --generate-hardware-config facter|nixos-generate-config <path>
+* --generate-hardware-config nixos-facter|nixos-generate-config <path>
   generate a hardware-configuration.nix file using the specified backend and write it to the specified path.
-  The backend can be either 'facter' or 'nixos-generate-config'.
+  The backend can be either 'nixos-facter' or 'nixos-generate-config'.
 * --phases
   comma separated list of phases to run. Default is: kexec,disko,install,reboot
   kexec: kexec into the nixos installer
