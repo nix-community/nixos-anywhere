@@ -65,12 +65,20 @@ Options:
   build the closure on the remote machine instead of locally and copy-closuring it
 * --vm-test
   build the system and test the disk configuration inside a VM without installing it to the target.
+* --generate-hardware-config facter|nixos-generate-config <path>
+  generate a hardware-configuration.nix file using the specified backend and write it to the specified path.
+  The backend can be either 'facter' or 'nixos-generate-config'.
 * --phases
   comma separated list of phases to run. Default is: kexec,disko,install,reboot
   kexec: kexec into the nixos installer
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
   install: install the system
   reboot: reboot the machine
+* --disko-mode create|mount|disko
+  set the disko mode to create, mount or destroy. Default is disko.
+  format: create partition tables, zpools, lvms, raids and filesystems (Experimental: Can be run increntally, but use with caution and good backups)
+  mount: mount the partition at the specified root-mountpoint
+  disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
 ```
 
 ## Explanation of known error messages
