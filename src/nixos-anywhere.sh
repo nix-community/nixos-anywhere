@@ -8,6 +8,7 @@ kexecUrl=""
 kexecExtraFlags=""
 enableDebug=""
 diskoScript=""
+diskoMode="disko"
 nixosSystem=""
 extraFiles=""
 vmTest="n"
@@ -116,6 +117,11 @@ Options:
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
   install: install the system
   reboot: reboot the machine
+* --disko-mode create|mount|disko
+  set the disko mode to create, mount or destroy. Default is disko.
+  format: create partition tables, zpools, lvms, raids and filesystems (Experimental: Can be run increntally, but use with caution and good backups)
+  mount: mount the partition at the specified root-mountpoint
+  disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
 USAGE
 }
 
@@ -200,6 +206,18 @@ parseArgs() {
       enableDebug="-x"
       printBuildLogs=y
       set -x
+      ;;
+    --disko-mode)
+      case "$2" in
+      create | mount | disko)
+        diskoMode=$2
+        ;;
+      *)
+        abort "Supported values for --disko-mode create, mount, disko. Unknown mode : $2"
+        ;;
+      esac
+
+      shift
       ;;
     --extra-files)
       extraFiles=$2
@@ -518,11 +536,11 @@ runDisko() {
     step Building disko script
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
-    nixCopy --to "ssh://$sshConnection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
+    nixCopy --to "ssh://$sshConnection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script" \
       --derivation --no-check-sigs
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     diskoScript=$(
-      nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
+      nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script" \
         --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$sshKeyDir/nixos-anywhere"
     )
   fi
@@ -602,7 +620,7 @@ main() {
   # parse flake nixos-install style syntax, get the system attr
   if [[ -n ${flake} ]]; then
     if [[ ${buildOnRemote} == "n" ]] && [[ ${hardwareConfigBackend} == "none" ]]; then
-      diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
+      diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script")
       nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
     fi
   elif [[ -n ${diskoScript} ]] && [[ -n ${nixosSystem} ]]; then
@@ -658,7 +676,7 @@ main() {
   fi
 
   if [[ ${buildOnRemote} == "n" ]] && [[ -n ${flake} ]] && [[ ${hardwareConfigBackend} != "none" ]]; then
-    diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
+    diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script")
     nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
   fi
 
