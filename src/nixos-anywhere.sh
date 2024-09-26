@@ -613,6 +613,9 @@ main() {
   parseArgs "$@"
 
   if [[ ${vmTest} == y ]]; then
+    if [[ ${hardwareConfigBackend} != "none" ]]; then
+      abort "--vm-test is not supported with --generate-hardware-config. You need to generate the hardware configuration before you can run the VM test." >&2
+    fi
     runVmTest
     exit 0
   fi
