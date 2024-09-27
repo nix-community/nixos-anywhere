@@ -232,13 +232,13 @@ If you also need to generate hardware configuration amend flags for
 nixos-generate-config:
 
 ```
-nix run --generate-hardware-config nixos-generate-config ./hardware-configuration.nix github:nix-community/nixos-anywhere -- --flake <path to configuration>#<configuration name> root@<ip address>
+nix run github:nix-community/nixos-anywhere -- --generate-hardware-config nixos-generate-config ./hardware-configuration.nix --flake <path to configuration>#<configuration name> root@<ip address>
 ```
 
 Or these flags if you are using nixos-facter instead:
 
 ```
-nix run --generate-hardware-config nixos-facter ./facter.json github:nix-community/nixos-anywhere -- --flake <path to configuration>#<configuration name> root@<ip address>
+nix run github:nix-community/nixos-anywhere -- --generate-hardware-config nixos-facter ./facter.json  --flake <path to configuration>#<configuration name> root@<ip address>
 ```
 
 Adjust the location of `./hardware-configuration.nix` and `./facter.json`
