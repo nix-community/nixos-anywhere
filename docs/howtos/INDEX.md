@@ -12,6 +12,8 @@
 
 [Using your own kexec image](./custom-kexec.md)
 
+[Repair installations without wiping data](./disko-modes.md)
+
 [Secrets and full disk encryption](./secrets.md)
 
 [Use without flakes](./use-without-flakes.md)
