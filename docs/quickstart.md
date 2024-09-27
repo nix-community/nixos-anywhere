@@ -68,19 +68,31 @@ not be able to log into the target machine post-installation without it.
 
 ### 4. Configure Storage
 
-In the same directory, create a file named `disk-config.nix`. This will be used
-to specify the disk layout to the
+In the same directory, create a file called `disk-config.nix`. This file will
+define the disk layout for the
 [disko](https://github.com/nix-community/disko/blob/master/docs/INDEX.md) tool,
-which nixos-anywhere uses to partition, format and mount the disks.
+which is used by nixos-anywhere to partition, format, and mount the disks.
 
-For a simple installation you can paste the contents from the example
+For a basic installation, you can copy the contents from the example provided
 [here](https://github.com/nix-community/nixos-anywhere-examples/blob/main/disk-config.nix).
-This configures a standard GPT (GUID Partition Table) partition compatible with
-both EFI and BIOS systems, and mounts the disk as `/dev/sda`. If this doesn’t
-meet your requirements, choose an example that suits your disk layout from the
+This configuration sets up a standard GPT (GUID Partition Table) that is
+compatible with both EFI and BIOS systems and mounts the disk as `/dev/sda`. You
+may need to adjust `/dev/sda` to match the correct disk on your machine. To
+identify the disk, run the `lsblk` command and replace `sda` with the actual
+disk name.
+
+For example, on this machine, we would select `nvme0n1` as the disk:
+
+```
+NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+nvme0n1     259:0    0  1.8T  0 disk
+```
+
+If this setup does not match your requirements, you can choose an example that
+better suits your disk layout from the
 [disko examples](https://github.com/nix-community/disko/tree/master/example).
-For more information about this configuration, refer to the
-[disko documentation.](https://github.com/nix-community/disko)
+For more detailed information, refer to the
+[disko documentation](https://github.com/nix-community/disko).
 
 ### 5. Lock your Flake
 
