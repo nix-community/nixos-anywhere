@@ -74,11 +74,11 @@ Options:
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
   install: install the system
   reboot: reboot the machine
-* --disko-mode create|mount|disko
-  set the disko mode to create, mount or destroy. Default is disko.
-  format: create partition tables, zpools, lvms, raids and filesystems (Experimental: Can be run increntally, but use with caution and good backups)
-  mount: mount the partition at the specified root-mountpoint
+* --disko-mode disko|mount|format
+  set the disko mode to format, mount or destroy. Default is disko.
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
+  mount: mount the partition at the specified root-mountpoint
+  format: create partition tables, zpools, lvms, raids and filesystems (Experimental: Can be run increntally, but use with caution and good backups)
 ```
 
 ## Explanation of known error messages
