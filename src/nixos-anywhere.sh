@@ -445,7 +445,7 @@ generateHardwareConfig() {
     ;;
   nixos-generate-config)
     step "Generating hardware-configuration.nix using nixos-generate-config"
-    runSsh -o ConnectTimeout=10 nixos-generate-config --show-hardware-config >"$hardwareConfigPath"
+    runSsh -o ConnectTimeout=10 nixos-generate-config --show-hardware-config --no-filesystems >"$hardwareConfigPath"
     ;;
   *)
     abort "Unknown hardware config backend: $hardwareConfigBackend"
