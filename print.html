@@ -278,18 +278,26 @@ line that reads:</p>
 <p>Replace the text <code>CHANGE</code> with your own SSH key. This is crucial, as you will
 not be able to log into the target machine post-installation without it.</p>
 <h3 id="4-configure-storage"><a class="header" href="#4-configure-storage">4. Configure Storage</a></h3>
-<p>In the same directory, create a file named <code>disk-config.nix</code>. This will be used
-to specify the disk layout to the
+<p>In the same directory, create a file called <code>disk-config.nix</code>. This file will
+define the disk layout for the
 <a href="https://github.com/nix-community/disko/blob/master/docs/INDEX.md">disko</a> tool,
-which nixos-anywhere uses to partition, format and mount the disks.</p>
-<p>For a simple installation you can paste the contents from the example
+which is used by nixos-anywhere to partition, format, and mount the disks.</p>
+<p>For a basic installation, you can copy the contents from the example provided
 <a href="https://github.com/nix-community/nixos-anywhere-examples/blob/main/disk-config.nix">here</a>.
-This configures a standard GPT (GUID Partition Table) partition compatible with
-both EFI and BIOS systems, and mounts the disk as <code>/dev/sda</code>. If this doesn’t
-meet your requirements, choose an example that suits your disk layout from the
+This configuration sets up a standard GPT (GUID Partition Table) that is
+compatible with both EFI and BIOS systems and mounts the disk as <code>/dev/sda</code>. You
+may need to adjust <code>/dev/sda</code> to match the correct disk on your machine. To
+identify the disk, run the <code>lsblk</code> command and replace <code>sda</code> with the actual
+disk name.</p>
+<p>For example, on this machine, we would select <code>nvme0n1</code> as the disk:</p>
+<pre><code>NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+nvme0n1     259:0    0  1.8T  0 disk
+</code></pre>
+<p>If this setup does not match your requirements, you can choose an example that
+better suits your disk layout from the
 <a href="https://github.com/nix-community/disko/tree/master/example">disko examples</a>.
-For more information about this configuration, refer to the
-<a href="https://github.com/nix-community/disko">disko documentation.</a></p>
+For more detailed information, refer to the
+<a href="https://github.com/nix-community/disko">disko documentation</a>.</p>
 <h3 id="5-lock-your-flake"><a class="header" href="#5-lock-your-flake">5. Lock your Flake</a></h3>
 <pre><code>nix flake lock
 </code></pre>
