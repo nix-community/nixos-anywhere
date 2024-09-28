@@ -237,7 +237,7 @@ Options:
   kexec: kexec into the nixos installer
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
   install: install the system
-  reboot: reboot the machine
+  reboot: unmount the filesystems, export any ZFS pools and reboot the machine
 * --disko-mode disko|mount|format
   set the disko mode to format, mount or destroy. Default is disko.
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
