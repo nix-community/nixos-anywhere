@@ -116,7 +116,7 @@ Options:
   kexec: kexec into the nixos installer
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
   install: install the system
-  reboot: reboot the machine
+  reboot: unmount the filesystems, export any ZFS pools and reboot the machine
 * --disko-mode disko|mount|format
   set the disko mode to format, mount or destroy. Default is disko.
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
@@ -574,10 +574,6 @@ nixosInstall() {
   fi
 
   step Installing NixOS
-  maybeReboot=""
-  if [[ ${phases[reboot]} == 1 ]]; then
-    maybeReboot="nohup sh -c 'sleep 6 && reboot' >/dev/null &"
-  fi
   runSsh sh <<SSH
 set -eu ${enableDebug}
 # when running not in nixos we might miss this directory, but it's needed in the nixos chroot during installation
@@ -599,12 +595,14 @@ if [ ${copyHostKeys-n} = "y" ]; then
   done
 fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem"
-if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
-  # we always want to export the zfs pools so people can boot from it without force import
-  umount -Rv /mnt/
-  zpool export -a || true
+if [[ ${phases[reboot]} == 1 ]]; then
+  if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
+    # we always want to export the zfs pools so people can boot from it without force import
+    umount -Rv /mnt/
+    zpool export -a || true
+  fi
+  nohup sh -c 'sleep 6 && reboot' >/dev/null &
 fi
-${maybeReboot}
 SSH
 
 }
