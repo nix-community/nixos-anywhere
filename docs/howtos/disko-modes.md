@@ -3,7 +3,7 @@
 By default, nixos-anywhere will reformat all configured disks before running the
 installation. However it is also possible to mount the filesystems of an
 existing installation and run `nixos-install`. This is useful to recover from a
-mis-configured NixOS installation by first booting into a NixOS installer or
+misconfigured NixOS installation by first booting into a NixOS installer or
 recovery system.
 
 To only mount existing filesystems, add `--disko-mode mount` to

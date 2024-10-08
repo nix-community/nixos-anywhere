@@ -11,7 +11,7 @@ error: file 'nixpkgs' was not found in the Nix search path (add it using $NIX_PA
 at «none»:0: (source not available)
 ```
 
-when using tools like nix-shell/nix-env that rely on `NIX_PATH` beeing set.
+when using tools like nix-shell/nix-env that rely on `NIX_PATH` being set.
 
 # Solution 1: Set the `NIX_PATH` via nixos configuration (recommended)
 
