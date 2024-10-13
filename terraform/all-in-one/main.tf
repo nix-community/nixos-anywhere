@@ -33,6 +33,7 @@ module "install" {
   instance_id                  = var.instance_id
   phases                       = var.phases
   nixos_generate_config_path   = var.nixos_generate_config_path
+  nixos_facter_path            = var.nixos_facter_path
   # deprecated attributes
   stop_after_disko             = var.stop_after_disko
   no_reboot                    = var.no_reboot

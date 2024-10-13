@@ -17,6 +17,7 @@ locals {
     flake = var.flake
     phases = join(",", local.phases)
     nixos_generate_config_path = var.nixos_generate_config_path
+    nixos_facter_path = var.nixos_facter_path
   })
 }
 

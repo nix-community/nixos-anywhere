@@ -28,7 +28,13 @@ else
   args+=("--store-paths" "${input[nixos_partitioner]}" "${input[nixos_system]}")
 fi
 if [[ -n ${input[nixos_generate_config_path]} ]]; then
+  if [[ -n ${input[nixos_facter_path]} ]]; then
+    echo "cannot set both variables 'nixos_generate_config_path' and 'nixos_facter_path'!" >&2
+    exit 1
+  fi
   args+=("--generate-hardware-config" "nixos-generate-config" "${input[nixos_generate_config_path]}")
+elif [[ -n ${input[nixos_facter_path]} ]]; then
+  args+=("--generate-hardware-config" "nixos-facter" "${input[nixos_facter_path]}")
 fi
 args+=(--phases "${input[phases]}")
 if [[ ${input[ssh_private_key]} != null ]]; then
