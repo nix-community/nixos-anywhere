@@ -27,6 +27,9 @@ if [[ -n ${input[flake]} ]]; then
 else
   args+=("--store-paths" "${input[nixos_partitioner]}" "${input[nixos_system]}")
 fi
+if [[ -n ${input[nixos_generate_config_path]} ]]; then
+  args+=("--generate-hardware-config" "nixos-generate-config" "${input[nixos_generate_config_path]}")
+fi
 args+=(--phases "${input[phases]}")
 if [[ ${input[ssh_private_key]} != null ]]; then
   export SSH_PRIVATE_KEY="${input[ssh_private_key]}"

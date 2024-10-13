@@ -16,6 +16,7 @@ locals {
     build_on_remote = var.build_on_remote
     flake = var.flake
     phases = join(",", local.phases)
+    nixos_generate_config_path = var.nixos_generate_config_path
   })
 }
 
