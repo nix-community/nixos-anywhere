@@ -66,6 +66,18 @@ line that reads:
 Replace the text `CHANGE` with your own SSH key. This is crucial, as you will
 not be able to log into the target machine post-installation without it.
 
+**Note:** If you use an `~/.ssh/config` entry **make sure the entry for your machine **does
+not include `IdentitiesOnly yes`\*\* since that will block the on-the-fly generated
+SSH key of `nixos-anywhere` during install. Delete this setting or set it to `no`
+and re-enable it after the install, e.g.
+
+```
+Host mymachine
+    HostName 1.1.1.1
+    IdentityFile ~/.ssh/my-ssh-private-key
+    IdentitiesOnly no
+```
+
 ### 4. Configure Storage
 
 In the same directory, create a file called `disk-config.nix`. This file will
