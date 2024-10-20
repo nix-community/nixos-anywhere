@@ -429,6 +429,7 @@ importFacts() {
 
 generateHardwareConfig() {
   local maybeSudo="$maybeSudo"
+  mkdir -p "$(dirname "$hardwareConfigPath")"
   case "$hardwareConfigBackend" in
   nixos-facter)
     if [[ ${isInstaller} == "y" ]]; then
