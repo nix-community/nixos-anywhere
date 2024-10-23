@@ -31,11 +31,12 @@ No modules.
 
 ## Inputs
 
-| Name                                                                | Description                                        | Type          | Default | Required |
-| ------------------------------------------------------------------- | -------------------------------------------------- | ------------- | ------- | :------: |
-| <a name="input_attribute"></a> [attribute](#input_attribute)        | the attribute to build, can also be a flake        | `string`      | n/a     |   yes    |
-| <a name="input_file"></a> [file](#input_file)                       | the nix file to evaluate, if not run in flake mode | `string`      | `null`  |    no    |
-| <a name="input_nix_options"></a> [nix\_options](#input_nix_options) | the options of nix                                 | `map(string)` | `{}`    |    no    |
+| Name                                                                   | Description                                         | Type          | Default | Required |
+| ---------------------------------------------------------------------- | --------------------------------------------------- | ------------- | ------- | :------: |
+| <a name="input_attribute"></a> [attribute](#input_attribute)           | the attribute to build, can also be a flake         | `string`      | n/a     |   yes    |
+| <a name="input_file"></a> [file](#input_file)                          | the nix file to evaluate, if not run in flake mode  | `string`      | `null`  |    no    |
+| <a name="input_nix_options"></a> [nix\_options](#input_nix_options)    | the options of nix                                  | `map(string)` | `{}`    |    no    |
+| <a name="input_special_args"></a> [special\_args](#input_special_args) | A map exposed as NixOS's `specialArgs` thru a file. | `any`         | `{}`    |    no    |
 
 ## Outputs
 
