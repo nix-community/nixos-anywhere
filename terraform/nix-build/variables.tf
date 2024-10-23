@@ -14,3 +14,9 @@ variable "nix_options" {
   description = "the options of nix"
   default = {}
 }
+
+variable "extra_build_env_vars" {
+  type = map(string)
+  description = "Extra environment variables to be passed to the build."
+  default = {}
+}

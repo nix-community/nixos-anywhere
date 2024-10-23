@@ -9,6 +9,7 @@ data "external" "nix-build" {
     attribute = var.attribute
     file = var.file
     nix_options = local.nix_options
+    environment = jsonencode(var.extra_build_env_vars)
   }
 }
 output "result" {
