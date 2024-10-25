@@ -134,6 +134,6 @@ variable "nixos_facter_path" {
 
 variable "extra_build_env_vars" {
   type = map(string)
-  description = "Extra environment variables to be passed to the build."
+  description = "Extra environment variables to be passed to the build. If set, evaluation will use `--impure`."
   default = {}
 }
