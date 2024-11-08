@@ -529,7 +529,7 @@ runDisko() {
   local diskoScript=$1
   for path in "${!diskEncryptionKeys[@]}"; do
     step "Uploading ${diskEncryptionKeys[$path]} to $path"
-    runSsh "umask 077; cat > $path" <"${diskEncryptionKeys[$path]}"
+    runSsh "umask 077; mkdir -p \"$(dirname "$path")\"; cat > $path" <"${diskEncryptionKeys[$path]}"
   done
   if [[ -n ${diskoScript} ]]; then
     nixCopy --to "ssh://$sshConnection" "$diskoScript"
