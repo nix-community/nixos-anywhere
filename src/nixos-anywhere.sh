@@ -623,7 +623,9 @@ main() {
   # parse flake nixos-install style syntax, get the system attr
   if [[ -n ${flake} ]]; then
     if [[ ${buildOnRemote} == "n" ]] && [[ ${hardwareConfigBackend} == "none" ]]; then
-      diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script")
+      if [[ ${phases[disko]} == 1 ]]; then
+        diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script")
+      fi
       nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
     fi
   elif [[ -n ${diskoScript} ]] && [[ -n ${nixosSystem} ]]; then
@@ -679,7 +681,9 @@ main() {
   fi
 
   if [[ ${buildOnRemote} == "n" ]] && [[ -n ${flake} ]] && [[ ${hardwareConfigBackend} != "none" ]]; then
-    diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script")
+    if [[ ${phases[disko]} == 1 ]]; then
+      diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script")
+    fi
     nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
   fi
 
