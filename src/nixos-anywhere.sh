@@ -176,7 +176,7 @@ parseArgs() {
         abort "Unknown hardware config backend: $2"
         ;;
       esac
-      hardwareConfigPath=$3
+      hardwareConfigPath="$(realpath "$3")"
       shift
       shift
       ;;
@@ -456,7 +456,9 @@ generateHardwareConfig() {
   # to make sure nix knows about the new file
   if command -v git >/dev/null; then
     pushd "$(dirname "$hardwareConfigPath")"
-    git add --intent-to-add --force -- "$hardwareConfigPath" >/dev/null 2>&1 || true
+    if git rev-parse --is-inside-work-tree >/dev/null; then
+      git add --intent-to-add --force -- "$hardwareConfigPath"
+    fi
     popd
   fi
 }
