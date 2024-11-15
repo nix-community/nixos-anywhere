@@ -600,6 +600,7 @@ if [[ ${phases[reboot]} == 1 ]]; then
   if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
     # we always want to export the zfs pools so people can boot from it without force import
     umount -Rv /mnt/
+    swapoff -a
     zpool export -a || true
   fi
   nohup sh -c 'sleep 6 && reboot' >/dev/null &
