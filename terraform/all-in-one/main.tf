@@ -3,6 +3,7 @@ module "system-build" {
   attribute = var.nixos_system_attr
   file = var.file
   nix_options = var.nix_options
+  extra_build_env_vars = var.extra_build_env_vars
 }
 
 module "partitioner-build" {
@@ -10,6 +11,7 @@ module "partitioner-build" {
   attribute = var.nixos_partitioner_attr
   file = var.file
   nix_options = var.nix_options
+  extra_build_env_vars = var.extra_build_env_vars
 }
 
 locals {
