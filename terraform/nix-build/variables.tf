@@ -14,3 +14,9 @@ variable "nix_options" {
   description = "the options of nix"
   default = {}
 }
+
+variable "special_args" {
+  type = any
+  default = {}
+  description = "A map exposed as NixOS's `specialArgs` thru a file."
+}
