@@ -55,6 +55,7 @@ module "nixos-rebuild" {
   target_host = var.target_host
   target_user = var.target_user
   target_port = var.target_port
+  ssh_options = var.ssh_options
 }
 
 output "result" {

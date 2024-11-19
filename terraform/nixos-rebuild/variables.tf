@@ -20,6 +20,15 @@ variable "target_port" {
   default     = 22
 }
 
+variable "ssh_options" {
+  type        = map(string)
+  description = "Additional options to pass to the SSH command"
+  default     = {
+    UserKnownHostsFile = "/dev/null"
+    StrictHostKeyChecking = "no"
+  }
+}
+
 variable "ssh_private_key" {
   type        = string
   description = "Content of private key used to connect to the target_host. If set to - no key is passed to openssh and ssh will use its own configuration"

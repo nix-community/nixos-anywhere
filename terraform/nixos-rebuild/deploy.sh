@@ -14,14 +14,16 @@ TARGET_PORT=$4
 IGNORE_SYSTEMD_ERRORS=$5
 shift 3
 
-TARGET="${TARGET_USER}@${TARGET_HOST}"
-
 workDir=$(mktemp -d)
 trap 'rm -rf "$workDir"' EXIT
 
-sshOpts=(-p "${TARGET_PORT}")
-sshOpts+=(-o UserKnownHostsFile=/dev/null)
-sshOpts+=(-o StrictHostKeyChecking=no)
+sshConfigFile="$workDir/ssh_config"
+cat >"$sshConfigFile" <<EOF
+Host $TARGET_HOST
+    User $TARGET_USER
+    Port $TARGET_PORT
+$(echo "$SSH_OPTIONS" | jq -r 'to_entries[] | "    \(.key) \(.value)"')
+EOF
 
 set +x
 if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
@@ -32,12 +34,12 @@ if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
     echo "$SSH_KEY" >"$sshPrivateKeyFile"
   )
   unset SSH_AUTH_SOCK # don't use system agent if key was supplied
-  sshOpts+=(-o "IdentityFile=${sshPrivateKeyFile}")
+  echo "    IdentityFile ${sshPrivateKeyFile}" >>"$sshConfigFile"
 fi
 set -x
 
 try=1
-until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --experimental-features nix-command --to "ssh://$TARGET" "$NIXOS_SYSTEM"; do
+until NIX_SSHOPTS="-F $sshConfigFile" nix copy -s --experimental-features nix-command --to "ssh://$TARGET_HOST" "$NIXOS_SYSTEM"; do
   if [[ $try -gt 10 ]]; then
     echo "retries exhausted" >&2
     exit 1
@@ -52,7 +54,7 @@ if [[ $TARGET_USER != "root" ]]; then
 fi
 deploy_status=0
 # shellcheck disable=SC2029
-ssh "${sshOpts[@]}" "$TARGET" "$switchCommand" || deploy_status="$?"
+ssh -F "$sshConfigFile" "$TARGET_HOST" "$switchCommand" || deploy_status="$?"
 if [[ $IGNORE_SYSTEMD_ERRORS == "true" && $deploy_status == "4" ]]; then
   exit 0
 fi
