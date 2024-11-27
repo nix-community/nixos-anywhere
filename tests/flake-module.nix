@@ -20,5 +20,6 @@
       from-nixos-with-sudo-stable = import ./from-nixos-with-sudo.nix testInputsStable;
       from-nixos-with-generated-config = import ./from-nixos-generate-config.nix testInputsUnstable;
       from-nixos-build-on-remote = import ./from-nixos-build-on-remote.nix testInputsUnstable;
+      from-nixos-separated-phases = import ./from-nixos-separated-phases.nix testInputsUnstable;
     });
 }

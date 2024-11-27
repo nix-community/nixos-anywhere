@@ -367,10 +367,15 @@ runVmTest() {
 }
 
 uploadSshKey() {
-  # we generate a temporary ssh keypair that we can use during nixos-anywhere
   # ssh-copy-id requires this directory
   mkdir -p "$HOME/.ssh/"
-  ssh-keygen -t ed25519 -f "$sshKeyDir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
+  if [[ -n ${sshPrivateKeyFile} ]]; then
+    cp "$sshPrivateKeyFile" "$sshKeyDir/nixos-anywhere"
+    ssh-keygen -y -f "$sshKeyDir/nixos-anywhere" >"$sshKeyDir/nixos-anywhere.pub"
+  else
+    # we generate a temporary ssh keypair that we can use during nixos-anywhere
+    ssh-keygen -t ed25519 -f "$sshKeyDir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
+  fi
 
   declare -a sshCopyIdArgs
   if [[ -n ${sshPrivateKeyFile} ]]; then
