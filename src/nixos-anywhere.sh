@@ -313,6 +313,11 @@ parseArgs() {
       echo 'For example, to use the output nixosConfigurations.foo from the flake.nix, append "#foo" to the flake-uri.' >&2
       exit 1
     fi
+
+    # Support .#foo shorthand
+    if [[ $flakeAttr != nixosConfigurations.* ]]; then
+      flakeAttr="nixosConfigurations.\"$flakeAttr\".config"
+    fi
   fi
 
 }
@@ -363,7 +368,7 @@ runVmTest() {
     --no-link \
     -L \
     "${nixOptions[@]}" \
-    "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.installTest"
+    "${flake}#${flakeAttr}.system.build.installTest"
 }
 
 uploadSshKey() {
@@ -539,11 +544,11 @@ runDisko() {
     step Building disko script
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
-    nixCopy --to "ssh://$sshConnection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script" \
+    nixCopy --to "ssh://$sshConnection" "${flake}#${flakeAttr}.system.build.${diskoMode}Script" \
       --derivation --no-check-sigs
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     diskoScript=$(
-      nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script" \
+      nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script" \
         --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$sshKeyDir/nixos-anywhere"
     )
   fi
@@ -561,11 +566,11 @@ nixosInstall() {
     step Building the system closure
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
-    nixCopy --to "ssh://$sshConnection?remote-store=local?root=/mnt" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
+    nixCopy --to "ssh://$sshConnection?remote-store=local?root=/mnt" "${flake}#${flakeAttr}.system.build.toplevel" \
       --derivation --no-check-sigs
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     nixosSystem=$(
-      nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
+      nixBuild "${flake}#${flakeAttr}.system.build.toplevel" \
         --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$sshKeyDir/nixos-anywhere&remote-store=local?root=/mnt"
     )
   fi
@@ -626,9 +631,9 @@ main() {
   if [[ -n ${flake} ]]; then
     if [[ ${buildOnRemote} == "n" ]] && [[ ${hardwareConfigBackend} == "none" ]]; then
       if [[ ${phases[disko]} == 1 ]]; then
-        diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script")
+        diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script")
       fi
-      nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
+      nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
     fi
   elif [[ -n ${diskoScript} ]] && [[ -n ${nixosSystem} ]]; then
     if [[ ! -e ${diskoScript} ]] || [[ ! -e ${nixosSystem} ]]; then
@@ -684,9 +689,9 @@ main() {
 
   if [[ ${buildOnRemote} == "n" ]] && [[ -n ${flake} ]] && [[ ${hardwareConfigBackend} != "none" ]]; then
     if [[ ${phases[disko]} == 1 ]]; then
-      diskoScript=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.${diskoMode}Script")
+      diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script")
     fi
-    nixosSystem=$(nixBuild "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
+    nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
   fi
 
   # Installation will fail if non-root user is used for installer.
