@@ -101,7 +101,7 @@ nix flake lock
 ```
 
 This will download your flake dependencies and make a `flake.lock` file that
-describes how to reproducably build your system.
+describes how to reproducibly build your system.
 
 Optionally, you can commit these files to a repo such as Github, or you can
 simply reference your local directory when you run **nixos-anywhere**. This
