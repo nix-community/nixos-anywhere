@@ -20,8 +20,7 @@ workDir=$(mktemp -d)
 trap 'rm -rf "$workDir"' EXIT
 
 sshOpts=(-p "${TARGET_PORT}")
-sshOpts+=(-o UserKnownHostsFile=/dev/null)
-sshOpts+=(-o StrictHostKeyChecking=no)
+sshOpts+=($SSH_OPTIONS)
 
 set +x
 if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
