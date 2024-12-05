@@ -62,12 +62,14 @@ declare -a sshArgs=()
 
 showUsage() {
   cat <<USAGE
-Usage: nixos-anywhere [options] <ssh-host>
+Usage: nixos-anywhere [options] [<ssh-host>]
 
 Options:
 
 * -f, --flake <flake_uri>
   set the flake to install the system from.
+* --target-host <ssh-host>
+  specified the SSH target host to deploy onto.
 * -i <identity_file>
   selects which SSH private key file to use.
 * -p, --ssh-port <ssh_port>
@@ -141,6 +143,10 @@ parseArgs() {
     case "$1" in
     -f | --flake)
       flake=$2
+      shift
+      ;;
+    --target-host)
+      sshConnection=$2
       shift
       ;;
     -i)
