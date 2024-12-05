@@ -35,7 +35,7 @@ pass ssh_host_ed25519_key > "$temp/etc/ssh/ssh_host_ed25519_key"
 chmod 600 "$temp/etc/ssh/ssh_host_ed25519_key"
 
 # Install NixOS to the host system with our secrets
-nixos-anywhere --extra-files "$temp" --flake '.#your-host' root@yourip
+nixos-anywhere --extra-files "$temp" --flake '.#your-host' --target-host root@yourip
 ```
 
 ## Example: Uploading Disk Encryption Secrets

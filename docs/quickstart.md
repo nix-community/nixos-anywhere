@@ -217,7 +217,7 @@ You can now run **nixos-anywhere** from the command line as shown below, where:
 - `<ip address>` is the IP address of the target machine.
 
 ```
-nix run github:nix-community/nixos-anywhere -- --flake <path to configuration>#<configuration name> root@<ip address>
+nix run github:nix-community/nixos-anywhere -- --flake <path to configuration>#<configuration name> --target-host root@<ip address>
 ```
 
 The command would look  like this if you had created your files in a directory
@@ -225,20 +225,20 @@ named `/home/mydir/test` and the IP address of your target machine is
 `37.27.18.135`:
 
 ```
-nix run github:nix-community/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud root@37.27.18.135
+nix run github:nix-community/nixos-anywhere -- --flake /home/mydir/test#hetzner-cloud --target-host root@37.27.18.135
 ```
 
 If you also need to generate hardware configuration amend flags for
 nixos-generate-config:
 
 ```
-nix run github:nix-community/nixos-anywhere -- --generate-hardware-config nixos-generate-config ./hardware-configuration.nix --flake <path to configuration>#<configuration name> root@<ip address>
+nix run github:nix-community/nixos-anywhere -- --generate-hardware-config nixos-generate-config ./hardware-configuration.nix --flake <path to configuration>#<configuration name> --target-host root@<ip address>
 ```
 
 Or these flags if you are using nixos-facter instead:
 
 ```
-nix run github:nix-community/nixos-anywhere -- --generate-hardware-config nixos-facter ./facter.json  --flake <path to configuration>#<configuration name> root@<ip address>
+nix run github:nix-community/nixos-anywhere -- --generate-hardware-config nixos-facter ./facter.json  --flake <path to configuration>#<configuration name> --target-host root@<ip address>
 ```
 
 Adjust the location of `./hardware-configuration.nix` and `./facter.json`

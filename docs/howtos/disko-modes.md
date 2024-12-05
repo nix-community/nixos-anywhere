@@ -10,7 +10,7 @@ To only mount existing filesystems, add `--disko-mode mount` to
 `nixos-anywhere`:
 
 ```
-nix run github:nix-community/nixos-anywhere -- --disko-mode mount --flake <path to configuration>#<configuration name> root@<ip address>
+nix run github:nix-community/nixos-anywhere -- --disko-mode mount --flake <path to configuration>#<configuration name> --target-host root@<ip address>
 ```
 
 1. This will first boot into a nixos-installer
