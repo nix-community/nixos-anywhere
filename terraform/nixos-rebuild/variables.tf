@@ -21,12 +21,12 @@ variable "target_port" {
 }
 
 variable "ssh_options" {
-  type        = map(string)
+  type        = list(string)
   description = "Additional options to pass to the SSH command"
-  default     = {
-    UserKnownHostsFile = "/dev/null"
-    StrictHostKeyChecking = "no"
-  }
+  default     = [
+    "-o UserKnownHostsFile=/dev/null",
+    "-o StrictHostKeyChecking=no"
+  ]
 }
 
 variable "ssh_private_key" {
