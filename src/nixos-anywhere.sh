@@ -577,7 +577,7 @@ nixosInstall() {
 
   if [[ -n ${extraFiles} ]]; then
     step Copying extra files
-    tar -C "$extraFiles" -cpf- . | runSsh "${maybeSudo} tar -C /mnt -xf- --no-same-owner"
+    tar -C "$extraFiles" -cpf- . | runSsh "tar -C /mnt -xf- --no-same-owner"
     runSsh "chmod 755 /mnt" # tar also changes permissions of /mnt
   fi
 
