@@ -222,7 +222,7 @@ SSH command (replace the IP address with your own):</p>
 <pre><code>ssh -v nixos@fec0::5054:ff:fe12:3456
 </code></pre>
 <p>You can then use the IP address to run <code>nixos-anywhere</code> like this:</p>
-<pre><code>nix run github:nix-community/nixos-anywhere -- --flake '.#myconfig' nixos@fec0::5054:ff:fe12:3456
+<pre><code>nix run github:nix-community/nixos-anywhere -- --flake '.#myconfig' --target-host nixos@fec0::5054:ff:fe12:3456
 </code></pre>
 <p>This example assumes a flake in the current directory containing a configuration
 named <code>myconfig</code>.</p>
