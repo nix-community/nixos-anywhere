@@ -67,7 +67,10 @@ Usage: nixos-anywhere [options] [<ssh-host>]
 Options:
 
 * -f, --flake <flake_uri>
-  set the flake to install the system from.
+  set the flake to install the system from. i.e.
+  nixos-anywhere --flake .#mymachine
+  Also supports variants:
+  nixos-anywhere --flake .#nixosConfigurations.mymachine.config.virtualisation.vmVariant
 * --target-host <ssh-host>
   specified the SSH target host to deploy onto.
 * -i <identity_file>
