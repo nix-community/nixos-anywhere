@@ -40,8 +40,8 @@ same directory as `disko-config.nix`.
 ```nix
 # default.nix
 let
-  # replace nixos-24.05 with your preferred nixos version or revision from here: https://status.nixos.org/
-  nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/archive/refs/heads/nixos-24.05.tar.gz";
+  # replace nixos-24.11 with your preferred nixos version or revision from here: https://status.nixos.org/
+  nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/archive/refs/heads/nixos-24.11.tar.gz";
 in
 import (nixpkgs + "/nixos/lib/eval-config.nix") {
   modules = [ ./configuration.nix ];
@@ -63,7 +63,7 @@ import (nixpkgs + "/nixos/lib/eval-config.nix") {
 
   # Set this to the NixOS version that you have set in the previous step.
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "24.05";
+  system.stateVersion = "24.11";
 }
 ```
 

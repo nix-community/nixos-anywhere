@@ -67,7 +67,10 @@ Usage: nixos-anywhere [options] [<ssh-host>]
 Options:
 
 * -f, --flake <flake_uri>
-  set the flake to install the system from.
+  set the flake to install the system from. i.e.
+  nixos-anywhere --flake .#mymachine
+  Also supports variants:
+  nixos-anywhere --flake .#nixosConfigurations.mymachine.config.virtualisation.vmVariant
 * --target-host <ssh-host>
   specified the SSH target host to deploy onto.
 * -i <identity_file>
@@ -486,7 +489,7 @@ runKexec() {
   if [[ $kexecUrl == "" ]]; then
     case "${isArch}" in
     x86_64 | aarch64)
-      kexecUrl="https://github.com/nix-community/nixos-images/releases/download/nixos-24.05/nixos-kexec-installer-noninteractive-${isArch}-linux.tar.gz"
+      kexecUrl="https://github.com/nix-community/nixos-images/releases/download/nixos-24.11/nixos-kexec-installer-noninteractive-${isArch}-linux.tar.gz"
       ;;
     *)
       abort "Unsupported architecture: ${isArch}. Our default kexec images only support x86_64 and aarch64 cpus. Checkout https://github.com/nix-community/nixos-anywhere/#using-your-own-kexec-image for more information."
