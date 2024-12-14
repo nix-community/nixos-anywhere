@@ -51,6 +51,15 @@ variable "target_port" {
   default     = 22
 }
 
+variable "ssh_options" {
+  type        = map(string)
+  description = "Additional options to pass to the SSH command used to connect to the target_host after installing NixOS."
+  default     = {
+    UserKnownHostsFile = "/dev/null"
+    StrictHostKeyChecking = "no"
+  }
+}
+
 variable "instance_id" {
   type        = string
   description = "The instance id of the target_host, used to track when to reinstall the machine"
