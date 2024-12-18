@@ -73,7 +73,7 @@ Options:
   Also supports variants:
   nixos-anywhere --flake .#nixosConfigurations.mymachine.config.virtualisation.vmVariant
 * --target-host <ssh-host>
-  specified the SSH target host to deploy onto.
+  set the SSH target host to deploy onto.
 * -i <identity_file>
   selects which SSH private key file to use.
 * -p, --ssh-port <ssh_port>
@@ -333,6 +333,9 @@ parseArgs() {
 }
 
 # ssh wrapper
+runSshNoTty() {
+  ssh -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
+}
 runSshTimeout() {
   timeout 10 ssh -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
 }
@@ -449,19 +452,18 @@ generateHardwareConfig() {
   nixos-facter)
     if [[ ${isInstaller} == "y" ]]; then
       if [[ ${hasNixOSFacter} == "n" ]]; then
-        abort "nixos-facter is not available in booted installer. You may want to boot an installer image from here instead: https://github.com/nix-community/nixos-images"
+        abort "nixos-facter is not available in booted installer, use nixos-generate-config. For nixos-facter, you may want to boot an installer image from here instead: https://github.com/nix-community/nixos-images"
       fi
     else
       maybeSudo=""
     fi
 
     step "Generating hardware-configuration.nix using nixos-facter"
-    # FIXME: if we take the output directly it adds some weird characters at the beginning
-    runSsh -o ConnectTimeout=10 ${maybeSudo} "nixos-facter" >"$hardwareConfigPath"
+    runSshNoTty -o ConnectTimeout=10 ${maybeSudo} "nixos-facter" >"$hardwareConfigPath"
     ;;
   nixos-generate-config)
     step "Generating hardware-configuration.nix using nixos-generate-config"
-    runSsh -o ConnectTimeout=10 nixos-generate-config --show-hardware-config --no-filesystems >"$hardwareConfigPath"
+    runSshNoTty -o ConnectTimeout=10 nixos-generate-config --show-hardware-config --no-filesystems >"$hardwareConfigPath"
     ;;
   *)
     abort "Unknown hardware config backend: $hardwareConfigBackend"
