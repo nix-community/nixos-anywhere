@@ -448,7 +448,7 @@ generateHardwareConfig() {
   nixos-facter)
     if [[ ${isInstaller} == "y" ]]; then
       if [[ ${hasNixOSFacter} == "n" ]]; then
-        abort "nixos-facter is not available in booted installer. You may want to boot an installer image from here instead: https://github.com/nix-community/nixos-images"
+        abort "nixos-facter is not available in booted installer, use nixos-generate-config. For nixos-facter, you may want to boot an installer image from here instead: https://github.com/nix-community/nixos-images"
       fi
     else
       maybeSudo=""
@@ -456,11 +456,11 @@ generateHardwareConfig() {
 
     step "Generating hardware-configuration.nix using nixos-facter"
     # FIXME: if we take the output directly it adds some weird characters at the beginning
-    runSsh -o ConnectTimeout=10 ${maybeSudo} "nixos-facter" >"$hardwareConfigPath"
+    runSsh -o ConnectTimeout=10 "stty nl; ${maybeSudo} nixos-facter" >"$hardwareConfigPath"
     ;;
   nixos-generate-config)
     step "Generating hardware-configuration.nix using nixos-generate-config"
-    runSsh -o ConnectTimeout=10 nixos-generate-config --show-hardware-config --no-filesystems >"$hardwareConfigPath"
+    runSsh -o ConnectTimeout=10 "stty nl; nixos-generate-config --show-hardware-config --no-filesystems" >"$hardwareConfigPath"
     ;;
   *)
     abort "Unknown hardware config backend: $hardwareConfigBackend"
