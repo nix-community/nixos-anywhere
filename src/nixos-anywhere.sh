@@ -45,6 +45,7 @@ isInstaller=
 isContainer=
 hasIpv6Only=
 hasTar=
+hasCpio=
 hasSudo=
 hasDoas=
 hasWget=
@@ -434,7 +435,7 @@ importFacts() {
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
-  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
@@ -671,6 +672,10 @@ main() {
 
   if [[ ${hasTar-n} == "n" ]]; then
     abort "no tar command found, but required to unpack kexec tarball"
+  fi
+
+  if [[ ${hasCpio-n} == "n" ]]; then
+    abort "no cpio command found, but required to build the new initrd"
   fi
 
   if [[ ${hasSetsid-n} == "n" ]]; then
