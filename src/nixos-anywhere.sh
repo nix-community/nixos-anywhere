@@ -570,16 +570,16 @@ nixosInstall() {
   local nixosSystem=$1
   if [[ -n ${nixosSystem} ]]; then
     step Uploading the system closure
-    nixCopy --to "ssh://$sshConnection?remote-store=local?root=/mnt" "$nixosSystem"
+    nixCopy --substituters / --to "ssh://$sshConnection?remote-store=local?root=/mnt" "$nixosSystem"
   elif [[ ${buildOnRemote} == "y" ]]; then
     step Building the system closure
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
-    nixCopy --to "ssh://$sshConnection?remote-store=local?root=/mnt" "${flake}#${flakeAttr}.system.build.toplevel" \
+    nixCopy --substituters / --to "ssh://$sshConnection?remote-store=local?root=/mnt" "${flake}#${flakeAttr}.system.build.toplevel" \
       --derivation --no-check-sigs
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     nixosSystem=$(
-      nixBuild "${flake}#${flakeAttr}.system.build.toplevel" \
+      nixBuild --substituters / "${flake}#${flakeAttr}.system.build.toplevel" \
         --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$sshKeyDir/nixos-anywhere&remote-store=local?root=/mnt"
     )
   fi
