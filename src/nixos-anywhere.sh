@@ -60,6 +60,7 @@ trap 'rm -rf "$sshKeyDir"' EXIT
 mkdir -p "$sshKeyDir"
 
 declare -A diskEncryptionKeys=()
+declare -A extraFilesOwnership=()
 declare -a nixCopyOptions=()
 declare -a sshArgs=()
 
@@ -254,6 +255,11 @@ parseArgs() {
       ;;
     --extra-files)
       extraFiles=$2
+      shift
+      ;;
+    --chown)
+      extraFilesOwnership["$2"]="$3"
+      shift
       shift
       ;;
     --disk-encryption-keys)
@@ -667,7 +673,13 @@ nixosInstall() {
   if [[ -n ${extraFiles} ]]; then
     step Copying extra files
     tar -C "$extraFiles" -cpf- . | runSsh "tar -C /mnt -xf- --no-same-owner"
+
     runSsh "chmod 755 /mnt" # tar also changes permissions of /mnt
+  fi
+
+  if [[ ${#extraFilesOwnership[@]} -gt 0 ]]; then
+    # shellcheck disable=SC2016
+    printf "%s\n" "${!extraFilesOwnership[@]}" "${extraFilesOwnership[@]}" | pr -2t | runSsh 'while read file ownership; do chown -R "$ownership" "/mnt/$file"; done'
   fi
 
   step Installing NixOS
