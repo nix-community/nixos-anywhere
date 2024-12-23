@@ -13,6 +13,7 @@ isInstaller=$(if [ "$isNixos" = "y" ] && grep -Eq 'VARIANT_ID="?installer"?' /et
 isContainer=$(if [ "$(has systemd-detect-virt)" = "y" ]; then systemd-detect-virt --container; else echo "none"; fi)
 hasIpv6Only=$(if [ "$(has ip)" = "n" ] || ip r g 1 >/dev/null 2>/dev/null || ! ip -6 r g :: >/dev/null 2>/dev/null; then echo "n"; else echo "y"; fi)
 hasTar=$(has tar)
+hasCpio=$(has cpio)
 hasSudo=$(has sudo)
 hasDoas=$(has doas)
 hasWget=$(has wget)

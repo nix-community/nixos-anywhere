@@ -45,6 +45,7 @@ isInstaller=
 isContainer=
 hasIpv6Only=
 hasTar=
+hasCpio=
 hasSudo=
 hasDoas=
 hasWget=
@@ -96,8 +97,8 @@ Options:
 * --copy-host-keys
   copy over existing /etc/ssh/ssh_host_* host keys to the installation
 * --extra-files <path>
-  path to a directory to copy into the root of the new nixos installation.
-  Copied files will be owned by root.
+  contents of local <path> are recursively copied to the root (/) of the new NixOS installation. Existing files are overwritten
+  Copied files will be owned by root. See documentation for details.
 * --disk-encryption-keys <remote_path> <local_path>
   copy the contents of the file or pipe in local_path to remote_path in the installer environment,
   after kexec but before installation. Can be repeated.
@@ -437,7 +438,7 @@ importFacts() {
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
-  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
@@ -673,6 +674,10 @@ main() {
 
   if [[ ${hasTar-n} == "n" ]]; then
     abort "no tar command found, but required to unpack kexec tarball"
+  fi
+
+  if [[ ${hasCpio-n} == "n" ]]; then
+    abort "no cpio command found, but required to build the new initrd"
   fi
 
   if [[ ${hasSetsid-n} == "n" ]]; then

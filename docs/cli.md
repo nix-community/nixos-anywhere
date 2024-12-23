@@ -36,8 +36,8 @@ Options:
 * --stop-after-disko
   exit after disko formatting, you can then proceed to install manually or some other way
 * --extra-files <path>
-  path to a directory to copy into the root of the new nixos installation.
-  Copied files will be owned by root.
+  contents of local <path> are recursively copied to the root (/) of the new NixOS installation. Existing files are overwritten
+  Copied files will be owned by root. See documentation for details.
 * --disk-encryption-keys <remote_path> <local_path>
   copy the contents of the file or pipe in local_path to remote_path in the installer environment,
   after kexec but before installation. Can be repeated.

@@ -10,6 +10,8 @@
 
 [Installing on a machine with no operating system](./no-os.md)
 
+[Copying files to the new installation](./extra-files.md)
+
 [Using your own kexec image](./custom-kexec.md)
 
 [Repair installations without wiping data](./disko-modes.md)
