@@ -28,7 +28,7 @@ if [[ $unpushed_commits != "" ]]; then
   echo -e "\nThere are unpushed changes, exiting:\n$unpushed_commits" >&2
   exit 1
 fi
-sed -i -e "s!version = \".*\"\$!version = \"${version}\"!" default.nix
+sed -i -e "s!version = \".*\"\$!version = \"${version}\"!" src/default.nix
 git add src/default.nix
 nix-shell -p nix-fast-build --command "nix-fast-build --eval-workers 2"
 git commit -m "bump version ${version}"
