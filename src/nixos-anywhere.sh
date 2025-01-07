@@ -50,6 +50,7 @@ hasTar=
 hasCpio=
 hasSudo=
 hasDoas=
+hasRun0=
 hasWget=
 hasCurl=
 hasSetsid=
@@ -474,7 +475,7 @@ importFacts() {
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
-  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasRun0 hasWget hasCurl hasSetsid; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
@@ -772,6 +773,8 @@ main() {
     maybeSudo="sudo"
   elif [[ ${hasDoas-n} == "y" ]]; then
     maybeSudo="doas"
+  elif [[ ${hasRun0-n} == "y" ]]; then
+    maybeSudo="run0"
   fi
 
   if [[ ${isOs} != "Linux" ]]; then
