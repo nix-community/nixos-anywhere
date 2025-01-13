@@ -297,7 +297,8 @@ reference this flake when using the NixOS `nixos-rebuild` command or a separate
 3rd party deployment tool of your choice i.e.
 [deploy-rs](https://github.com/serokell/deploy-rs),
 [colmena](https://github.com/zhaofengli/colmena),
-[nixinate](https://github.com/MatthewCroughan/nixinate).
+[nixinate](https://github.com/MatthewCroughan/nixinate),
+[clan](https://clan.lol/) (author's choice).
 
 To update on the machine locally (replace `<URL to your flake>` with your flake
 i.e. `.#` if your flake is in the current directory):
