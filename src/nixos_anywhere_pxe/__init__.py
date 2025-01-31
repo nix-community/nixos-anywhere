@@ -238,6 +238,7 @@ def start_pixiecore(
 class Options:
     flake: str
     netboot_image_flake: str
+    skip_firewall: bool
     dhcp_interface: str
     dhcp_server_ip: ipaddress.IPv4Address
     dhcp_subnet: int
@@ -245,6 +246,50 @@ class Options:
     pixiecore_http_port: int
     pause_after_completion: bool
     nixos_anywhere_args: list[str]
+
+
+@contextmanager
+def open_firewall(options: Options) -> Iterator[None]:
+    if options.skip_firewall:
+        yield
+        return
+
+    ports = [
+        [p]
+        for p in [f"tcp/{options.pixiecore_http_port}", "67/udp", "69/udp", "4011/udp"]
+    ]
+    if shutil.which("nixos-firewall-tool") is not None:
+        command_prefix = ["nixos-firewall-tool", "open"]
+        ports = [
+            ["tcp", str(options.pixiecore_http_port)],
+            ["udp", "67"],
+            ["udp", "69"],
+            ["udp", "4011"],
+        ]
+        reset_command = ["nixos-firewall-tool", "reset"]
+    elif shutil.which("ufw") is not None:
+        command_prefix = ["ufw", "allow"]
+        reset_command = ["ufw", "reload"]
+    elif shutil.which("firewall-cmd") is not None:
+        command_prefix = ["firewall-cmd", "--add-port"]
+        reset_command = ["firewall-cmd", "--reload"]
+    else:
+        print(
+            f"No firewall tool found. Please make sure that the following ports are open: 67/udp, 69/udp, 4011/udp, and {options.pixiecore_http_port}/tcp",
+            file=sys.stderr,
+        )
+        yield
+        return
+
+    try:
+        for port in ports:
+            subprocess.run([*command_prefix, *port], check=True)
+        yield
+    finally:
+        if subprocess.run(reset_command, check=True).returncode != 0:
+            print(
+                "failed to reset firewall rules, see above for details", file=sys.stderr
+            )
 
 
 def die(msg: str) -> NoReturn:
@@ -287,6 +332,11 @@ def parse_args(args: list[str]) -> Options:
         help="Whether to wait for user confirmation before tearing down the network setup once the installation completed",
         action="store_true",
     )
+    parser.add_argument(
+        "--skip-firewall",
+        help="Skip opening firewall ports",
+        action="store_true",
+    )
 
     parsed, unknown_args = parser.parse_known_args(args)
     try:
@@ -318,6 +368,7 @@ def parse_args(args: list[str]) -> Options:
 
     return Options(
         flake=parsed.flake,
+        skip_firewall=parsed.skip_firewall,
         netboot_image_flake=parsed.netboot_image_flake,
         dhcp_server_ip=dhcp_server_ip,
         dhcp_subnet=dhcp_subnet.prefixlen,
@@ -464,6 +515,7 @@ def run_nixos_anywhere(options: Options) -> None:
             f"{options.dhcp_server_ip}/{options.dhcp_subnet}",
         ),
         ssh_private_key() as ssh_key,
+        open_firewall(options),
         start_pixiecore(
             options.dhcp_server_ip,
             options.pixiecore_http_port,
