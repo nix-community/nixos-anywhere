@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 import time
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -246,6 +246,7 @@ class Options:
     pixiecore_http_port: int
     pause_after_completion: bool
     nixos_anywhere_args: list[str]
+    private_key: Path | None = None
 
 
 @contextmanager
@@ -337,6 +338,12 @@ def parse_args(args: list[str]) -> Options:
         help="Skip opening firewall ports",
         action="store_true",
     )
+    parser.add_argument(
+        "-i",
+        "--private-key",
+        help="Path to private key to use for ssh connection to target machine",
+        type=Path,
+    )
 
     parsed, unknown_args = parser.parse_known_args(args)
     try:
@@ -377,6 +384,7 @@ def parse_args(args: list[str]) -> Options:
         pixiecore_http_port=parsed.pixiecore_http_port,
         pause_after_completion=parsed.pause_after_completion,
         nixos_anywhere_args=unknown_args,
+        private_key=parsed.private_key,
     )
 
 
@@ -411,12 +419,13 @@ def nixos_anywhere(
         "-L",
         # do not substitute because we do not have internet and copying locally is faster.
         "--no-substitute-on-destination",
+        "-i",
+        ssh_private_key,
         ip,
         *nixos_anywhere_args,
     ]
     run(
         cmd,
-        extra_env=dict(SSH_PRIVATE_KEY=ssh_private_key.read_text()),
         check=False,
     )
     print("If the installation failed, you may run the install command manually again:")
@@ -509,22 +518,36 @@ def run_nixos_anywhere(options: Options) -> None:
     pxe_image_store_path = build_pxe_image(options.netboot_image_flake)
 
     random_hostname = f"nixos-pxe-{binascii.b2a_hex(os.urandom(4)).decode('ascii')}"
-    with (
-        configure_network_interface(
-            options.dhcp_interface,
-            f"{options.dhcp_server_ip}/{options.dhcp_subnet}",
-        ),
-        ssh_private_key() as ssh_key,
-        open_firewall(options),
-        start_pixiecore(
-            options.dhcp_server_ip,
-            options.pixiecore_http_port,
-            ssh_key.public_key,
-            pxe_image_store_path,
-            random_hostname,
-        ),
-        start_dnsmasq(options.dhcp_interface, options.dhcp_range) as dnsmasq,
-    ):
+
+    subprocess.run(["nixos-rebuild", "build", "--flake", options.flake], check=True)
+
+    with ExitStack() as stack:
+        stack.enter_context(
+            configure_network_interface(
+                options.dhcp_interface,
+                f"{options.dhcp_server_ip}/{options.dhcp_subnet}",
+            )
+        )
+        if options.private_key is None:
+            ssh_key = stack.enter_context(ssh_private_key())
+        else:
+            ssh_key = SshKey(
+                private_key=options.private_key,
+                public_key=options.private_key.with_suffix(".pub"),
+            )
+        stack.enter_context(open_firewall(options))
+        stack.enter_context(
+            start_pixiecore(
+                options.dhcp_server_ip,
+                options.pixiecore_http_port,
+                ssh_key.public_key,
+                pxe_image_store_path,
+                random_hostname,
+            )
+        )
+        dnsmasq = stack.enter_context(
+            start_dnsmasq(options.dhcp_interface, options.dhcp_range)
+        )
         print("Waiting for a client to install nixos to. Cancel with Ctrl-C!")
         try:
             dispatch_dnsmasq(dnsmasq, options, ssh_key, random_hostname)
