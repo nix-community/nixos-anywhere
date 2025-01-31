@@ -113,7 +113,9 @@ example uses a local directory on the source machine.
 If your SSH key is not found, you will be asked for your password. If you are
 using a non-root user, you must have access to sudo without a password. To avoid
 SSH password prompts, set the `SSHPASS` environment variable to your password
-and add `--env-password` to the `nixos-anywhere` command.
+and add `--env-password` to the `nixos-anywhere` command. If providing a
+specific SSH key through `-i` (identity_file), this key will then be used for
+the installation and no temporary SSH key will be created.
 
 ### 7. (Optional) Test your NixOS and Disko configuration
 
