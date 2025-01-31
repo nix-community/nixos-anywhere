@@ -311,7 +311,9 @@ example uses a local directory on the source machine.</p>
 If your SSH key is not found, you will be asked for your password. If you are
 using a non-root user, you must have access to sudo without a password. To avoid
 SSH password prompts, set the <code>SSHPASS</code> environment variable to your password
-and add <code>--env-password</code> to the <code>nixos-anywhere</code> command.</p>
+and add <code>--env-password</code> to the <code>nixos-anywhere</code> command. If providing a
+specific SSH key through <code>-i</code> (identity_file), this key will then be used for
+the installation and no temporary SSH key will be created.</p>
 <h3 id="7-optional-test-your-nixos-and-disko-configuration"><a class="header" href="#7-optional-test-your-nixos-and-disko-configuration">7. (Optional) Test your NixOS and Disko configuration</a></h3>
 <p>Skip this step and continue with Step 8, if you don't have a hardware
 configuration (hardware-configuration.nix or facter.json) generated yet or make
