@@ -15,9 +15,6 @@
    - NixOS
    - Windows systems using WSL2.
 
-   _Note_: Should be able to build nix derivations for the target platform.
-   Otherwise `--build-on-remote` can be used.
-
 2. **Nix Installation:** If Nix is not yet installed on your system, refer to
    the [nix installation page](https://nixos.org/download#download-nix).
 
