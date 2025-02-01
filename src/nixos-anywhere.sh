@@ -12,6 +12,7 @@ diskoMode="disko"
 nixosSystem=""
 extraFiles=""
 vmTest="n"
+swapoff="n"
 nixOptions=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
@@ -117,6 +118,8 @@ Options:
 * --generate-hardware-config nixos-facter|nixos-generate-config <path>
   generate a hardware-configuration.nix file using the specified backend and write it to the specified path.
   The backend can be either 'nixos-facter' or 'nixos-generate-config'.
+* --swapoff
+  turn off swap devices during reboot phase. Enable this if creating a ZFS swap device so it is exported.
 * --phases
   comma separated list of phases to run. Default is: kexec,disko,install,reboot
   kexec: kexec into the nixos installer
@@ -288,6 +291,9 @@ parseArgs() {
       ;;
     --vm-test)
       vmTest=y
+      ;;
+    --swapoff)
+      swapoff=y
       ;;
     *)
       if [[ -z ${sshConnection} ]]; then
@@ -624,7 +630,9 @@ if [[ ${phases[reboot]} == 1 ]]; then
   if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
     # we always want to export the zfs pools so people can boot from it without force import
     umount -Rv /mnt/
-    swapoff -a
+    if [[ ${swapoff} == "y" ]]; then
+      swapoff -a
+    fi
     zpool export -a || true
   fi
   nohup sh -c 'sleep 6 && reboot' >/dev/null &

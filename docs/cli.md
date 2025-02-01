@@ -53,4 +53,6 @@ Options:
   build the closure on the remote machine instead of locally and copy-closuring it
 * --vm-test
   build the system and test the disk configuration inside a VM without installing it to the target.
+* --swapoff
+  turn off swap devices during reboot phase. Enable this if creating a ZFS swap device so it is exported.
 ```
