@@ -87,7 +87,7 @@ with `ln -s` by default. It does not follow them to copy the underlying file.
 
 **NOTE**: hard links can only be created on the same filesystem.
 
-If you have larger peristent data to copy to the target. GNU `tar` will copy
+If you have larger persistent data to copy to the target. GNU `tar` will copy
 data referenced by hard links created with `ln`. A hard link does not create
 another copy the data.
 
