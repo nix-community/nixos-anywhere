@@ -21,7 +21,7 @@ let
       ;
   };
 
-  package = python3.pkgs.buildPythonPackage {
+  package = python3.pkgs.buildPythonApplication {
     name = "nixos-anywhere-pxe";
     inherit src;
     format = "pyproject";
