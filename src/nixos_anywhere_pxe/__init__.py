@@ -6,6 +6,7 @@ import gzip
 import ipaddress
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -21,13 +22,11 @@ if TYPE_CHECKING:
 
 FILE = None | int | IO
 
-# use nixos-anywhere if available, else use unpackaged shell script for development
-NIXOS_ANYWHERE_SH = shutil.which("nixos-anywhere")
-if NIXOS_ANYWHERE_SH is not None:
-    # i prefer not having huge nix-store paths in the logs
-    NIXOS_ANYWHERE_SH = "nixos-anywhere"
-else:
-    NIXOS_ANYWHERE_SH = Path(__file__).parent.absolute() / "src/nixos-anywhere.sh"
+# If we are running from a local checkout, use the local nixos-anywhere.sh otherwise use the installed one.
+NIXOS_ANYWHERE_SH = "nixos-anywhere"
+LOCAL_NIXOS_ANYWHERE_SH = Path(__file__).parent.absolute() / "src/nixos-anywhere.sh"
+if not LOCAL_NIXOS_ANYWHERE_SH.exists():
+    NIXOS_ANYWHERE_SH = str(LOCAL_NIXOS_ANYWHERE_SH)
 
 
 def run(
@@ -45,7 +44,7 @@ def run(
     if isinstance(cmd, str):
         cmd = [cmd]
         shell = True
-    displayed_cmd = " ".join(cmd)
+    displayed_cmd = shlex.join(cmd)
     print(f"$ {displayed_cmd}")
     env = os.environ.copy()
     env.update(extra_env)
@@ -413,23 +412,26 @@ def nixos_anywhere(
     cmd = [
         # FIXME: path
         "bash",
-        str(NIXOS_ANYWHERE_SH),
+        NIXOS_ANYWHERE_SH,
         "--flake",
         flake,
         "-L",
         # do not substitute because we do not have internet and copying locally is faster.
         "--no-substitute-on-destination",
         "-i",
-        ssh_private_key,
+        str(ssh_private_key),
         ip,
         *nixos_anywhere_args,
     ]
-    run(
+    rc = run(
         cmd,
         check=False,
     )
-    print("If the installation failed, you may run the install command manually again:")
-    print(f"{cmd} -i {ssh_private_key.read_text()}")
+    if rc.returncode != 0:
+        print(
+            "The installation failed, you may run the install command manually again:"
+        )
+        print(f"{cmd} -i {ssh_private_key}")
 
 
 @contextmanager
@@ -496,10 +498,6 @@ def dispatch_dnsmasq(
             print(f"skip already seen device with mac address {event.mac_address}")
         seen_devices.add(event.mac_address)
 
-        print(
-            "Will now run nixos-remote on this target. You can also try to connect to the machine by doing:",
-        )
-        print(f"  ssh -i {ssh_key.private_key} root@{event.ip_addr}")
         nixos_anywhere(
             event.ip_addr,
             options.flake,
@@ -545,14 +543,18 @@ def run_nixos_anywhere(options: Options) -> None:
                 random_hostname,
             )
         )
-        dnsmasq = stack.enter_context(
-            start_dnsmasq(options.dhcp_interface, options.dhcp_range)
-        )
-        print("Waiting for a client to install nixos to. Cancel with Ctrl-C!")
         try:
-            dispatch_dnsmasq(dnsmasq, options, ssh_key, random_hostname)
-        except KeyboardInterrupt:
-            print("terminating...")
+            dnsmasq = stack.enter_context(
+                start_dnsmasq(options.dhcp_interface, options.dhcp_range)
+            )
+            print("Waiting for a client to install nixos to. Cancel with Ctrl-C!")
+            try:
+                dispatch_dnsmasq(dnsmasq, options, ssh_key, random_hostname)
+            except KeyboardInterrupt:
+                print("terminating...")
+        except Exception as e:
+            print(f"error: {e}")
+            raise
 
 
 # switch to https://pojntfx.github.io/go-isc-dhcp/ ?
