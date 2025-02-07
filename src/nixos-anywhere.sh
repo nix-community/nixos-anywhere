@@ -473,7 +473,7 @@ importFacts() {
   done
 }
 
-canBuildLocally() {
+checkBuildLocally() {
   local system extraPlatforms machineSystem
   system="$(nix --extra-experimental-features 'nix-command flakes' config show system)"
   extraPlatforms="$(nix --extra-experimental-features 'nix-command flakes' config show extra-platforms)"
@@ -485,32 +485,33 @@ canBuildLocally() {
   else
     machineSystem="$(nix --extra-experimental-features 'nix-command flakes' eval --raw "${flake}"#"${flakeAttr}".pkgs.system 2>/dev/null || echo "unknown")"
     if [[ ${machineSystem} == "unknown" ]]; then
+      buildOn=auto
       return
     fi
   fi
 
   if [[ ${system} == "${machineSystem}" ]]; then
+    buildOn=local
     return
   fi
 
   if [[ ${extraPlatforms} == "*${machineSystem}*" ]]; then
+    buildOn=local
     return
   fi
 
-  local entropy nonSubstitutableDrv
+  local entropy
   entropy="$(date +'%Y%m%d%H%M%S')"
-  nonSubstitutableDrv=$(nix eval \
-    --impure \
-    --raw \
+  if nix build \
     -L \
     "${nixOptions[@]}" \
     --expr \
-    "((builtins.getFlake \"$flake\").inputs.nixpkgs.legacyPackages.$system.runCommandNoCC \"nixos-anywhere-can-build-$entropy\" { } \"echo > \$out\").drvPath")
-
-  if ! nix build "${nixOptions[@]}" "${nonSubstitutableDrv}^*"; then
+    "derivation { system = \"$system\"; name = \"env-$entropy\"; builder = \"/bin/sh\"; args = [ \"-c\" \"echo > \$out\" ]; }"; then
     # The local build failed
-    export buildOn=remote
+    buildOn=local
   fi
+
+  buildOn=remote
 }
 
 generateHardwareConfig() {
@@ -708,7 +709,7 @@ main() {
   fi
 
   if [[ ${buildOn} == "auto" ]]; then
-    canBuildLocally
+    checkBuildLocally
   fi
 
   # parse flake nixos-install style syntax, get the system attr
@@ -778,11 +779,15 @@ main() {
   # Before we do not have a valid hardware configuration we don't know the machine system
   if [[ ${buildOn} == "auto" ]]; then
     local remoteSystem
-    remoteSystem=$(runSsh -o ConnectTimeout=10 nix --extra-experimental-features 'nix-command flakes' config show system)
-    canBuildLocally "${remoteSystem}"
+    remoteSystem=$(runSshNoTty -o ConnectTimeout=10 nix --extra-experimental-features nix-command config show system)
+    checkBuildLocally "${remoteSystem}"
+    # if we cannot figure it out at this point, we will build on the remote host
+    if [[ ${buildOn} == "auto" ]]; then
+      buildOn=remote
+    fi
   fi
 
-  if [[ ${buildOn} != "remote" ]] && [[ -n ${flake} ]] && [[ ${hardwareConfigBackend} != "none" ]]; then
+  if [[ ${buildOn} != "remote" ]] && [[ -n ${flake} ]] && [[ -z ${diskoScript} ]]; then
     if [[ ${phases[disko]} == 1 ]]; then
       diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script")
     fi
