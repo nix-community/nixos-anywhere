@@ -36,6 +36,7 @@ fi
 sshConnection=
 postKexecSshPort=22
 buildOnRemote=n
+buildOn=auto
 envPassword=n
 
 # Facts set by get-facts.sh
@@ -129,8 +130,11 @@ Options:
 * --disko-mode disko|mount|format
   set the disko mode to format, mount or destroy. Default is disko.
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
-  mount: mount the partition at the specified root-mountpoint
-  format: create partition tables, zpools, lvms, raids and filesystems (Experimental: Can be run increntally, but use with caution and good backups)
+* --build-on auto|remote|local
+  sets the build on settings to auto, remote or local. Default is auto.
+  auto: tries to figure out, if the build is possible on the local host, if not falls back gracefully to remote build
+  local: will build on the local host
+  remote: will build on the remote host
 USAGE
 }
 
@@ -146,6 +150,7 @@ step() {
 parseArgs() {
   local substituteOnDestination=y
   local printBuildLogs=n
+  local buildOnRemote=n
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -f | --flake)
@@ -235,6 +240,18 @@ parseArgs() {
 
       shift
       ;;
+    --build-on)
+      case "$2" in
+      auto | local | remote)
+        buildOn=$2
+        ;;
+      *)
+        abort "Supported values for --build-on are auto, local and remote. Unknown mode : $2"
+        ;;
+      esac
+
+      shift
+      ;;
     --extra-files)
       extraFiles=$2
       shift
@@ -287,7 +304,9 @@ parseArgs() {
       substituteOnDestination=n
       ;;
     --build-on-remote)
+      echo "WARNING: --build-on-remote is deprecated, use --build-on remote instead" 2>&1
       buildOnRemote=y
+      buildOn="remote"
       ;;
     --env-password)
       envPassword=y
@@ -317,6 +336,10 @@ parseArgs() {
 
   if [[ $vmTest == "n" ]] && [[ -z ${sshConnection} ]]; then
     abort "ssh-host must be set"
+  fi
+
+  if [[ $buildOn == "local" ]] && [[ $buildOnRemote == "y" ]]; then
+    abort "Conflicting flags: --build-on local and --build-on-remote used."
   fi
 
   if [[ -n ${flake} ]]; then
@@ -371,7 +394,7 @@ runVmTest() {
     exit 1
   fi
 
-  if [[ ${buildOnRemote} == "y" ]]; then
+  if [[ ${buildOn} == "remote" ]]; then
     echo "--vm-test is not supported with --build-on-remote" >&2
     exit 1
   fi
@@ -456,6 +479,47 @@ importFacts() {
       abort "Failed to retrieve fact $var from host"
     fi
   done
+}
+
+checkBuildLocally() {
+  local system extraPlatforms machineSystem
+  system="$(nix --extra-experimental-features 'nix-command flakes' config show system)"
+  extraPlatforms="$(nix --extra-experimental-features 'nix-command flakes' config show extra-platforms)"
+
+  if [[ $# -gt 0 ]]; then
+    machineSystem=$1
+  elif [[ -n ${nixosSystem} ]]; then
+    machineSystem="$(cat "${nixosSystem}"/system)"
+  else
+    machineSystem="$(nix --extra-experimental-features 'nix-command flakes' eval --raw "${flake}"#"${flakeAttr}".pkgs.system 2>/dev/null || echo "unknown")"
+    if [[ ${machineSystem} == "unknown" ]]; then
+      buildOn=auto
+      return
+    fi
+  fi
+
+  if [[ ${system} == "${machineSystem}" ]]; then
+    buildOn=local
+    return
+  fi
+
+  if [[ ${extraPlatforms} == "*${machineSystem}*" ]]; then
+    buildOn=local
+    return
+  fi
+
+  local entropy
+  entropy="$(date +'%Y%m%d%H%M%S')"
+  if nix build \
+    -L \
+    "${nixOptions[@]}" \
+    --expr \
+    "derivation { system = \"$system\"; name = \"env-$entropy\"; builder = \"/bin/sh\"; args = [ \"-c\" \"echo > \$out\" ]; }"; then
+    # The local build failed
+    buildOn=local
+  fi
+
+  buildOn=remote
 }
 
 generateHardwareConfig() {
@@ -565,7 +629,7 @@ runDisko() {
   done
   if [[ -n ${diskoScript} ]]; then
     nixCopy --to "ssh://$sshConnection" "$diskoScript"
-  elif [[ ${buildOnRemote} == "y" ]]; then
+  elif [[ ${buildOn} == "remote" ]]; then
     step Building disko script
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
@@ -587,7 +651,7 @@ nixosInstall() {
   if [[ -n ${nixosSystem} ]]; then
     step Uploading the system closure
     nixCopy --to "ssh://$sshConnection?remote-store=local?root=/mnt" "$nixosSystem"
-  elif [[ ${buildOnRemote} == "y" ]]; then
+  elif [[ ${buildOn} == "remote" ]]; then
     step Building the system closure
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
@@ -652,9 +716,13 @@ main() {
     exit 0
   fi
 
+  if [[ ${buildOn} == "auto" ]]; then
+    checkBuildLocally
+  fi
+
   # parse flake nixos-install style syntax, get the system attr
   if [[ -n ${flake} ]]; then
-    if [[ ${buildOnRemote} == "n" ]] && [[ ${hardwareConfigBackend} == "none" ]]; then
+    if [[ ${buildOn} == "local" ]] && [[ ${hardwareConfigBackend} == "none" ]]; then
       if [[ ${phases[disko]} == 1 ]]; then
         diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script")
       fi
@@ -716,7 +784,18 @@ main() {
     generateHardwareConfig
   fi
 
-  if [[ ${buildOnRemote} == "n" ]] && [[ -n ${flake} ]] && [[ ${hardwareConfigBackend} != "none" ]]; then
+  # Before we do not have a valid hardware configuration we don't know the machine system
+  if [[ ${buildOn} == "auto" ]]; then
+    local remoteSystem
+    remoteSystem=$(runSshNoTty -o ConnectTimeout=10 nix --extra-experimental-features nix-command config show system)
+    checkBuildLocally "${remoteSystem}"
+    # if we cannot figure it out at this point, we will build on the remote host
+    if [[ ${buildOn} == "auto" ]]; then
+      buildOn=remote
+    fi
+  fi
+
+  if [[ ${buildOn} != "remote" ]] && [[ -n ${flake} ]] && [[ -z ${diskoScript} ]]; then
     if [[ ${phases[disko]} == 1 ]]; then
       diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script")
     fi
