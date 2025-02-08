@@ -7,7 +7,7 @@ flakeAttr=""
 kexecUrl=""
 kexecExtraFlags=""
 enableDebug=""
-nixBuildFlags=""
+nixBuildFlags=()
 diskoScript=""
 diskoMode="disko"
 nixosSystem=""
@@ -221,7 +221,7 @@ parseArgs() {
       copyHostKeys=y
       ;;
     --show-trace)
-      nixBuildFlags+=" --show-trace"
+      nixBuildFlags+=("--show-trace")
       ;;
     --debug)
       enableDebug="-x"
@@ -382,7 +382,7 @@ nixBuild() {
   NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere ${sshArgs[*]}" nix build \
     --print-out-paths \
     --no-link \
-    "$nixBuildFlags" \
+    "${nixBuildFlags[@]}" \
     "${nixOptions[@]}" \
     "$@"
 }
@@ -410,7 +410,7 @@ runVmTest() {
     --print-out-paths \
     --no-link \
     -L \
-    "$nixBuildFlags" \
+    "${nixBuildFlags[@]}" \
     "${nixOptions[@]}" \
     "${flake}#${flakeAttr}.system.build.installTest"
 }
