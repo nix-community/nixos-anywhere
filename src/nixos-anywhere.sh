@@ -7,7 +7,6 @@ flakeAttr=""
 kexecUrl=""
 kexecExtraFlags=""
 enableDebug=""
-nixBuildFlags=""
 diskoScript=""
 diskoMode="disko"
 nixosSystem=""
@@ -108,8 +107,6 @@ Options:
   disable passing --substitute-on-destination to nix-copy
 * --debug
   enable debug output
-* --show-trace
-  show nix build traces
 * --option <key> <value>
   nix option to pass to every nix related command
 * --from <store-uri>
@@ -219,9 +216,6 @@ parseArgs() {
       ;;
     --copy-host-keys)
       copyHostKeys=y
-      ;;
-    --show-trace)
-      nixBuildFlags+=" --show-trace"
       ;;
     --debug)
       enableDebug="-x"
@@ -382,7 +376,6 @@ nixBuild() {
   NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere ${sshArgs[*]}" nix build \
     --print-out-paths \
     --no-link \
-    "$nixBuildFlags" \
     "${nixOptions[@]}" \
     "$@"
 }
@@ -410,7 +403,6 @@ runVmTest() {
     --print-out-paths \
     --no-link \
     -L \
-    "$nixBuildFlags" \
     "${nixOptions[@]}" \
     "${flake}#${flakeAttr}.system.build.installTest"
 }
