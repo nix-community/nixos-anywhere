@@ -29,6 +29,8 @@ Options:
   use another kexec tarball to bootstrap NixOS
 * --kexec-extra-flags
   extra flags to add into the call to kexec, e.g. "--no-sync"
+* --ssh-store-settings
+  extra ssh store settings appended to the store URI e.g. "compress=true&max-connections=10"
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
 * --copy-host-keys
