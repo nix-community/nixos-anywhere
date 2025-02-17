@@ -53,4 +53,9 @@ Options:
   build the closure on the remote machine instead of locally and copy-closuring it
 * --vm-test
   build the system and test the disk configuration inside a VM without installing it to the target.
+* --build-on auto|remote|local
+  sets the build on settings to auto, remote or local. Default is auto.
+  auto: tries to figure out, if the build is possible on the local host, if not falls back gracefully to remote build
+  local: will build on the local host
+  remote: will build on the remote host
 ```

@@ -6,6 +6,7 @@ on:
       - main
       - staging
   pull_request:
+  merge_group:
 
 jobs:
   deploy:
