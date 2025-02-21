@@ -64,7 +64,14 @@ line that reads:
 ```
 
 Replace the text `CHANGE` with your own SSH key. This is crucial, as you will
-not be able to log into the target machine post-installation without it.
+not be able to log into the target machine post-installation without it. If you
+have a .pem file you can run
+
+```bash
+ssh-keygen -y -f /path/to/your/key.pem
+```
+
+then paste the result in between the quotes like "ssh-rsa AAA..."
 
 ### 4. Configure Storage
 
