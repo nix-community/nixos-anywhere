@@ -81,7 +81,7 @@ may need to adjust `/dev/sda` to match the correct disk on your machine. To
 identify the disk, run the `lsblk` command and replace `sda` with the actual
 disk name.
 
-For example, on this machine, we would select `nvme0n1` as the disk:
+For example, on this machine, we would select `/dev/nvme0n1` as the disk:
 
 ```
 NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
