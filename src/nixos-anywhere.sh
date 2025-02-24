@@ -726,7 +726,9 @@ main() {
       if [[ ${phases[disko]} == 1 ]]; then
         diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script")
       fi
-      nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
+      if [[ ${phases[install]} == 1 ]]; then
+        nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
+      fi
     fi
   elif [[ -n ${diskoScript} ]] && [[ -n ${nixosSystem} ]]; then
     if [[ ! -e ${diskoScript} ]] || [[ ! -e ${nixosSystem} ]]; then
@@ -799,7 +801,9 @@ main() {
     if [[ ${phases[disko]} == 1 ]]; then
       diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script")
     fi
-    nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
+    if [[ ${phases[install]} == 1 ]]; then
+      nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
+    fi
   fi
 
   # Installation will fail if non-root user is used for installer.
