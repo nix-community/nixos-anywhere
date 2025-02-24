@@ -274,7 +274,11 @@ line that reads:</p>
             "CHANGE"
 </code></pre>
 <p>Replace the text <code>CHANGE</code> with your own SSH key. This is crucial, as you will
-not be able to log into the target machine post-installation without it.</p>
+not be able to log into the target machine post-installation without it. If you
+have a .pem file you can run</p>
+<pre><code class="language-bash">ssh-keygen -y -f /path/to/your/key.pem
+</code></pre>
+<p>then paste the result in between the quotes like "ssh-rsa AAA..."</p>
 <h3 id="4-configure-storage"><a class="header" href="#4-configure-storage">4. Configure Storage</a></h3>
 <p>In the same directory, create a file called <code>disk-config.nix</code>. This file will
 define the disk layout for the
