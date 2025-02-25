@@ -291,7 +291,7 @@ compatible with both EFI and BIOS systems and mounts the disk as <code>/dev/sda<
 may need to adjust <code>/dev/sda</code> to match the correct disk on your machine. To
 identify the disk, run the <code>lsblk</code> command and replace <code>sda</code> with the actual
 disk name.</p>
-<p>For example, on this machine, we would select <code>nvme0n1</code> as the disk:</p>
+<p>For example, on this machine, we would select <code>/dev/nvme0n1</code> as the disk:</p>
 <pre><code>NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 nvme0n1     259:0    0  1.8T  0 disk
 </code></pre>
