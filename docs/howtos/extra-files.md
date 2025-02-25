@@ -75,6 +75,14 @@ during installation.
 When the files are extracted on the remote the copied data will be owned by
 root.
 
+If you wish to change the ownership after the files are copied onto the system,
+you can use the `--chown` option.
+
+For example, if you did `--chown /home/myuser/.ssh 1000:100`, this would equate
+to running `chown -R /home/myuser/.ssh 1000:100` where the uid is 1000 and the
+gid is 100. **Only do this when you can _guarantee_ what the uid and gid will
+be.**
+
 ### Symbolic Links
 
 Do not create symbolic links to reference data to copy.
