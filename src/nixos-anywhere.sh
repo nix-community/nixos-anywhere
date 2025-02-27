@@ -8,6 +8,7 @@ kexecUrl=""
 kexecExtraFlags=""
 sshStoreSettings=""
 enableDebug=""
+skipPreSwitchChecks="n"
 nixBuildFlags=()
 diskoScript=""
 diskoMode="disko"
@@ -142,6 +143,8 @@ Options:
   auto: tries to figure out, if the build is possible on the local host, if not falls back gracefully to remote build
   local: will build on the local host
   remote: will build on the remote host
+* --skip-pre-switch-checks
+  Skip running shell script fragments defined in 'system.preSwitchChecks' during installation.
 USAGE
 }
 
@@ -333,6 +336,9 @@ parseArgs() {
       ;;
     --vm-test)
       vmTest=y
+      ;;
+    --skip-pre-switch-checks)
+      skipPreSwitchChecks="y"
       ;;
     *)
       if [[ -z ${sshConnection} ]]; then
@@ -718,6 +724,9 @@ if [ ${copyHostKeys-n} = "y" ]; then
     fi
     cp -a "\$p" "/mnt/\$p"
   done
+fi
+if [ ${skipPreSwitchChecks-n} = y ]; then
+  export NIXOS_NO_CHECK=1
 fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem"
 if [[ ${phases[reboot]} == 1 ]]; then
