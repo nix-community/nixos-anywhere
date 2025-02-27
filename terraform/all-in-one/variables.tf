@@ -137,3 +137,9 @@ variable "special_args" {
   default = {}
   description = "A map exposed as NixOS's `specialArgs` thru a file."
 }
+
+variable "build_on_remote" {
+  type        = bool
+  description = "Build the closure on the remote machine instead of building it locally and copying it over"
+  default     = false
+}
