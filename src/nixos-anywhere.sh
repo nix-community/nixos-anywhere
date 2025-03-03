@@ -719,6 +719,9 @@ if [ ${copyHostKeys-n} = "y" ]; then
     cp -a "\$p" "/mnt/\$p"
   done
 fi
+if [ ${NIXOS_NO_CHECK-0} = 1 ]; then
+  export NIXOS_NO_CHECK=1
+fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem"
 if [[ ${phases[reboot]} == 1 ]]; then
   if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
