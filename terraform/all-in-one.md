@@ -26,6 +26,8 @@ module "deploy" {
   instance_id            = local.ipv4
   # useful if something goes wrong
   # debug_logging          = true
+  # build the closure on the remote machine instead of locally
+  # build_on_remote        = true
   # script is below
   extra_files_script     = "${path.module}/decrypt-ssh-secrets.sh"
   disk_encryption_key_scripts = [{
@@ -109,7 +111,7 @@ NixOS without relying on special_args.
     centralizing state in a single repository.
 - **Disadvantages**:
   - Deploying new machines requires tracking additional state. Every time
-    Terraform updates the JSON file, you’ll need to commit these changes to your
+    Terraform updates the JSON file, you'll need to commit these changes to your
     repository.
 
 ### Implementation
@@ -218,6 +220,7 @@ No resources.
 | <a name="input_no_reboot"></a> [no\_reboot](#input_no_reboot)                                                         | DEPRECATED: Use `phases` instead. Do not reboot after installation                                                                                                                                                                                        | `bool`                                                                 | `false`                                                                 |    no    |
 | <a name="input_phases"></a> [phases](#input_phases)                                                                   | Phases to run. See `nixos-anywhere --help` for more information                                                                                                                                                                                           | `set(string)`                                                          | <pre>[<br> "kexec",<br> "disko",<br> "install",<br> "reboot"<br>]</pre> |    no    |
 | <a name="input_special_args"></a> [special\_args](#input_special_args)                                                | A map exposed as NixOS's `specialArgs` thru a file.                                                                                                                                                                                                       | `any`                                                                  | `{}`                                                                    |    no    |
+| <a name="input_build_on_remote"></a> [build\_on\_remote](#input_build_on_remote)                                      | Build the closure on the remote machine instead of building it locally and copying it over                                                                                                                                                                | `bool`                                                                 | `false`                                                                 |    no    |
 | <a name="input_stop_after_disko"></a> [stop\_after\_disko](#input_stop_after_disko)                                   | DEPRECATED: Use `phases` instead. Exit after disko formatting                                                                                                                                                                                             | `bool`                                                                 | `false`                                                                 |    no    |
 | <a name="input_target_host"></a> [target\_host](#input_target_host)                                                   | DNS host to deploy to                                                                                                                                                                                                                                     | `string`                                                               | n/a                                                                     |   yes    |
 | <a name="input_target_port"></a> [target\_port](#input_target_port)                                                   | SSH port used to connect to the target\_host after installing NixOS. If install\_port is not set than this port is also used before installing.                                                                                                           | `number`                                                               | `22`                                                                    |    no    |
