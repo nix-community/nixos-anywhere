@@ -3,6 +3,12 @@ variable "nixos_system" {
   description = "The nixos system to deploy"
 }
 
+variable "nixos_system_packages" {
+  type        = string
+  description = "The array of nixos system packages to deploy"
+  default     = ""
+}
+
 variable "target_host" {
   type        = string
   description = "DNS host to deploy to"
