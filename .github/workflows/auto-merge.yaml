@@ -1,0 +1,14 @@
+name: Auto Merge Dependency Updates
+on:
+  - pull_request_target
+jobs:
+  auto-merge-dependency-updates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: "auto-merge:${{ github.head_ref }}"
+      cancel-in-progress: true
+    steps:
+      - uses: Mic92/auto-merge@main
