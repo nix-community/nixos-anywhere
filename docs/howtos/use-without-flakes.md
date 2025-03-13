@@ -78,5 +78,5 @@ step:
 Run `nixos-anywhere` as follows:
 
 ```bash
-nixos-anywhere --store-paths $(nix-build -A config.system.build.disko -A config.system.build.toplevel --no-out-link) root@machine
+nixos-anywhere --store-paths $(nix-build -A config.system.build.formatScript -A config.system.build.toplevel --no-out-link) root@machine
 ```
