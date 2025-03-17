@@ -31,3 +31,9 @@ variable "ignore_systemd_errors" {
   description = "Ignore systemd errors happening during deploy"
   default = false
 }
+
+variable "install_bootloader" {
+  type = bool
+  description = "Install/re-install the bootloader"
+  default = false
+}

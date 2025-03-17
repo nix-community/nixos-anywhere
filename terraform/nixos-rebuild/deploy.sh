@@ -3,7 +3,7 @@
 set -uex -o pipefail
 
 if [ "$#" -ne 5 ]; then
-  echo "USAGE: $0 NIXOS_SYSTEM TARGET_USER TARGET_HOST TARGET_PORT IGNORE_SYSTEMD_ERRORS" >&2
+  echo "USAGE: $0 NIXOS_SYSTEM TARGET_USER TARGET_HOST TARGET_PORT IGNORE_SYSTEMD_ERRORS INSTALL_BOOTLOADER" >&2
   exit 1
 fi
 
@@ -12,7 +12,9 @@ TARGET_USER=$2
 TARGET_HOST=$3
 TARGET_PORT=$4
 IGNORE_SYSTEMD_ERRORS=$5
-shift 3
+INSTALL_BOOTLOADER=$6
+
+shift 6
 
 TARGET="${TARGET_USER}@${TARGET_HOST}"
 
@@ -46,7 +48,14 @@ until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --experimental-features nix-comman
   try=$((try + 1))
 done
 
-switchCommand="nix-env -p /nix/var/nix/profiles/system --set $(printf "%q" "$NIXOS_SYSTEM"); /nix/var/nix/profiles/system/bin/switch-to-configuration switch"
+if [[ $INSTALL_BOOTLOADER == "true" ]]; then
+  extra_env='NIXOS_INSTALL_BOOTLOADER=1'
+else
+  extra_env=''
+fi
+
+switchCommand="nix-env -p /nix/var/nix/profiles/system --set $(printf "%q" "$NIXOS_SYSTEM"); $extra_env /nix/var/nix/profiles/system/bin/switch-to-configuration switch"
+
 if [[ $TARGET_USER != "root" ]]; then
   switchCommand="sudo bash -c '$switchCommand'"
 fi

@@ -143,3 +143,9 @@ variable "build_on_remote" {
   description = "Build the closure on the remote machine instead of building it locally and copying it over"
   default     = false
 }
+
+variable "install_bootloader" {
+  type = bool
+  description = "Install/re-install the bootloader"
+  default = false
+}
