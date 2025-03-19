@@ -2,7 +2,7 @@
 
 set -uex -o pipefail
 
-if [ "$#" -ne 5 ]; then
+if [ "$#" -ne 6 ]; then
   echo "USAGE: $0 NIXOS_SYSTEM TARGET_USER TARGET_HOST TARGET_PORT IGNORE_SYSTEMD_ERRORS INSTALL_BOOTLOADER" >&2
   exit 1
 fi
