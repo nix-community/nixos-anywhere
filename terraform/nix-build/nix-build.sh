@@ -33,9 +33,23 @@ else
   flake_rel="$(echo "${attribute}" | cut -d "#" -f 1)"
   # e.g. flake_rel="."
   flake_dir="$(readlink -f "${flake_rel}")"
-  flake_nar="$(nix flake prefetch "${flake_dir}" --json | jq -r '.hash')"
+  flake_path="${flake_dir}/flake.nix"
+  flake_json="$(nix flake prefetch "${flake_dir}" --json)"
+  flake_nar="$(echo "$flake_json" | jq -r '.hash')"
+  store_path="$(echo "${flake_json}" | jq -r '.storePath')"
+  # while we have a store path now, for a repo this reflects its root level,
+  # so search for the largest child segment yielding a match in that store dir.
+  iter_path="${flake_path}"
+  while [[ ${iter_path} != "/" ]]; do
+    parent="$(dirname "${iter_path}")"
+    child_segment="${flake_path//$parent/}"
+    if [[ -f "${store_path}${child_segment}" ]]; then
+      target_segment="${child_segment}"
+    fi
+    iter_path="${parent}"
+  done
   # substitute variables into the template
-  nix_expr="(builtins.getFlake ''file://${flake_dir}/flake.nix?narHash=${flake_nar}'').${config_path}.extendModules { specialArgs = builtins.fromJSON ''${special_args}''; }"
+  nix_expr="(builtins.getFlake ''file://${flake_dir}?dir=${target_segment//\/flake.nix/}&narHash=${flake_nar}'').${config_path}.extendModules { specialArgs = builtins.fromJSON ''${special_args}''; }"
   # inject `special_args` into nixos config's `specialArgs`
   # shellcheck disable=SC2086
   out=$(nix build --no-link --json ${options} --expr "${nix_expr}" "${config_attribute}")
