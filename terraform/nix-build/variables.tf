@@ -9,6 +9,12 @@ variable "file" {
   default = null
 }
 
+variable "nix_argstrs" {
+  type = map(string)
+  description = "the argstrs of nix"
+  default = {}
+}
+
 variable "nix_options" {
   type = map(string)
   description = "the options of nix"
