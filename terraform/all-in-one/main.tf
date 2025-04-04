@@ -36,6 +36,7 @@ module "install" {
   phases                       = var.phases
   nixos_generate_config_path   = var.nixos_generate_config_path
   nixos_facter_path            = var.nixos_facter_path
+  build_on_remote              = var.build_on_remote
   # deprecated attributes
   stop_after_disko             = var.stop_after_disko
   no_reboot                    = var.no_reboot
@@ -55,6 +56,7 @@ module "nixos-rebuild" {
   target_host = var.target_host
   target_user = var.target_user
   target_port = var.target_port
+  install_bootloader = var.install_bootloader
 }
 
 output "result" {

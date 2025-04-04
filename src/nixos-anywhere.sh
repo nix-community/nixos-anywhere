@@ -9,8 +9,10 @@ kexecExtraFlags=""
 sshStoreSettings=""
 enableDebug=""
 nixBuildFlags=()
+diskoAttr=""
 diskoScript=""
 diskoMode="disko"
+diskoDeps=y
 nixosSystem=""
 extraFiles=""
 vmTest="n"
@@ -137,6 +139,10 @@ Options:
 * --disko-mode disko|mount|format
   set the disko mode to format, mount or destroy. Default is disko.
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
+* --no-disko-deps
+  This will only upload the disko script and not the partitioning tools dependencies.
+  Installers usually have dependencies available.
+  Use this option if your target machine has not enough RAM to store the dependencies in memory.
 * --build-on auto|remote|local
   sets the build on settings to auto, remote or local. Default is auto.
   auto: tries to figure out, if the build is possible on the local host, if not falls back gracefully to remote build
@@ -255,6 +261,9 @@ parseArgs() {
 
       shift
       ;;
+    --no-disko-deps)
+      diskoDeps=n
+      ;;
     --build-on)
       case "$2" in
       auto | local | remote)
@@ -345,6 +354,12 @@ parseArgs() {
     esac
     shift
   done
+
+  diskoAttr="${diskoMode}Script"
+
+  if [[ ${diskoDeps} == "n" ]]; then
+    diskoAttr="${diskoAttr}NoDeps"
+  fi
 
   if [[ ${printBuildLogs} == "y" ]]; then
     nixOptions+=("-L")
@@ -659,7 +674,7 @@ runDisko() {
       --derivation --no-check-sigs
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     diskoScript=$(
-      nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script" \
+      nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}" \
         --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$sshKeyDir%2Fnixos-anywhere&$sshStoreSettings"
     )
   fi
@@ -756,7 +771,7 @@ main() {
   if [[ -n ${flake} ]]; then
     if [[ ${buildOn} == "local" ]] && [[ ${hardwareConfigBackend} == "none" ]]; then
       if [[ ${phases[disko]} == 1 ]]; then
-        diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script")
+        diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}")
       fi
       if [[ ${phases[install]} == 1 ]]; then
         nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
@@ -831,7 +846,7 @@ main() {
 
   if [[ ${buildOn} != "remote" ]] && [[ -n ${flake} ]] && [[ -z ${diskoScript} ]]; then
     if [[ ${phases[disko]} == 1 ]]; then
-      diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script")
+      diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}")
     fi
     if [[ ${phases[install]} == 1 ]]; then
       nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")

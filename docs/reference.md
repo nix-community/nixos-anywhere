@@ -19,12 +19,17 @@ TODO: Populate this guide properly
 <!-- `$ bash ./src/nixos-anywhere.sh --help` -->
 
 ```
-Usage: nixos-anywhere [options] <ssh-host>
+Usage: nixos-anywhere [options] [<ssh-host>]
 
 Options:
 
 * -f, --flake <flake_uri>
-  set the flake to install the system from.
+  set the flake to install the system from. i.e.
+  nixos-anywhere --flake .#mymachine
+  Also supports variants:
+  nixos-anywhere --flake .#nixosConfigurations.mymachine.config.virtualisation.vmVariant
+* --target-host <ssh-host>
+  set the SSH target host to deploy onto.
 * -i <identity_file>
   selects which SSH private key file to use.
 * -p, --ssh-port <ssh_port>
@@ -43,6 +48,8 @@ Options:
   use another kexec tarball to bootstrap NixOS
 * --kexec-extra-flags
   extra flags to add into the call to kexec, e.g. "--no-sync"
+* --ssh-store-setting <key> <value>
+  ssh store settings appended to the store URI, e.g. "compress true". <value> needs to be URI encoded.
 * --post-kexec-ssh-port <ssh_port>
   after kexec is executed, use a custom ssh port to connect. Defaults to 22
 * --copy-host-keys
@@ -60,6 +67,8 @@ Options:
   disable passing --substitute-on-destination to nix-copy
 * --debug
   enable debug output
+* --show-trace
+  show nix build traces
 * --option <key> <value>
   nix option to pass to every nix related command
 * --from <store-uri>
@@ -80,8 +89,15 @@ Options:
 * --disko-mode disko|mount|format
   set the disko mode to format, mount or destroy. Default is disko.
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
-  mount: mount the partition at the specified root-mountpoint
-  format: create partition tables, zpools, lvms, raids and filesystems (Experimental: Can be run increntally, but use with caution and good backups)
+* --no-disko-deps
+  This will only upload the disko script and not the partitioning tools dependencies.
+  Installers usually have dependencies available.
+  Use this option if your target machine has not enough RAM to store the dependencies in memory.
+* --build-on auto|remote|local
+  sets the build on settings to auto, remote or local. Default is auto.
+  auto: tries to figure out, if the build is possible on the local host, if not falls back gracefully to remote build
+  local: will build on the local host
+  remote: will build on the remote host
 ```
 
 ## Explanation of known error messages

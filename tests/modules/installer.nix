@@ -15,7 +15,7 @@ in
   environment.systemPackages = [ inputs.nixos-anywhere ];
 
   environment.etc = {
-    "nixos-anywhere/disko".source = system-to-install.config.system.build.diskoScript;
+    "nixos-anywhere/disko".source = system-to-install.config.system.build.diskoScriptNoDeps;
     "nixos-anywhere/system-to-install".source = system-to-install.config.system.build.toplevel;
     "nixos-anywhere/kexec-installer".source = kexec-installer;
   };
