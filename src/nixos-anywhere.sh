@@ -85,7 +85,8 @@ Options:
 * -p, --ssh-port <ssh_port>
   set the ssh port to connect with
 * --ssh-option <ssh_option>
-  set an ssh option
+  set one ssh option, no need for the `-o` flag, can be repeated.
+  for example: `--ssh-option UserKnownHostsFile=./known_hosts`
 * -L, --print-build-logs
   print full build logs
 * --env-password
