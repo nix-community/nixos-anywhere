@@ -545,6 +545,7 @@ checkBuildLocally() {
 
   local entropy
   entropy="$(date +'%Y%m%d%H%M%S')"
+
   if nix build \
     -L \
     "${nixOptions[@]}" \
@@ -552,6 +553,7 @@ checkBuildLocally() {
     "derivation { system = \"$system\"; name = \"env-$entropy\"; builder = \"/bin/sh\"; args = [ \"-c\" \"echo > \$out\" ]; }"; then
     # The local build failed
     buildOn=local
+    return
   fi
 
   buildOn=remote
