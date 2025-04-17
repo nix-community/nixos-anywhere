@@ -722,9 +722,12 @@ set -eu ${enableDebug}
 # when running not in nixos we might miss this directory, but it's needed in the nixos chroot during installation
 export PATH="\$PATH:/run/current-system/sw/bin"
 
-# needed for installation if initrd-secrets are used
-mkdir -p /mnt/tmp
-chmod 777 /mnt/tmp
+if [ ! -d "/mnt/tmp" ]; then
+  # needed for installation if initrd-secrets are used
+  mkdir -p /mnt/tmp
+  chmod 777 /mnt/tmp
+fi
+
 if [ ${copyHostKeys-n} = "y" ]; then
   # NB we copy host keys that are in turn copied by kexec installer.
   mkdir -m 755 -p /mnt/etc/ssh
