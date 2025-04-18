@@ -745,6 +745,13 @@ if [ ! -z ${NIXOS_NO_CHECK+0} ]; then
   export NIXOS_NO_CHECK
 fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem"
+SSH
+
+}
+
+nixosReboot() {
+  step Rebooting
+  runSsh sh <<SSH
 if [[ ${phases[reboot]} == 1 ]]; then
   if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
     # we always want to export the zfs pools so people can boot from it without force import
@@ -756,6 +763,8 @@ if [[ ${phases[reboot]} == 1 ]]; then
 fi
 SSH
 
+  step Waiting for the machine to become unreachable due to reboot
+  while runSshTimeout -- exit 0; do sleep 1; done
 }
 
 main() {
@@ -876,8 +885,7 @@ main() {
   fi
 
   if [[ ${phases[reboot]} == 1 ]]; then
-    step Waiting for the machine to become unreachable due to reboot
-    while runSshTimeout -- exit 0; do sleep 1; done
+    nixosReboot
   fi
 
   step "Done!"
