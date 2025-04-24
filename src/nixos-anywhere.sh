@@ -11,7 +11,7 @@ enableDebug=""
 nixBuildFlags=()
 diskoAttr=""
 diskoScript=""
-diskoMode="disko"
+diskoMode=""
 diskoDeps=y
 nixosSystem=""
 extraFiles=""
@@ -357,6 +357,14 @@ parseArgs() {
   done
 
   diskoAttr="${diskoMode}Script"
+
+  if [[ ${diskoMode} != "" ]]; then
+    if [[ ${diskoScript} != "" ]]; then
+      abort "--disko-mode cannot be used if --store-paths is used"
+    fi
+  else
+    diskoMode=disko
+  fi
 
   if [[ ${diskoDeps} == "n" ]]; then
     diskoAttr="${diskoAttr}NoDeps"
