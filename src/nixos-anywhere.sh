@@ -11,7 +11,7 @@ enableDebug=""
 nixBuildFlags=()
 diskoAttr=""
 diskoScript=""
-diskoMode="disko"
+diskoMode=""
 diskoDeps=y
 nixosSystem=""
 extraFiles=""
@@ -357,6 +357,14 @@ parseArgs() {
   done
 
   diskoAttr="${diskoMode}Script"
+
+  if [[ ${diskoMode} != "" ]]; then
+    if [[ ${diskoScript} != "" ]]; then
+      abort "--disko-mode cannot be used if --store-paths is used"
+    fi
+  else
+    diskoMode=disko
+  fi
 
   if [[ ${diskoDeps} == "n" ]]; then
     diskoAttr="${diskoAttr}NoDeps"
@@ -745,7 +753,7 @@ if [ ! -z ${NIXOS_NO_CHECK+0} ]; then
   export NIXOS_NO_CHECK
 fi
 nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem"
-if [[ ${phases[reboot]} == 1 ]]; then
+if [ ${phases[reboot]} == 1 ]; then
   if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
     # we always want to export the zfs pools so people can boot from it without force import
     umount -Rv /mnt/
