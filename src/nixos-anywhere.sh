@@ -356,8 +356,6 @@ parseArgs() {
     shift
   done
 
-  diskoAttr="${diskoMode}Script"
-
   if [[ ${diskoMode} != "" ]]; then
     if [[ ${diskoScript} != "" ]]; then
       abort "--disko-mode cannot be used if --store-paths is used"
@@ -365,6 +363,8 @@ parseArgs() {
   else
     diskoMode=disko
   fi
+
+  diskoAttr="${diskoMode}Script"
 
   if [[ ${diskoDeps} == "n" ]]; then
     diskoAttr="${diskoAttr}NoDeps"
