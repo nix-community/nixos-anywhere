@@ -5,6 +5,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 cd "$SCRIPT_DIR/.."
+readonly repo_url="git@github.com:nix-community/nixos-anywhere"
 
 version=${1:-}
 if [[ -z $version ]]; then
@@ -23,16 +24,38 @@ if [[ -n $uncommitted_changes ]]; then
   echo -e "There are uncommitted changes, exiting:\n${uncommitted_changes}" >&2
   exit 1
 fi
-git pull git@github.com:nix-community/nixos-anywhere main
+git pull "$repo_url" main
 unpushed_commits=$(git log --format=oneline origin/main..main)
-if [[ $unpushed_commits != "" ]]; then
+if [[ -n $unpushed_commits ]]; then
   echo -e "\nThere are unpushed changes, exiting:\n$unpushed_commits" >&2
   exit 1
 fi
+
+git branch -D "release-${version}" || true
+git checkout -b "release-${version}"
+
 sed -i -e "s!version = \".*\";!version = \"${version}\";!" src/default.nix
 git add src/default.nix
-nix-shell -p nix-fast-build --command "nix-fast-build --eval-workers 2"
-git commit -m "bump version ${version}"
-git tag "${version}"
 
-echo "now run 'git push --tags origin main'"
+git commit -m "bump version ${version}"
+git push origin "release-${version}"
+gh pr create \
+  --base main \
+  --head "release-${version}" \
+  --title "Release ${version}" \
+  --body "Release ${version} of nixpkgs-review" \
+  --merge \
+  --delete-branch
+
+gh pr merge --auto "release-${version}"
+git checkout main
+
+while true; do
+  if gh pr view "release-${version}" | grep -q 'MERGED'; then
+    break
+  fi
+  echo "Waiting for PR to be merged..."
+  sleep 5
+done
+git pull "$repo_url" main
+gh release create "${version}" --draft --title "${version}" --notes ""
