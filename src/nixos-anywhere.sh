@@ -65,7 +65,7 @@ mkdir -p "$sshKeyDir"
 declare -A diskEncryptionKeys=()
 declare -A extraFilesOwnership=()
 declare -a nixCopyOptions=()
-declare -a sshArgs=()
+declare -a sshArgs=("-o" "IdentitiesOnly=yes" "-i" "$sshKeyDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
 
 showUsage() {
   cat <<USAGE
@@ -407,23 +407,27 @@ parseArgs() {
 
 # ssh wrapper
 runSshNoTty() {
-  ssh -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
+  # shellcheck disable=SC2029
+  # We want to expand "$@" to get the command to run over SSH
+  ssh "${sshArgs[@]}" "$sshConnection" "$@"
 }
 runSshTimeout() {
-  timeout 10 ssh -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
+  timeout 10 ssh "${sshArgs[@]}" "$sshConnection" "$@"
 }
 runSsh() {
-  ssh "$sshTtyParam" -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
+  # shellcheck disable=SC2029
+  # We want to expand "$@" to get the command to run over SSH
+  ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
 }
 
 nixCopy() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere ${sshArgs[*]}" nix copy \
+  NIX_SSHOPTS="${sshArgs[*]}" nix copy \
     "${nixOptions[@]}" \
     "${nixCopyOptions[@]}" \
     "$@"
 }
 nixBuild() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere ${sshArgs[*]}" nix build \
+  NIX_SSHOPTS="${sshArgs[*]}" nix build \
     --print-out-paths \
     --no-link \
     "${nixBuildFlags[@]}" \
@@ -470,32 +474,21 @@ uploadSshKey() {
     ssh-keygen -t ed25519 -f "$sshKeyDir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
   fi
 
-  declare -a sshCopyIdArgs
-  if [[ -n ${sshPrivateKeyFile} ]]; then
-    unset SSH_AUTH_SOCK # don't use system agent if key was supplied
-    sshCopyIdArgs+=(-o "IdentityFile=${sshPrivateKeyFile}" -f)
-  fi
-
   step Uploading install SSH keys
   until
     if [[ ${envPassword} == y ]]; then
       sshpass -e \
         ssh-copy-id \
-        -i "$sshKeyDir"/nixos-anywhere.pub \
         -o ConnectTimeout=10 \
-        -o UserKnownHostsFile=/dev/null \
-        -o IdentitiesOnly=yes \
-        -o StrictHostKeyChecking=no \
-        "${sshCopyIdArgs[@]}" \
         "${sshArgs[@]}" \
         "$sshConnection"
     else
+      # To override `IdentitiesOnly=yes` set in `sshArgs` we need to set
+      # `IdentitiesOnly=no` first as the first time an SSH option is
+      # specified on the command line takes precedence
       ssh-copy-id \
-        -i "$sshKeyDir"/nixos-anywhere.pub \
+        -o IdentitiesOnly=no \
         -o ConnectTimeout=10 \
-        -o UserKnownHostsFile=/dev/null \
-        -o StrictHostKeyChecking=no \
-        "${sshCopyIdArgs[@]}" \
         "${sshArgs[@]}" \
         "$sshConnection"
     fi
@@ -559,7 +552,7 @@ checkBuildLocally() {
     -L \
     "${nixOptions[@]}" \
     --expr \
-    "derivation { system = \"$system\"; name = \"env-$entropy\"; builder = \"/bin/sh\"; args = [ \"-c\" \"echo > \$out\" ]; }"; then
+    "derivation { system = \"$machineSystem\"; name = \"env-$entropy\"; builder = \"/bin/sh\"; args = [ \"-c\" \"echo > \$out\" ]; }"; then
     # The local build failed
     buildOn=local
     return
