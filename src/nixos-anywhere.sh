@@ -552,7 +552,7 @@ checkBuildLocally() {
     -L \
     "${nixOptions[@]}" \
     --expr \
-    "derivation { system = \"$system\"; name = \"env-$entropy\"; builder = \"/bin/sh\"; args = [ \"-c\" \"echo > \$out\" ]; }"; then
+    "derivation { system = \"$machineSystem\"; name = \"env-$entropy\"; builder = \"/bin/sh\"; args = [ \"-c\" \"echo > \$out\" ]; }"; then
     # The local build failed
     buildOn=local
     return
