@@ -65,7 +65,7 @@ mkdir -p "$sshKeyDir"
 declare -A diskEncryptionKeys=()
 declare -A extraFilesOwnership=()
 declare -a nixCopyOptions=()
-declare -a sshArgs=("-i" "$sshKeyDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
+declare -a sshArgs=("-o" "IdentitiesOnly=yes" "-i" "$sshKeyDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
 
 showUsage() {
   cat <<USAGE
@@ -474,26 +474,21 @@ uploadSshKey() {
     ssh-keygen -t ed25519 -f "$sshKeyDir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
   fi
 
-  declare -a sshCopyIdArgs
-  if [[ -n ${sshPrivateKeyFile} ]]; then
-    unset SSH_AUTH_SOCK # don't use system agent if key was supplied
-    sshCopyIdArgs+=(-o "IdentityFile=${sshPrivateKeyFile}" -f)
-  fi
-
   step Uploading install SSH keys
   until
     if [[ ${envPassword} == y ]]; then
       sshpass -e \
         ssh-copy-id \
         -o ConnectTimeout=10 \
-        -o IdentitiesOnly=yes \
-        "${sshCopyIdArgs[@]}" \
         "${sshArgs[@]}" \
         "$sshConnection"
     else
+      # To override `IdentitiesOnly=yes` set in `sshArgs` we need to set
+      # `IdentitiesOnly=no` first as the first time an SSH option is
+      # specified on the command line takes precedence
       ssh-copy-id \
+        -o IdentitiesOnly=no \
         -o ConnectTimeout=10 \
-        "${sshCopyIdArgs[@]}" \
         "${sshArgs[@]}" \
         "$sshConnection"
     fi
