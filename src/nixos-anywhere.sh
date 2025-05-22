@@ -65,7 +65,7 @@ mkdir -p "$sshKeyDir"
 declare -A diskEncryptionKeys=()
 declare -A extraFilesOwnership=()
 declare -a nixCopyOptions=()
-declare -a sshArgs=()
+declare -a sshArgs=("-i" "$sshKeyDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
 
 showUsage() {
   cat <<USAGE
@@ -407,23 +407,27 @@ parseArgs() {
 
 # ssh wrapper
 runSshNoTty() {
-  ssh -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
+  # shellcheck disable=SC2029
+  # We want to expand "$@" to get the command to run over SSH
+  ssh "${sshArgs[@]}" "$sshConnection" "$@"
 }
 runSshTimeout() {
-  timeout 10 ssh -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
+  timeout 10 ssh "${sshArgs[@]}" "$sshConnection" "$@"
 }
 runSsh() {
-  ssh "$sshTtyParam" -i "$sshKeyDir"/nixos-anywhere -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${sshArgs[@]}" "$sshConnection" "$@"
+  # shellcheck disable=SC2029
+  # We want to expand "$@" to get the command to run over SSH
+  ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
 }
 
 nixCopy() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere ${sshArgs[*]}" nix copy \
+  NIX_SSHOPTS="${sshArgs[*]}" nix copy \
     "${nixOptions[@]}" \
     "${nixCopyOptions[@]}" \
     "$@"
 }
 nixBuild() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere ${sshArgs[*]}" nix build \
+  NIX_SSHOPTS="${sshArgs[*]}" nix build \
     --print-out-paths \
     --no-link \
     "${nixBuildFlags[@]}" \
@@ -481,20 +485,14 @@ uploadSshKey() {
     if [[ ${envPassword} == y ]]; then
       sshpass -e \
         ssh-copy-id \
-        -i "$sshKeyDir"/nixos-anywhere.pub \
         -o ConnectTimeout=10 \
-        -o UserKnownHostsFile=/dev/null \
         -o IdentitiesOnly=yes \
-        -o StrictHostKeyChecking=no \
         "${sshCopyIdArgs[@]}" \
         "${sshArgs[@]}" \
         "$sshConnection"
     else
       ssh-copy-id \
-        -i "$sshKeyDir"/nixos-anywhere.pub \
         -o ConnectTimeout=10 \
-        -o UserKnownHostsFile=/dev/null \
-        -o StrictHostKeyChecking=no \
         "${sshCopyIdArgs[@]}" \
         "${sshArgs[@]}" \
         "$sshConnection"
