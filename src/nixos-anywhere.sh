@@ -630,18 +630,30 @@ SSH
     kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
   fi
 
+  # gnu tar cannot automatically detect the compression when decompressing via stdin
+  tarDecomp=""
+  if [[ ${kexecUrl} =~ \.tar\.gz$ ]]; then
+    tarDecomp="--gzip"
+  elif [[ ${kexecUrl} =~ \.tar\.xz$ ]]; then
+    tarDecomp="--xz"
+  elif [[ ${kexecUrl} =~ \.tar\.zstd$ ]]; then
+    tarDecomp="--zstd"
+  elif [[ ${kexecUrl} =~ \.tar$ ]]; then
+    tarDecomp=""
+  fi
+
   if [[ -f $kexecUrl ]]; then
-    runSsh "${maybeSudo} tar -C /root/kexec -xvzf-" <"$kexecUrl"
+    runSsh "${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}" <"$kexecUrl"
   elif [[ ${hasCurl} == "y" ]]; then
-    runSsh "curl --fail -Ss -L '${kexecUrl}' | ${maybeSudo} tar -C /root/kexec -xvzf-"
+    runSsh "curl --fail -Ss -L '${kexecUrl}' | ${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}"
   elif [[ ${hasWget} == "y" ]]; then
-    runSsh "wget '${kexecUrl}' -O- | ${maybeSudo} tar -C /root/kexec -xvzf-"
+    runSsh "wget '${kexecUrl}' -O- | ${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}"
   else
-    curl --fail -Ss -L "${kexecUrl}" | runSsh "${maybeSudo} tar -C /root/kexec -xvzf-"
+    curl --fail -Ss -L "${kexecUrl}" | runSsh "${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}"
   fi
 
   runSsh <<SSH
-TMPDIR=/root/kexec setsid ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags "${kexecExtraFlags}"
+  TMPDIR=/root/kexec setsid ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags "${kexecExtraFlags}"
 SSH
 
   # use the default SSH port to connect at this point
