@@ -47,7 +47,7 @@
         nixos-anywhere \
           -i /root/.ssh/install_key \
           --debug \
-          --kexec /etc/nixos-anywhere/kexec-installer \
+          --kexec /etc/nixos-anywhere/kexec-installer.tar.gz \
           --extra-files /tmp/extra-files \
           --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
           --chown /home/user 1000:100 \
