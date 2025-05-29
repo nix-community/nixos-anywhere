@@ -23,7 +23,7 @@
         nixos-anywhere \
           -i /root/.ssh/install_key \
           --debug \
-          --kexec /etc/nixos-anywhere/kexec-installer \
+          --kexec /etc/nixos-anywhere/kexec-installer.tar.gz \
           --phases kexec \
           --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
           nixos@installed >&2
@@ -46,7 +46,7 @@
           --debug \
           --phases install \
           --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
-          root@installed >&2 
+          root@installed >&2
       """)
   '';
 }
