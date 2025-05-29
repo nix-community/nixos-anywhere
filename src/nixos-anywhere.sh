@@ -671,6 +671,18 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
   local localUploadCommand=()
   local remoteUploadCommand=()
 
+  # gnu tar cannot automatically detect the compression when decompressing via stdin
+  tarDecomp=""
+  if [[ ${kexecUrl} =~ \.tar\.gz$ ]]; then
+    tarDecomp="--gzip"
+  elif [[ ${kexecUrl} =~ \.tar\.xz$ ]]; then
+    tarDecomp="--xz"
+  elif [[ ${kexecUrl} =~ \.tar\.zstd$ ]]; then
+    tarDecomp="--zstd"
+  elif [[ ${kexecUrl} =~ \.tar$ ]]; then
+    tarDecomp=""
+  fi
+
   if [[ -f $kexecUrl ]]; then
     localUploadCommand=(cat "$kexecUrl")
   elif [[ $hasWget == "y" ]]; then
@@ -686,14 +698,14 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
   local remoteCommands
   if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
     # Use remote command for download and execution
-    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | ${maybeSudo} tar -C /root/kexec -xvzf-"
+    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | ${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}"
 
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
     runSsh sh -c "$(printf '%q' "$remoteCommands")"
   else
     # Use local command with pipe to remote
-    tarCommand="${maybeSudo} tar -C /root/kexec -xvzf-"
+    tarCommand="${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}"
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
     "${localUploadCommand[@]}" | runSsh sh -c "$(printf '%q' "$remoteCommands")"
