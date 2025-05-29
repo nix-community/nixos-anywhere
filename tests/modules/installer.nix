@@ -17,6 +17,6 @@ in
   environment.etc = {
     "nixos-anywhere/disko".source = system-to-install.config.system.build.diskoScriptNoDeps;
     "nixos-anywhere/system-to-install".source = system-to-install.config.system.build.toplevel;
-    "nixos-anywhere/kexec-installer".source = kexec-installer;
+    "nixos-anywhere/kexec-installer.tar.gz".source = kexec-installer;
   };
 }
