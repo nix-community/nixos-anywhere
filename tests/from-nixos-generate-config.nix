@@ -9,7 +9,7 @@
     };
     installed = {
       services.openssh.enable = true;
-      virtualisation.memorySize = 1024;
+      virtualisation.memorySize = 1500;
 
       users.users.root.openssh.authorizedKeys.keyFiles = [ ./modules/ssh-keys/ssh.pub ];
     };
