@@ -36,4 +36,4 @@ custom installer via the --kexec flag which connects to your VPN.
        [different kexec image](./howtos/INDEX.md#using-your-own-kexec-image)
        manually.
    - **Memory Requirements:**
-     - At least 1 GB of RAM (excluding swap space).
+     - At least 1.5 GB of RAM (excluding swap space).

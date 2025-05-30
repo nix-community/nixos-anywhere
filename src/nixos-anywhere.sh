@@ -619,32 +619,55 @@ runKexec() {
   fi
 
   step Switching system into kexec
-  runSsh sh <<SSH
-set -efu ${enableDebug}
-$maybeSudo rm -rf /root/kexec
-$maybeSudo mkdir -p /root/kexec
-SSH
 
   # no way to reach global ipv4 destinations, use gh-v6.com automatically if github url
   if [[ ${hasIpv6Only} == "y" ]] && [[ $kexecUrl == "https://github.com/"* ]]; then
     kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
   fi
 
+  # Define common remote commands template
+  local remoteCommandTemplate="
+set -eu ${enableDebug}
+${maybeSudo} rm -rf /root/kexec
+${maybeSudo} mkdir -p /root/kexec
+%TAR_COMMAND%
+TMPDIR=/root/kexec setsid sudo /root/kexec/kexec/run --kexec-extra-flags \"$kexecExtraFlags\"
+"
+
+  # Define upload commands
+  local localUploadCommand=()
+  local remoteUploadCommand=()
+
   if [[ -f $kexecUrl ]]; then
-    runSsh "${maybeSudo} tar -C /root/kexec -xvzf-" <"$kexecUrl"
-  elif [[ ${hasCurl} == "y" ]]; then
-    runSsh "curl --fail -Ss -L '${kexecUrl}' | ${maybeSudo} tar -C /root/kexec -xvzf-"
-  elif [[ ${hasWget} == "y" ]]; then
-    runSsh "wget '${kexecUrl}' -O- | ${maybeSudo} tar -C /root/kexec -xvzf-"
+    localUploadCommand=(cat "$kexecUrl")
+  elif [[ $hasWget == "y" ]]; then
+    remoteUploadCommand=(wget "$kexecUrl" -O-)
+  elif [[ $hasCurl == "y" ]]; then
+    remoteUploadCommand=(curl --fail -Ss -L "$kexecUrl")
   else
-    curl --fail -Ss -L "${kexecUrl}" | runSsh "${maybeSudo} tar -C /root/kexec -xvzf-"
+    # Fallback to local curl
+    localUploadCommand=(curl --fail -Ss -L "${kexecUrl}")
   fi
 
-  runSsh <<SSH
-TMPDIR=/root/kexec setsid ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags "${kexecExtraFlags}"
-SSH
+  local tarCommand
+  local remoteCommands
+  if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
+    # Use remote command for download and execution
+    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | ${maybeSudo} tar -C /root/kexec -xvzf-"
+
+    remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
+
+    runSsh sh -c "$remoteCommands"
+  else
+    # Use local command with pipe to remote
+    tarCommand="${maybeSudo} tar -C /root/kexec -xvzf-"
+    remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
+
+    "${localUploadCommand[@]}" | runSsh sh -c "$remoteCommands"
+  fi
 
   # use the default SSH port to connect at this point
+  local i
   for i in "${!sshArgs[@]}"; do
     if [[ ${sshArgs[i]} == "-p" ]]; then
       sshArgs[i + 1]=$postKexecSshPort
