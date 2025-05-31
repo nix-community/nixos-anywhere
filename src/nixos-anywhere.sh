@@ -657,13 +657,13 @@ TMPDIR=/root/kexec setsid sudo /root/kexec/kexec/run --kexec-extra-flags \"$kexe
 
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
-    runSsh sh -c "$remoteCommands"
+    runSsh sh -c "$(printf '%q' "$remoteCommands")"
   else
     # Use local command with pipe to remote
     tarCommand="${maybeSudo} tar -C /root/kexec -xvzf-"
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
-    "${localUploadCommand[@]}" | runSsh sh -c "$remoteCommands"
+    "${localUploadCommand[@]}" | runSsh sh -c "$(printf '%q' "$remoteCommands")"
   fi
 
   # use the default SSH port to connect at this point
