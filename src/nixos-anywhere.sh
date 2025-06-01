@@ -465,7 +465,14 @@ runVmTest() {
 
 uploadSshKey() {
   # ssh-copy-id requires this directory
-  mkdir -p "$HOME/.ssh/"
+  local sshCopyHome="$HOME"
+  if ! mkdir -p "$HOME/.ssh/" 2>/dev/null; then
+    # Fallback: create a temporary home directory for ssh-copy-id in sshKeyDir
+    sshCopyHome="$sshKeyDir/ssh-home"
+    mkdir -p "$sshCopyHome/.ssh"
+    echo "Warning: Could not create $HOME/.ssh, using temporary directory: $sshCopyHome"
+  fi
+  
   if [[ -n ${sshPrivateKeyFile} ]]; then
     cp "$sshPrivateKeyFile" "$sshKeyDir/nixos-anywhere"
     ssh-keygen -y -f "$sshKeyDir/nixos-anywhere" >"$sshKeyDir/nixos-anywhere.pub"
@@ -477,7 +484,7 @@ uploadSshKey() {
   step Uploading install SSH keys
   until
     if [[ ${envPassword} == y ]]; then
-      sshpass -e \
+      HOME="$sshCopyHome" sshpass -e \
         ssh-copy-id \
         -o ConnectTimeout=10 \
         "${sshArgs[@]}" \
@@ -486,7 +493,7 @@ uploadSshKey() {
       # To override `IdentitiesOnly=yes` set in `sshArgs` we need to set
       # `IdentitiesOnly=no` first as the first time an SSH option is
       # specified on the command line takes precedence
-      ssh-copy-id \
+      HOME="$sshCopyHome" ssh-copy-id \
         -o IdentitiesOnly=no \
         -o ConnectTimeout=10 \
         "${sshArgs[@]}" \
