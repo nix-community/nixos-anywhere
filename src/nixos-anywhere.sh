@@ -58,14 +58,14 @@ hasCurl=
 hasSetsid=
 hasNixOSFacter=
 
-sshKeyDir=$(mktemp -d)
-trap 'rm -rf "$sshKeyDir"' EXIT
-mkdir -p "$sshKeyDir"
+tempDir=$(mktemp -d)
+trap 'rm -rf "$tempDir"' EXIT
+mkdir -p "$tempDir"
 
 declare -A diskEncryptionKeys=()
 declare -A extraFilesOwnership=()
 declare -a nixCopyOptions=()
-declare -a sshArgs=("-o" "IdentitiesOnly=yes" "-i" "$sshKeyDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
+declare -a sshArgs=("-o" "IdentitiesOnly=yes" "-i" "$tempDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
 
 showUsage() {
   cat <<USAGE
@@ -467,18 +467,18 @@ uploadSshKey() {
   # ssh-copy-id requires this directory
   local sshCopyHome="$HOME"
   if ! mkdir -p "$HOME/.ssh/" 2>/dev/null; then
-    # Fallback: create a temporary home directory for ssh-copy-id in sshKeyDir
-    sshCopyHome="$sshKeyDir/ssh-home"
+    # Fallback: create a temporary home directory for ssh-copy-id in tempDir
+    sshCopyHome="$tempDir/ssh-home"
     mkdir -p "$sshCopyHome/.ssh"
     echo "Warning: Could not create $HOME/.ssh, using temporary directory: $sshCopyHome"
   fi
-  
+
   if [[ -n ${sshPrivateKeyFile} ]]; then
-    cp "$sshPrivateKeyFile" "$sshKeyDir/nixos-anywhere"
-    ssh-keygen -y -f "$sshKeyDir/nixos-anywhere" >"$sshKeyDir/nixos-anywhere.pub"
+    cp "$sshPrivateKeyFile" "$tempDir/nixos-anywhere"
+    ssh-keygen -y -f "$tempDir/nixos-anywhere" >"$tempDir/nixos-anywhere.pub"
   else
     # we generate a temporary ssh keypair that we can use during nixos-anywhere
-    ssh-keygen -t ed25519 -f "$sshKeyDir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
+    ssh-keygen -t ed25519 -f "$tempDir"/nixos-anywhere -P "" -C "nixos-anywhere" >/dev/null
   fi
 
   step Uploading install SSH keys
@@ -709,7 +709,7 @@ runDisko() {
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     diskoScript=$(
       nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}" \
-        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$sshKeyDir%2Fnixos-anywhere&$sshStoreSettings"
+        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$tempDir%2Fnixos-anywhere&$sshStoreSettings"
     )
   fi
 
@@ -731,7 +731,7 @@ nixosInstall() {
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     nixosSystem=$(
       nixBuild "${flake}#${flakeAttr}.system.build.toplevel" \
-        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$sshKeyDir%2Fnixos-anywhere&remote-store=local%3Froot=%2Fmnt&$sshStoreSettings"
+        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$tempDir%2Fnixos-anywhere&remote-store=local%3Froot=%2Fmnt&$sshStoreSettings"
     )
   fi
 
@@ -830,8 +830,8 @@ main() {
   fi
 
   if [[ -n ${SSH_PRIVATE_KEY} ]] && [[ -z ${sshPrivateKeyFile} ]]; then
-    # $sshKeyDir is getting deleted on trap EXIT
-    sshPrivateKeyFile="$sshKeyDir/from-env"
+    # $tempDir is getting deleted on trap EXIT
+    sshPrivateKeyFile="$tempDir/from-env"
     (
       umask 077
       printf '%s\n' "$SSH_PRIVATE_KEY" >"$sshPrivateKeyFile"
