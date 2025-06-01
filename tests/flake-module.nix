@@ -17,7 +17,7 @@
       testInputsStable = testInputsUnstable // {
         kexec-installer = "${inputs'.nixos-images.packages.kexec-installer-nixos-stable-noninteractive}/nixos-kexec-installer-noninteractive-${system}.tar.gz";
       };
-      ubuntuTestInputs = testInputsUnstable // {
+      linuxTestInputs = testInputsUnstable // {
         nix-vm-test = inputs.nix-vm-test;
       };
     in
@@ -29,6 +29,17 @@
       from-nixos-with-generated-config = import ./from-nixos-generate-config.nix testInputsUnstable;
       from-nixos-build-on-remote = import ./from-nixos-build-on-remote.nix testInputsUnstable;
       from-nixos-separated-phases = import ./from-nixos-separated-phases.nix testInputsUnstable;
-      ubuntu-kexec-test = import ./ubuntu-kexec-test.nix ubuntuTestInputs;
+      ubuntu-kexec-test = import ./linux-kexec-test.nix (linuxTestInputs // {
+        distribution = "ubuntu";
+        version = "24_04";
+      });
+      fedora-kexec-test = import ./linux-kexec-test.nix (linuxTestInputs // {
+        distribution = "fedora";
+        version = "40";
+      });
+      debian-kexec-test = import ./linux-kexec-test.nix (linuxTestInputs // {
+        distribution = "debian";
+        version = "12";
+      });
     });
 }
