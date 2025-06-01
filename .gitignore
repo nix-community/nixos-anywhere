@@ -4,3 +4,5 @@ result*
 
 # terraform
 .terraform.lock.hcl
+terraform/tests/hcloud/modules/ssh-key/test_key
+terraform/tests/hcloud/modules/ssh-key/test_key.pub

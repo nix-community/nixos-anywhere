@@ -1,0 +1,10 @@
+# Terraform variables for nixos-anywhere test suite
+# Copy this file to terraform.tfvars and fill in your values
+
+# Required: Hetzner Cloud API token
+# Get this from https://console.hetzner.cloud/
+hcloud_token = "your-hcloud-token-here"
+
+# Optional: Prefix for test resource names
+# This helps identify and clean up test resources
+test_name_prefix = "tftest-nixos-anywhere"

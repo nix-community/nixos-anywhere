@@ -1,4 +1,13 @@
+{ inputs, ... }:
 {
+  flake.nixosConfigurations.terraform-test = inputs.nixpkgs.lib.nixosSystem {
+    system = "x86_64-linux";
+    modules = [
+      ../tests/modules/system-to-install.nix
+      inputs.disko.nixosModules.disko
+    ];
+  };
+
   perSystem = { pkgs, ... }: {
     devShells.terraform = pkgs.mkShell {
       buildInputs = with pkgs; [
