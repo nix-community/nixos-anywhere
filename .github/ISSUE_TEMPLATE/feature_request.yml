@@ -1,0 +1,85 @@
+name: Feature Request
+description: Suggest an idea or enhancement for nixos-anywhere
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm you've completed these steps
+      options:
+        - label: I have searched existing issues to make sure this isn't a duplicate
+          required: true
+        - label: I have checked the documentation to see if this feature already exists
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: Is your feature request related to a problem? Please describe the problem you're trying to solve.
+      placeholder: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented
+      placeholder: A clear and concise description of what you want to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered
+      placeholder: A clear and concise description of any alternative solutions or features you've considered
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What type of feature is this?
+      options:
+        - New command-line option
+        - New installation target support
+        - Performance improvement
+        - Documentation improvement
+        - Developer experience improvement
+        - Integration with other tools
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe your specific use case and how this feature would help
+      placeholder: |
+        - What are you trying to accomplish?
+        - How would this feature fit into your workflow?
+        - Who else might benefit from this feature?
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Ideas
+      description: Do you have any ideas about how this could be implemented?
+      placeholder: If you have thoughts on the technical implementation, please share them here
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples about the feature request here
+      placeholder: Any additional information that might help understand the request

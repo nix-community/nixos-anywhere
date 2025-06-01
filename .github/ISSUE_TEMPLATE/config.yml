@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/nix-community/nixos-anywhere/tree/main/docs
+    about: Check the documentation for usage guides and examples
+  - name: Community Discussion
+    url: https://discourse.nixos.org/
+    about: Ask questions and discuss with the NixOS community
+  - name: Matrix Chat
+    url: https://matrix.to/#/#nixos-anywhere:matrix.org
+    about: Real-time chat support for nixos-anywhere
