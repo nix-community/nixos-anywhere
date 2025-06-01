@@ -26,6 +26,7 @@
         ./src/flake-module.nix
         ./tests/flake-module.nix
         ./docs/flake-module.nix
+        ./terraform/flake-module.nix
         # allow to disable treefmt in downstream flakes
       ] ++ inputs.nixpkgs.lib.optional (inputs.treefmt-nix ? flakeModule) ./treefmt/flake-module.nix;
 

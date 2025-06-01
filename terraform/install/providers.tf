@@ -1,5 +1,5 @@
 terraform {
   required_providers {
-    null       = { source = "hashicorp/null" }
+    null = { source = "hashicorp/null" }
   }
 }

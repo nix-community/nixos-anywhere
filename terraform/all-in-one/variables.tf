@@ -1,7 +1,7 @@
 variable "kexec_tarball_url" {
-  type = string
+  type        = string
   description = "NixOS kexec installer tarball url"
-  default = null
+  default     = null
 }
 
 # To make this re-usable we maybe should accept a store path here?
@@ -100,8 +100,8 @@ variable "extra_files_script" {
 }
 
 variable "disk_encryption_key_scripts" {
-  type        = list(object({
-    path = string
+  type = list(object({
+    path   = string
     script = string
   }))
   description = "Each script will be executed locally. Output of each will be created at the given path to disko during installation. The keys will be not copied to the final system"
@@ -115,9 +115,9 @@ variable "extra_environment" {
 }
 
 variable "nix_options" {
-  type = map(string)
+  type        = map(string)
   description = "the options of nix"
-  default = {}
+  default     = {}
 }
 
 variable "nixos_generate_config_path" {
@@ -133,8 +133,8 @@ variable "nixos_facter_path" {
 }
 
 variable "special_args" {
-  type = any
-  default = {}
+  type        = any
+  default     = {}
   description = "A map exposed as NixOS's `specialArgs` thru a file."
 }
 
@@ -145,7 +145,7 @@ variable "build_on_remote" {
 }
 
 variable "install_bootloader" {
-  type = bool
+  type        = bool
   description = "Install/re-install the bootloader"
-  default = false
+  default     = false
 }
