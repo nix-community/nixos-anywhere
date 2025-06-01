@@ -1,10 +1,10 @@
-{ modulesPath, self, ... }: {
+{ modulesPath, self, lib, ... }: {
   imports = [
     (modulesPath + "/testing/test-instrumentation.nix")
     (modulesPath + "/profiles/qemu-guest.nix")
     (modulesPath + "/profiles/minimal.nix")
   ];
-  networking.hostName = "nixos-anywhere";
+  networking.hostName = lib.mkDefault "nixos-anywhere";
   documentation.enable = false;
   hardware.enableAllFirmware = false;
   networking.hostId = "8425e349"; # from profiles/base.nix, needed for zfs

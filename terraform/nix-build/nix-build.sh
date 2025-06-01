@@ -31,12 +31,17 @@ else
 
   # grab flake nar from error message
   flake_rel="$(echo "${attribute}" | cut -d "#" -f 1)"
-  # e.g. flake_rel="."
-  flake_dir="$(readlink -f "${flake_rel}")"
-  flake_nar="$(nix flake prefetch "${flake_dir}" --json | jq -r '.hash')"
+
+  # Use nix flake prefetch to get the flake into the store, then use path:// URL with narHash
+  prefetch_result="$(nix flake prefetch "${flake_rel}" --json)"
+  store_path="$(echo "${prefetch_result}" | jq -r '.storePath')"
+  nar_hash="$(echo "${prefetch_result}" | jq -r '.hash')"
+  flake_url="path:${store_path}?narHash=${nar_hash}"
+
   # substitute variables into the template
-  nix_expr="(builtins.getFlake ''file://${flake_dir}/flake.nix?narHash=${flake_nar}'').${config_path}.extendModules { specialArgs = builtins.fromJSON ''${special_args}''; }"
+  nix_expr="(builtins.getFlake ''${flake_url}'').${config_path}.extendModules { specialArgs = builtins.fromJSON ''${special_args}''; }"
   # inject `special_args` into nixos config's `specialArgs`
+  
   # shellcheck disable=SC2086
   out=$(nix build --no-link --json ${options} --expr "${nix_expr}" "${config_attribute}")
 fi

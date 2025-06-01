@@ -5,6 +5,18 @@
     modules = [
       ../tests/modules/system-to-install.nix
       inputs.disko.nixosModules.disko
+      (args: {
+        # Example usage of special args from terraform
+        networking.hostName = args.terraform.hostname or "nixos-anywhere";
+
+        # Create testable files in /etc based on terraform special_args
+        environment.etc = {
+          "terraform-config.json" = {
+            text = builtins.toJSON args.terraform or { };
+            mode = "0644";
+          };
+        };
+      })
     ];
   };
 
