@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -efu
 
-declare file attribute nix_options special_args
-eval "$(jq -r '@sh "attribute=\(.attribute) file=\(.file) nix_options=\(.nix_options) special_args=\(.special_args)"')"
+declare file attribute nix_options special_args debug_logging
+eval "$(jq -r '@sh "attribute=\(.attribute) file=\(.file) nix_options=\(.nix_options) special_args=\(.special_args) debug_logging=\(.debug_logging)"')"
+if [ "${debug_logging}" = "true" ]; then
+  set -x
+fi
 if [ "${nix_options}" != '{"options":{}}' ]; then
   options=$(echo "${nix_options}" | jq -r '.options | to_entries | map("--option \(.key) \(.value)") | join(" ")')
 else
@@ -41,7 +44,7 @@ else
   # substitute variables into the template
   nix_expr="(builtins.getFlake ''${flake_url}'').${config_path}.extendModules { specialArgs = builtins.fromJSON ''${special_args}''; }"
   # inject `special_args` into nixos config's `specialArgs`
-  
+
   # shellcheck disable=SC2086
   out=$(nix build --no-link --json ${options} --expr "${nix_expr}" "${config_attribute}")
 fi

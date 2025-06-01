@@ -20,3 +20,9 @@ variable "special_args" {
   default     = {}
   description = "A map exposed as NixOS's `specialArgs` thru a file."
 }
+
+variable "debug_logging" {
+  type        = bool
+  default     = false
+  description = "Enable debug logging"
+}
