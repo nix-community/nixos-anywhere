@@ -1,3 +1,6 @@
 result*
 .direnv
 /docs/book
+
+# terraform
+.terraform.lock.hcl
