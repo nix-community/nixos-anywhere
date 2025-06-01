@@ -11,6 +11,8 @@
     nixos-images.url = "github:nix-community/nixos-images";
     nixos-images.inputs.nixos-unstable.follows = "nixpkgs";
     nixos-images.inputs.nixos-stable.follows = "nixos-stable";
+    # https://github.com/numtide/nix-vm-test/pull/105
+    nix-vm-test = { url = "github:Mic92/nix-vm-test"; inputs.nixpkgs.follows = "nixpkgs"; };
 
     # used for development
     treefmt-nix = { url = "github:numtide/treefmt-nix"; inputs.nixpkgs.follows = "nixpkgs"; };
