@@ -5,6 +5,10 @@
 # Get this from https://console.hetzner.cloud/
 hcloud_token = "your-hcloud-token-here"
 
+# Required: DigitalOcean API token
+# Get this from https://cloud.digitalocean.com/account/api/tokens
+digitalocean_token = "your-digitalocean-token-here"
+
 # Optional: Prefix for test resource names
 # This helps identify and clean up test resources
 test_name_prefix = "tftest-nixos-anywhere"

@@ -1,8 +1,8 @@
 terraform {
   required_providers {
-    hcloud = {
-      source  = "hetznercloud/hcloud"
-      version = "~> 1.45"
+    digitalocean = {
+      source  = "digitalocean/digitalocean"
+      version = "~> 2.34"
     }
     tls = {
       source  = "hashicorp/tls"
@@ -15,12 +15,12 @@ terraform {
   }
 }
 
-provider "hcloud" {
-  token = var.hcloud_token
+provider "digitalocean" {
+  token = var.digitalocean_token
 }
 
-variable "hcloud_token" {
-  description = "Hetzner Cloud API token (64 characters)"
+variable "digitalocean_token" {
+  description = "DigitalOcean API token"
   type        = string
   sensitive   = true
 }
@@ -40,7 +40,6 @@ variable "nixos_partitioner_attr" {
   description = "NixOS partitioner attribute"
   type        = string
 }
-
 
 variable "debug_logging" {
   description = "Enable debug logging"
@@ -66,33 +65,39 @@ resource "local_file" "public_key" {
   filename = "${path.root}/test_key.pub"
 }
 
-# Create Hetzner Cloud SSH key
-resource "hcloud_ssh_key" "test_key" {
+# Create DigitalOcean SSH key
+resource "digitalocean_ssh_key" "test_key" {
   name       = "${var.test_name_prefix}-deployment-key"
   public_key = tls_private_key.test_key.public_key_openssh
 }
 
-# Create test server
-resource "hcloud_server" "test_server" {
-  name        = "${var.test_name_prefix}-server"
-  image       = "ubuntu-22.04"
-  server_type = "cx22"
-  location    = "hel1"
-  ssh_keys    = [hcloud_ssh_key.test_key.id]
+# Create test droplet
+# Note: Using s-2vcpu-2gb (minimum 2GB RAM required for nixos-anywhere kexec)
+# DigitalOcean uses /dev/vda for disk devices (handled by digitalocean config)
+resource "digitalocean_droplet" "test_server" {
+  name     = "${var.test_name_prefix}-server"
+  image    = "ubuntu-22-04-x64"
+  size     = "s-2vcpu-2gb"
+  region   = "nyc3"
+  ssh_keys = [digitalocean_ssh_key.test_key.id]
 
-  labels = {
-    purpose  = "nixos-anywhere-test"
-    test_run = replace(replace(replace(timestamp(), ":", "-"), "T", "-"), "Z", "")
-  }
+  tags = [
+    "nixos-anywhere-test",
+    replace(replace(replace(timestamp(), ":", "-"), "T", "-"), "Z", "")
+  ]
 }
 
 # nixos-anywhere all-in-one module
+# Uses digitalocean configuration from nixos-anywhere-examples which:
+# - Sets disk device to /dev/vda (DigitalOcean standard)
+# - Configures cloud-init for network setup
+# - Disables DHCP in favor of cloud-init provisioning
 module "nixos_anywhere" {
   source = "../../all-in-one"
 
   nixos_system_attr      = var.nixos_system_attr
   nixos_partitioner_attr = var.nixos_partitioner_attr
-  target_host            = hcloud_server.test_server.ipv4_address
+  target_host            = digitalocean_droplet.test_server.ipv4_address
   target_port            = 22
   target_user            = "root"
   debug_logging          = var.debug_logging
@@ -107,4 +112,24 @@ module "nixos_anywhere" {
 output "nixos_anywhere_result" {
   description = "nixos-anywhere module result"
   value       = module.nixos_anywhere.result
+}
+
+output "droplet_ip" {
+  description = "DigitalOcean droplet public IP address"
+  value       = digitalocean_droplet.test_server.ipv4_address
+}
+
+output "droplet_id" {
+  description = "DigitalOcean droplet ID for cleanup"
+  value       = digitalocean_droplet.test_server.id
+}
+
+output "ssh_key_id" {
+  description = "DigitalOcean SSH key ID for cleanup"
+  value       = digitalocean_ssh_key.test_key.id
+}
+
+output "ssh_connection_command" {
+  description = "SSH command to connect to the deployed server"
+  value       = "ssh -i ${local_file.private_key.filename} root@${digitalocean_droplet.test_server.ipv4_address}"
 }
