@@ -638,7 +638,7 @@ set -eu ${enableDebug}
 ${maybeSudo} rm -rf /root/kexec
 ${maybeSudo} mkdir -p /root/kexec
 %TAR_COMMAND%
-TMPDIR=/root/kexec setsid sudo /root/kexec/kexec/run --kexec-extra-flags \"$kexecExtraFlags\"
+TMPDIR=/root/kexec setsid --wait sudo /root/kexec/kexec/run --kexec-extra-flags \"$kexecExtraFlags\"
 "
 
   # Define upload commands
