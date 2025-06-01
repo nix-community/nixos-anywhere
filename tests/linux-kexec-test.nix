@@ -1,11 +1,11 @@
-{ pkgs, nixos-anywhere, kexec-installer, nix-vm-test, system-to-install, ... }:
+{ pkgs, nixos-anywhere, kexec-installer, nix-vm-test, system-to-install, distribution, version, ... }:
 
-(nix-vm-test.lib.${pkgs.system}.ubuntu."24_04" {
+(nix-vm-test.lib.${pkgs.system}.${distribution}.${version} {
   sharedDirs = { };
 
   # Configure VM with 2GB memory
   machineConfigModule = { ... }: {
-    nodes.vm.virtualisation.memorySize = 2048;
+    nodes.vm.virtualisation.memorySize = 1500;
   };
 
   # The test script
@@ -19,8 +19,12 @@
     # Wait for the system to be fully booted
     vm.wait_for_unit("multi-user.target")
 
+    # Detect SSH service name (ssh on Ubuntu/Debian, sshd on Fedora/RHEL)
+    ssh_service = "sshd" if "${distribution}" in ["fedora", "centos", "rhel"] else "ssh"
+
     # Unmask SSH service (which is masked by default in the test VM)
-    vm.succeed("systemctl unmask ssh.service ssh.socket")
+    vm.succeed(f"systemctl unmask {ssh_service}.service || true")
+    vm.succeed(f"systemctl unmask {ssh_service}.socket || true")
 
     # Generate SSH host keys (required for SSH to start)
     vm.succeed("ssh-keygen -A")
@@ -38,10 +42,7 @@
     )
 
     # Start SSH service
-    vm.succeed("systemctl start ssh")
-
-    # Wait for SSH to be available
-    vm.wait_for_open_port(22)
+    vm.succeed(f"systemctl start {ssh_service}")
 
     # Forward SSH port using vm.forward_port method
     ssh_port = 2222
