@@ -27,13 +27,13 @@ variable "ssh_private_key" {
 }
 
 variable "ignore_systemd_errors" {
-  type = bool
+  type        = bool
   description = "Ignore systemd errors happening during deploy"
-  default = false
+  default     = false
 }
 
 variable "install_bootloader" {
-  type = bool
+  type        = bool
   description = "Install/re-install the bootloader"
-  default = false
+  default     = false
 }

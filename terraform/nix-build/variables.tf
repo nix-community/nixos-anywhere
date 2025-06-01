@@ -1,22 +1,22 @@
 variable "attribute" {
-  type = string
+  type        = string
   description = "the attribute to build, can also be a flake"
 }
 
 variable "file" {
-  type = string
+  type        = string
   description = "the nix file to evaluate, if not run in flake mode"
-  default = null
+  default     = null
 }
 
 variable "nix_options" {
-  type = map(string)
+  type        = map(string)
   description = "the options of nix"
-  default = {}
+  default     = {}
 }
 
 variable "special_args" {
-  type = any
-  default = {}
+  type        = any
+  default     = {}
   description = "A map exposed as NixOS's `specialArgs` thru a file."
 }

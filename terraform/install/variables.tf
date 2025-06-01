@@ -36,9 +36,9 @@ variable "target_port" {
 }
 
 variable "target_pass" {
-  type       = string
+  type        = string
   description = "Password used to connect to the target_host"
-  default    = null
+  default     = null
 }
 
 variable "ssh_private_key" {
@@ -66,8 +66,8 @@ variable "extra_files_script" {
 }
 
 variable "disk_encryption_key_scripts" {
-  type        = list(object({
-    path = string
+  type = list(object({
+    path   = string
     script = string
   }))
   description = "Each script will be executed locally. Output of each will be created at the given path to disko during installation. The keys will be not copied to the final system"
