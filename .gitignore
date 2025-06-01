@@ -6,3 +6,8 @@ result*
 .terraform.lock.hcl
 terraform/tests/hcloud/modules/ssh-key/test_key
 terraform/tests/hcloud/modules/ssh-key/test_key.pub
+terraform/tests/hcloud/test_key
+terraform/tests/hcloud/test_key.pub
+errored_test.tfstate
+errored_test.tfstate.backup
+terraform.tfstate
