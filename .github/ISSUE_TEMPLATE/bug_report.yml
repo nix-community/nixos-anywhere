@@ -1,0 +1,120 @@
+name: Bug Report
+description: File a bug report to help us improve nixos-anywhere
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please make sure you've followed the steps below before submitting.
+
+        **Before submitting:**
+        1. Run `nix run --refresh github:nix-community/nixos-anywhere` to ensure you're using the latest version
+        2. Reproduce the issue with the `--debug` flag to get detailed logs
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm you've completed these steps
+      options:
+        - label: I have updated to the latest version using `nix run --refresh github:nix-community/nixos-anywhere`
+          required: true
+        - label: I have reproduced the issue with the `--debug` flag
+          required: true
+        - label: I have searched existing issues to make sure this isn't a duplicate
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe what happened and what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run command '...'
+        2. See error
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug Logs
+      description: Please paste the full output from running nixos-anywhere with the `--debug` flag
+      placeholder: Paste the complete debug output here
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: Command Used
+      description: The exact nixos-anywhere command you ran
+      placeholder: "nix run github:nix-community/nixos-anywhere -- --debug [your options]"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target-system
+    attributes:
+      label: Target System
+      description: What type of system are you installing NixOS on?
+      options:
+        - Cloud server (AWS, DigitalOcean, etc.)
+        - Bare metal server
+        - Virtual machine
+        - Hetzner dedicated server
+        - Local machine
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: nixos-version
+    attributes:
+      label: NixOS Version
+      description: What version of NixOS are you trying to install?
+      placeholder: "e.g., 23.11, unstable"
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Information
+      description: Please provide information about your environment
+      placeholder: |
+        - Host OS: (e.g., NixOS 23.11, Ubuntu 22.04)
+        - Nix version: (output of `nix --version`)
+        - Target architecture: (e.g., x86_64-linux, aarch64-linux)
+      value: |
+        - Host OS:
+        - Nix version:
+        - Target architecture:
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration Files
+      description: Please share relevant parts of your NixOS configuration or disko configuration
+      placeholder: Share your flake.nix, disko configuration, or other relevant config files
+      render: nix
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: Any additional information that might help understand the issue
