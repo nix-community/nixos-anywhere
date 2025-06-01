@@ -25,11 +25,12 @@
       buildInputs = with pkgs; [
         terraform-docs
         (opentofu.withPlugins (p: [
-          p.tls
+          p.digitalocean
+          p.external
           p.hcloud
           p.local
-          p.external
           p.null
+          p.tls
         ]))
       ];
 
