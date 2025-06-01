@@ -77,7 +77,7 @@ resource "hcloud_server" "test_server" {
   name        = "${var.test_name_prefix}-server"
   image       = "ubuntu-22.04"
   server_type = "cx22"
-  location    = "nbg1"
+  location    = "hel1"
   ssh_keys    = [hcloud_ssh_key.test_key.id]
 
   labels = {
