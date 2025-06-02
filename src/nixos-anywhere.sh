@@ -633,12 +633,13 @@ runKexec() {
   fi
 
   # Define common remote commands template
-  local remoteCommandTemplate="
+  local remoteCommandTemplate
+  remoteCommandTemplate="
 set -eu ${enableDebug}
 ${maybeSudo} rm -rf /root/kexec
 ${maybeSudo} mkdir -p /root/kexec
 %TAR_COMMAND%
-TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags \"$kexecExtraFlags\"
+TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
 "
 
   # Define upload commands
