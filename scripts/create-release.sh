@@ -1,5 +1,5 @@
 #!/usr/bin/env nix
-#! nix shell nixpkgs#bash nixpkgs#gnused --command bash
+#! nix shell nixpkgs#bash nixpkgs#gnused nixpkgs#gh --command bash
 
 set -euo pipefail
 

@@ -1,6 +1,5 @@
 name: Bug Report
 description: File a bug report to help us improve nixos-anywhere
-title: "[Bug]: "
 labels: ["bug"]
 body:
   - type: markdown
