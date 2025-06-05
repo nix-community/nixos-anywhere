@@ -31,6 +31,10 @@ if [[ -n $unpushed_commits ]]; then
   exit 1
 fi
 
+if ! gh auth status &>/dev/null; then
+  gh auth login
+fi
+
 git branch -D "release-${version}" || true
 git checkout -b "release-${version}"
 
