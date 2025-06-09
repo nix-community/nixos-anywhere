@@ -8,18 +8,19 @@
 
       users.users.nixos = {
         isNormalUser = true;
+        password = "test123";
         openssh.authorizedKeys.keyFiles = [ ./modules/ssh-keys/ssh.pub ];
         extraGroups = [ "wheel" ];
       };
       security.sudo.enable = true;
-      security.sudo.wheelNeedsPassword = false;
+      security.sudo.wheelNeedsPassword = true;
     };
   };
   testScript = ''
     start_all()
     installer.succeed("echo super-secret > /tmp/disk-1.key")
     output = installer.succeed("""
-      nixos-anywhere \
+      SUDO_PASSWORD=test123 nixos-anywhere \
         -i /root/.ssh/install_key \
         --debug \
         --kexec /etc/nixos-anywhere/kexec-installer \
@@ -27,7 +28,7 @@
         --disk-encryption-keys /tmp/disk-1.key /tmp/disk-1.key \
         --disk-encryption-keys /tmp/disk-2.key <(echo another-secret) \
         --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
-        nixos@installed >&2
+        nixos@installed 2>&1
       echo "disk-1.key: '$(ssh -i /root/.ssh/install_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
         root@installed cat /tmp/disk-1.key)'"
       echo "disk-2.key: '$(ssh -i /root/.ssh/install_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
