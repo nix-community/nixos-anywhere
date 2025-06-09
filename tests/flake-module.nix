@@ -7,6 +7,13 @@
         ./modules/system-to-install.nix
         inputs.disko.nixosModules.disko
       ];
+      system-to-install-vdb = pkgs.nixos [
+        ./modules/system-to-install.nix
+        inputs.disko.nixosModules.disko
+        {
+          nixos-anywhere.diskDevice = "/dev/vdb";
+        }
+      ];
       testInputsUnstable = {
         inherit pkgs;
         inherit (inputs.disko.nixosModules) disko;
@@ -17,6 +24,9 @@
       testInputsStable = testInputsUnstable // {
         kexec-installer = "${inputs'.nixos-images.packages.kexec-installer-nixos-stable-noninteractive}/nixos-kexec-installer-noninteractive-${system}.tar.gz";
       };
+      testInputsInstallerSudo = testInputsUnstable // {
+        system-to-install = system-to-install-vdb;
+      };
       linuxTestInputs = testInputsUnstable // {
         nix-vm-test = inputs.nix-vm-test;
       };
@@ -26,6 +36,7 @@
       from-nixos-stable = import ./from-nixos.nix testInputsStable;
       from-nixos-with-sudo = import ./from-nixos-with-sudo.nix testInputsUnstable;
       from-nixos-with-sudo-stable = import ./from-nixos-with-sudo.nix testInputsStable;
+      from-nixos-installer-with-sudo = import ./from-nixos-installer-with-sudo.nix testInputsInstallerSudo;
       from-nixos-with-generated-config = import ./from-nixos-generate-config.nix testInputsUnstable;
       from-nixos-build-on-remote = import ./from-nixos-build-on-remote.nix testInputsUnstable;
       from-nixos-separated-phases = import ./from-nixos-separated-phases.nix testInputsUnstable;

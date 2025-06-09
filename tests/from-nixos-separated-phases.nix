@@ -46,7 +46,7 @@
           --debug \
           --phases install \
           --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
-          root@installed >&2 
+          root@installed >&2
       """)
   '';
 }
