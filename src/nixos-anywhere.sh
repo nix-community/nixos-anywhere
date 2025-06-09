@@ -430,28 +430,15 @@ runSsh() {
 
 # Helper function to authenticate sudo with password if needed
 maybeSudo() {
-  # Early return if no command provided and no sudo password
-  if [[ $# -eq 0 && -z ${SUDO_PASSWORD} ]]; then
-    return
-  fi
-
-  # Use 'true' as default command if none provided but we have sudo password
-  local cmd=("${@:-true}")
-
   if [[ -n ${SUDO_PASSWORD} ]] && [[ ${maybeSudoCommand} == "sudo" ]]; then
     # If debug is enabled and we have a sudo password, warn about potential issues
-
     # Use sudo with password authentication - pipe password to all sudo commands
     printf "printf %%s %q | sudo -S " "$SUDO_PASSWORD"
-    printf '%q ' "${cmd[@]}"
+    # Restore debug state if it was enabled
   elif [[ -n ${maybeSudoCommand} ]]; then
     printf '%s ' "${maybeSudoCommand}"
-    printf '%q ' "${cmd[@]}"
-  else
-    # No sudo command needed (e.g., already root after kexec)
-    printf '%q ' "${cmd[@]}"
   fi
-  echo
+  # No output if no sudo needed (e.g., already root after kexec)
 }
 
 # Test and cache sudo password if needed
@@ -547,7 +534,7 @@ buildStoreUrl() {
       # Use password authentication for nix-daemon
       remoteProgram="sh -c $(urlEncode "$(printf %s "$(printf '%q' "$SUDO_PASSWORD")" | sudo -S nix-daemon)")"
     else
-      remoteProgram="${maybeSudoCommand},nix-daemon"
+      remoteProgram="${maybeSudoCommand} nix-daemon"
     fi
 
     if [[ $storeUrl == *"?"* ]]; then
@@ -752,7 +739,7 @@ generateHardwareConfig() {
     fi
 
     step "Generating hardware-configuration.nix using nixos-facter"
-    runSshNoTty -o ConnectTimeout=10 "$(maybeSudo nixos-facter)" >"$hardwareConfigPath"
+    runSshNoTty -o ConnectTimeout=10 "$(maybeSudo)nixos-facter" >"$hardwareConfigPath"
     ;;
   nixos-generate-config)
     step "Generating hardware-configuration.nix using nixos-generate-config"
@@ -806,10 +793,10 @@ runKexec() {
   local remoteCommandTemplate
   remoteCommandTemplate="
 set -eu ${enableDebug}
-$(maybeSudo rm -rf /root/kexec)
-$(maybeSudo mkdir -p /root/kexec)
+$(maybeSudo)rm -rf /root/kexec
+$(maybeSudo)mkdir -p /root/kexec
 %TAR_COMMAND%
-$(maybeSudo TMPDIR=/root/kexec setsid --wait /root/kexec/kexec/run --kexec-extra-flags "$kexecExtraFlags")
+$(maybeSudo)TMPDIR=/root/kexec setsid --wait /root/kexec/kexec/run${kexecExtraFlags:+ --kexec-extra-flags \"$kexecExtraFlags\"}
 "
 
   # Define upload commands
@@ -870,7 +857,7 @@ runDisko() {
   local diskoScript=$1
   for path in "${!diskEncryptionKeys[@]}"; do
     step "Uploading ${diskEncryptionKeys[$path]} to $path"
-    runSsh "$(maybeSudo sh) -c $(printf '%q' "umask 077; mkdir -p $(dirname "$path"); cat > $path")" <"${diskEncryptionKeys[$path]}"
+    runSsh "$(maybeSudo)sh -c $(printf '%q' "umask 077; mkdir -p $(dirname "$path"); cat > $path")" <"${diskEncryptionKeys[$path]}"
   done
   if [[ -n ${diskoScript} ]]; then
     nixCopy --to "ssh-ng://$sshConnection" "$diskoScript"
@@ -887,7 +874,7 @@ runDisko() {
   fi
 
   step Formatting hard drive with disko
-  runSsh "$(maybeSudo "$diskoScript")"
+  runSsh "$(maybeSudo)$diskoScript"
 }
 
 nixosInstall() {
@@ -912,12 +899,12 @@ nixosInstall() {
     step Copying extra files
     tar -C "$extraFiles" -cpf- . | runSsh "${maybeSudoCommand} tar -C /mnt -xf- --no-same-owner"
 
-    runSsh "$(maybeSudo chmod 755 /mnt)" # tar also changes permissions of /mnt
+    runSsh "$(maybeSudo)chmod 755 /mnt" # tar also changes permissions of /mnt
   fi
 
   if [[ ${#extraFilesOwnership[@]} -gt 0 ]]; then
-    # shellcheck disable=SC2016
-    printf "%s\n" "${!extraFilesOwnership[@]}" "${extraFilesOwnership[@]}" | pr -2t | runSsh 'while read file ownership; do '"$(maybeSudo chown -R \$ownership \"/mnt/\$file\")"'; done'
+    # shellcheck disable=SC2016,SC2086
+    printf "%s\n" "${!extraFilesOwnership[@]}" "${extraFilesOwnership[@]}" | pr -2t | runSsh "while read file ownership; do $(maybeSudo)chown -R \$ownership /mnt/\$file; done"
   fi
 
   step Installing NixOS
@@ -929,27 +916,27 @@ export PATH="\$PATH:/run/current-system/sw/bin"
 
 if [ ! -d "/mnt/tmp" ]; then
   # needed for installation if initrd-secrets are used
-  $(maybeSudo mkdir -p /mnt/tmp)
-  $(maybeSudo chmod 777 /mnt/tmp)
+  $(maybeSudo)mkdir -p /mnt/tmp
+  $(maybeSudo)chmod 777 /mnt/tmp
 fi
 
 if [ ${copyHostKeys-n} = "y" ]; then
   # NB we copy host keys that are in turn copied by kexec installer.
-  $(maybeSudo mkdir -m 755 -p /mnt/etc/ssh)
+  $(maybeSudo)mkdir -m 755 -p /mnt/etc/ssh
   for p in /etc/ssh/ssh_host_*; do
     # Skip if the source file does not exist (i.e. glob did not match any files)
     # or the destination already exists (e.g. copied with --extra-files).
     if [ ! -e "\$p" ] || [ -e "/mnt/\$p" ]; then
       continue
     fi
-    $(maybeSudo cp -a '$p' '/mnt/$p')
+    $(maybeSudo)cp -a "\$p" "/mnt/\$p"
   done
 fi
 # https://stackoverflow.com/a/13864829
 if [ ! -z ${NIXOS_NO_CHECK+0} ]; then
   export NIXOS_NO_CHECK
 fi
-$(maybeSudo nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem")
+$(maybeSudo)nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem"
 SSH
 
 }
@@ -959,11 +946,11 @@ nixosReboot() {
   runSsh sh <<SSH
   if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
     # we always want to export the zfs pools so people can boot from it without force import
-    $(maybeSudo umount -Rv /mnt/)
-    $(maybeSudo swapoff -a)
-    $(maybeSudo zpool export -a || true)
+    $(maybeSudo)umount -Rv /mnt/
+    $(maybeSudo)swapoff -a
+    $(maybeSudo)zpool export -a || true
   fi
-  $(maybeSudo nohup sh -c 'sleep 6 && reboot') >/dev/null &
+  $(maybeSudo)nohup sh -c 'sleep 6 && reboot' >/dev/null &
 SSH
 
   step Waiting for the machine to become unreachable due to reboot

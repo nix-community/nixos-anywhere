@@ -34,6 +34,10 @@ module "install" {
   nixos_system      = module.system-build.result.out
   nixos_partitioner = module.disko.result.out
   target_host       = local.ipv4
+  # Optional: SSH password authentication
+  # target_pass       = "your-ssh-password"
+  # Optional: Sudo password for remote operations
+  # target_sudo_pass  = "your-sudo-password"
 }
 ```
 

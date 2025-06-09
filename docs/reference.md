@@ -42,7 +42,7 @@ Options:
 * --env-password
   set a password used by ssh-copy-id, the password should be set by
   the environment variable SSHPASS. Additionally, sudo password can be set
-  via SUDO_PASSWORD environment variable for remote sudo operations 
+  via SUDO_PASSWORD environment variable for remote sudo operations
   (only supported with sudo, not doas)
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly

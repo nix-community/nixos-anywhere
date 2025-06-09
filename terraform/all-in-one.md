@@ -28,6 +28,10 @@ module "deploy" {
   # debug_logging          = true
   # build the closure on the remote machine instead of locally
   # build_on_remote        = true
+  # Optional: SSH password for initial installation
+  # install_pass           = "your-ssh-password"
+  # Optional: Sudo password for remote operations during installation
+  # install_sudo_pass      = "your-sudo-password"
   # script is below
   extra_files_script     = "${path.module}/decrypt-ssh-secrets.sh"
   disk_encryption_key_scripts = [{
@@ -139,7 +143,7 @@ locals {
 resource "local_file" "nixos_vars" {
   content         = jsonencode(local.nixos_vars) # Converts variables to JSON
   filename        = local.nixos_vars_file        # Specifies the output file path
-  file_permission = "600"                        
+  file_permission = "600"
 
   # Automatically adds the generated file to Git
   provisioner "local-exec" {
