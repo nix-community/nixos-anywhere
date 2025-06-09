@@ -40,7 +40,7 @@
       installer.succeed("chmod 600 /tmp/extra-files/home/user/.ssh/id_ed25519")
       ssh_key_path = "/etc/ssh/ssh_host_ed25519_key.pub"
       ssh_key_output = installer.wait_until_succeeds(f"""
-        ssh -i /root/.ssh/install_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+        timeout 3 ssh -i /root/.ssh/install_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
           root@installed cat {ssh_key_path}
       """)
       installer.succeed("""
