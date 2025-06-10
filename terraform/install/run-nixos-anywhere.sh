@@ -13,7 +13,14 @@ args=()
 
 if [[ ${input[debug_logging]} == "true" ]]; then
   set -x
-  declare -p input
+  # Print input variables but filter out sensitive passwords
+  for key in "${!input[@]}"; do
+    if [[ $key == *"pass"* ]]; then
+      echo "input[$key]='[FILTERED]'"
+    else
+      echo "input[$key]='${input[$key]}'"
+    fi
+  done
   args+=("--debug")
 fi
 if [[ ${input[kexec_tarball_url]} != "null" ]]; then
@@ -40,9 +47,22 @@ args+=(--phases "${input[phases]}")
 if [[ ${input[ssh_private_key]} != null ]]; then
   export SSH_PRIVATE_KEY="${input[ssh_private_key]}"
 fi
+if [[ ${input[target_pass]} != null || ${input[target_sudo_pass]} != null ]]; then
+  args+=("--env-password")
+fi
+# Temporarily disable debug output when exporting sensitive variables
+if [[ ${input[debug_logging]} == "true" ]]; then
+  set +x
+fi
 if [[ ${input[target_pass]} != null ]]; then
   export SSHPASS=${input[target_pass]}
-  args+=("--env-password")
+fi
+if [[ ${input[target_sudo_pass]} != null ]]; then
+  export SUDO_PASSWORD=${input[target_sudo_pass]}
+fi
+# Re-enable debug output if it was enabled
+if [[ ${input[debug_logging]} == "true" ]]; then
+  set -x
 fi
 
 tmpdir=$(mktemp -d)

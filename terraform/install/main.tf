@@ -12,6 +12,7 @@ locals {
     target_host                = var.target_host
     target_port                = var.target_port
     target_pass                = var.target_pass
+    target_sudo_pass           = var.target_sudo_pass
     extra_files_script         = var.extra_files_script
     build_on_remote            = var.build_on_remote
     flake                      = var.flake

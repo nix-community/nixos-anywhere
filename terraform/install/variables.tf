@@ -41,6 +41,13 @@ variable "target_pass" {
   default     = null
 }
 
+variable "target_sudo_pass" {
+  type        = string
+  description = "Sudo password for remote sudo operations on target_host. Only supported with sudo, not doas."
+  default     = null
+  sensitive   = true
+}
+
 variable "ssh_private_key" {
   type        = string
   description = "Content of private key used to connect to the target_host"

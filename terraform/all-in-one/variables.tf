@@ -149,3 +149,17 @@ variable "install_bootloader" {
   description = "Install/re-install the bootloader"
   default     = false
 }
+
+variable "install_pass" {
+  type        = string
+  description = "Password used to connect to the target_host during installation"
+  default     = null
+  sensitive   = true
+}
+
+variable "install_sudo_pass" {
+  type        = string
+  description = "Sudo password for remote sudo operations during installation. Only supported with sudo, not doas."
+  default     = null
+  sensitive   = true
+}

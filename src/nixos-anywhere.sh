@@ -21,6 +21,7 @@ nixOptions=(
   "--no-write-lock-file"
 )
 SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY-}
+SUDO_PASSWORD=${SUDO_PASSWORD-}
 
 declare -A phases
 phases[kexec]=1
@@ -53,6 +54,7 @@ hasTar=
 hasCpio=
 hasSudo=
 hasDoas=
+hasPasswordlessSudo=
 hasWget=
 hasCurl=
 hasSetsid=
@@ -64,7 +66,7 @@ mkdir -p "$tempDir"
 
 declare -A diskEncryptionKeys=()
 declare -A extraFilesOwnership=()
-declare -a nixCopyOptions=()
+declare -a nixCopyOptions=(--no-check-sigs)
 declare -a sshArgs=("-o" "IdentitiesOnly=yes" "-i" "$tempDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
 
 showUsage() {
@@ -91,7 +93,9 @@ Options:
   print full build logs
 * --env-password
   set a password used by ssh-copy-id, the password should be set by
-  the environment variable SSHPASS
+  the environment variable SSHPASS. Additionally, sudo password can be set
+  via SUDO_PASSWORD environment variable for remote sudo operations
+  (only supported with sudo, not doas).
 * -s, --store-paths <disko-script> <nixos-system>
   set the store paths to the disko-script and nixos-system directly
   if this is given, flake is not needed
@@ -247,6 +251,10 @@ parseArgs() {
       ;;
     --debug)
       enableDebug="-x"
+      if [[ ${SUDO_PASSWORD} != "" ]]; then
+        echo "WARNING: Debug mode enabled with SUDO_PASSWORD. Password authentication may interfere with debug output." >&2
+        sleep 2
+      fi
       printBuildLogs=y
       set -x
       ;;
@@ -420,19 +428,171 @@ runSsh() {
   ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
 }
 
+# Helper function to authenticate sudo with password if needed
+maybeSudo() {
+  if [[ -n ${SUDO_PASSWORD} ]] && [[ ${maybeSudoCommand} == "sudo" ]]; then
+    # If debug is enabled and we have a sudo password, warn about potential issues
+    # Use sudo with password authentication - pipe password to all sudo commands
+    printf "printf %%s %q | sudo -S " "$SUDO_PASSWORD"
+    # Restore debug state if it was enabled
+  elif [[ -n ${maybeSudoCommand} ]]; then
+    printf '%s ' "${maybeSudoCommand}"
+  fi
+  # No output if no sudo needed (e.g., already root after kexec)
+}
+
+# Test and cache sudo password if needed
+testAndCacheSudoPassword() {
+  # Skip if no sudo command available
+  if [[ -z ${maybeSudoCommand} ]]; then
+    return 0
+  fi
+
+  # Skip if using doas (doesn't support password authentication)
+  if [[ ${maybeSudoCommand} == "doas" ]]; then
+    return 0
+  fi
+
+  # Skip if sudo works without password
+  if [[ ${hasPasswordlessSudo} == "y" ]]; then
+    step "Passwordless sudo confirmed"
+    return 0
+  fi
+
+  # If we already have a password supplied, trust it
+  if [[ -n ${SUDO_PASSWORD} ]]; then
+    step "Using supplied sudo password"
+    return 0
+  fi
+
+  # Only prompt for password in interactive sessions
+  if [[ -t 0 ]]; then
+    step "Sudo requires password authentication"
+    local attempts=0
+    local maxAttempts=5
+
+    while [[ $attempts -lt $maxAttempts ]]; do
+      echo -n "Enter sudo password for ${sshConnection}: "
+      read -rs password
+      echo
+
+      # Test the password
+      local testOutput
+      testOutput=$(runSshNoTty "echo $(printf %q "$password") | sudo -S echo 'SUDO_TEST_SUCCESS'" 2>&1)
+      if [[ $testOutput == *"SUDO_TEST_SUCCESS"* ]]; then
+        SUDO_PASSWORD="$password"
+        step "Sudo password verified and cached"
+        return 0
+      else
+        ((attempts++))
+        if [[ $attempts -lt $maxAttempts ]]; then
+          echo "Invalid password, please try again ($attempts/$maxAttempts)"
+        fi
+      fi
+    done
+
+    abort "Failed to authenticate sudo after $maxAttempts attempts"
+  else
+    # Non-interactive session without working sudo
+    abort "Sudo requires password but running in non-interactive mode. Set SUDO_PASSWORD environment variable or configure passwordless sudo."
+  fi
+}
+
+urlEncode() {
+  local string="${1}"
+  local strlen=${#string}
+  local encoded=""
+  local pos c o
+
+  for ((pos = 0; pos < strlen; pos++)); do
+    c=${string:pos:1}
+    case "$c" in
+    [-_.~a-zA-Z0-9]) o="${c}" ;;
+    *) printf -v o '%%%02x' "'$c" ;;
+    esac
+    encoded+="${o}"
+  done
+  echo "${encoded}"
+}
+
+buildStoreUrl() {
+  local storeUrl="$1"
+
+  # Add sshStoreSettings if present
+  if [[ -n ${sshStoreSettings} ]] && [[ $storeUrl == ssh-ng://* ]]; then
+    if [[ $storeUrl == *"?"* ]]; then
+      storeUrl="${storeUrl}&${sshStoreSettings}"
+    else
+      storeUrl="${storeUrl}?${sshStoreSettings}"
+    fi
+  fi
+
+  # Add remote-program parameter when sudo is needed
+  if [[ -n ${maybeSudoCommand} ]] && [[ $storeUrl == ssh-ng://* ]]; then
+    local remoteProgram
+    if [[ -n ${SUDO_PASSWORD} ]] && [[ ${maybeSudoCommand} == "sudo" ]]; then
+      # Use password authentication for nix-daemon
+      remoteProgram="sh -c $(urlEncode "$(printf %s "$(printf '%q' "$SUDO_PASSWORD")" | sudo -S nix-daemon)")"
+    else
+      remoteProgram="${maybeSudoCommand} nix-daemon"
+    fi
+
+    if [[ $storeUrl == *"?"* ]]; then
+      storeUrl="${storeUrl}&remote-program=${remoteProgram}"
+    else
+      storeUrl="${storeUrl}?remote-program=${remoteProgram}"
+    fi
+  fi
+
+  echo "$storeUrl"
+}
+
 nixCopy() {
-  NIX_SSHOPTS="${sshArgs[*]}" nix copy \
-    "${nixOptions[@]}" \
-    "${nixCopyOptions[@]}" \
-    "$@"
+  # Process arguments to add remote-program parameter when sudo is needed
+  local processedArgs=()
+  local i=1
+  while [[ $i -le $# ]]; do
+    local arg="${!i}"
+    if [[ $arg == "--to" ]]; then
+      processedArgs+=("$arg")
+      ((i++))
+      local storeUrl="${!i}"
+      storeUrl=$(buildStoreUrl "$storeUrl")
+      processedArgs+=("$storeUrl")
+    else
+      processedArgs+=("$arg")
+    fi
+    ((i++))
+  done
+
+  local nixCopyArgs=("${nixOptions[@]}" "${nixCopyOptions[@]}")
+
+  NIX_SSHOPTS="${sshArgs[*]}" nix copy "${nixCopyArgs[@]}" "${processedArgs[@]}"
 }
 nixBuild() {
+  # Process arguments to add remote-program parameter when sudo is needed
+  local processedArgs=()
+  local i=1
+  while [[ $i -le $# ]]; do
+    local arg="${!i}"
+    if [[ $arg == "--store" ]]; then
+      processedArgs+=("$arg")
+      ((i++))
+      local storeUrl="${!i}"
+      storeUrl=$(buildStoreUrl "$storeUrl")
+      processedArgs+=("$storeUrl")
+    else
+      processedArgs+=("$arg")
+    fi
+    ((i++))
+  done
+
   NIX_SSHOPTS="${sshArgs[*]}" nix build \
     --print-out-paths \
     --no-link \
     "${nixBuildFlags[@]}" \
     "${nixOptions[@]}" \
-    "$@"
+    "${processedArgs[@]}"
 }
 
 runVmTest() {
@@ -518,7 +678,7 @@ importFacts() {
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
-  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasPasswordlessSudo hasWget hasCurl hasSetsid; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
@@ -569,7 +729,6 @@ checkBuildLocally() {
 }
 
 generateHardwareConfig() {
-  local maybeSudo="$maybeSudo"
   mkdir -p "$(dirname "$hardwareConfigPath")"
   case "$hardwareConfigBackend" in
   nixos-facter)
@@ -577,12 +736,10 @@ generateHardwareConfig() {
       if [[ ${hasNixOSFacter} == "n" ]]; then
         abort "nixos-facter is not available in booted installer, use nixos-generate-config. For nixos-facter, you may want to boot an installer image from here instead: https://github.com/nix-community/nixos-images"
       fi
-    else
-      maybeSudo=""
     fi
 
     step "Generating hardware-configuration.nix using nixos-facter"
-    runSshNoTty -o ConnectTimeout=10 ${maybeSudo} "nixos-facter" >"$hardwareConfigPath"
+    runSshNoTty -o ConnectTimeout=10 "$(maybeSudo)nixos-facter" >"$hardwareConfigPath"
     ;;
   nixos-generate-config)
     step "Generating hardware-configuration.nix using nixos-generate-config"
@@ -636,10 +793,10 @@ runKexec() {
   local remoteCommandTemplate
   remoteCommandTemplate="
 set -eu ${enableDebug}
-${maybeSudo} rm -rf /root/kexec
-${maybeSudo} mkdir -p /root/kexec
+$(maybeSudo)rm -rf /root/kexec
+$(maybeSudo)mkdir -p /root/kexec
 %TAR_COMMAND%
-TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
+$(maybeSudo)TMPDIR=/root/kexec setsid --wait /root/kexec/kexec/run${kexecExtraFlags:+ --kexec-extra-flags \"$kexecExtraFlags\"}
 "
 
   # Define upload commands
@@ -659,16 +816,17 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
 
   local tarCommand
   local remoteCommands
+
   if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
     # Use remote command for download and execution
-    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | ${maybeSudo} tar -C /root/kexec -xvzf-"
+    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | ${maybeSudoCommand} tar -C /root/kexec -xvzf-"
 
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
     runSsh sh -c "$(printf '%q' "$remoteCommands")"
   else
     # Use local command with pipe to remote
-    tarCommand="${maybeSudo} tar -C /root/kexec -xvzf-"
+    tarCommand="${maybeSudoCommand} tar -C /root/kexec -xvzf-"
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
     "${localUploadCommand[@]}" | runSsh sh -c "$(printf '%q' "$remoteCommands")"
@@ -688,6 +846,8 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
 
   # After kexec we explicitly set the user to root@
   sshConnection="root@${sshHost}"
+  # After kexec, we're running as root in the NixOS installer, so no need for sudo
+  maybeSudoCommand=""
 
   # waiting for machine to become available again
   until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
@@ -697,58 +857,58 @@ runDisko() {
   local diskoScript=$1
   for path in "${!diskEncryptionKeys[@]}"; do
     step "Uploading ${diskEncryptionKeys[$path]} to $path"
-    runSsh "umask 077; mkdir -p \"$(dirname "$path")\"; cat > $path" <"${diskEncryptionKeys[$path]}"
+    runSsh "$(maybeSudo)sh -c $(printf '%q' "umask 077; mkdir -p $(dirname "$path"); cat > $path")" <"${diskEncryptionKeys[$path]}"
   done
   if [[ -n ${diskoScript} ]]; then
-    nixCopy --to "ssh://$sshConnection?$sshStoreSettings" "$diskoScript"
+    nixCopy --to "ssh-ng://$sshConnection" "$diskoScript"
   elif [[ ${buildOn} == "remote" ]]; then
     step Building disko script
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
-    nixCopy --to "ssh://$sshConnection?$sshStoreSettings" "${flake}#${flakeAttr}.system.build.${diskoMode}Script" \
-      --derivation --no-check-sigs
+    nixCopy --to "ssh-ng://$sshConnection" --derivation "${flake}#${flakeAttr}.system.build.${diskoMode}Script"
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     diskoScript=$(
       nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}" \
-        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$tempDir%2Fnixos-anywhere&$sshStoreSettings"
+        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$tempDir%2Fnixos-anywhere"
     )
   fi
 
   step Formatting hard drive with disko
-  runSsh "$diskoScript"
+  runSsh "$(maybeSudo)$diskoScript"
 }
 
 nixosInstall() {
   local nixosSystem=$1
+  local remoteStoreUrl="remote-store=local%3Froot=%2Fmnt"
   if [[ -n ${nixosSystem} ]]; then
     step Uploading the system closure
-    nixCopy --to "ssh://$sshConnection?remote-store=local%3Froot=%2Fmnt&$sshStoreSettings" "$nixosSystem"
+    nixCopy --to "ssh-ng://$sshConnection?${remoteStoreUrl}" "$nixosSystem"
   elif [[ ${buildOn} == "remote" ]]; then
     step Building the system closure
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
-    nixCopy --to "ssh://$sshConnection?remote-store=local%3Froot=%2Fmnt&$sshStoreSettings" "${flake}#${flakeAttr}.system.build.toplevel" \
-      --derivation --no-check-sigs
+    nixCopy --to "ssh-ng://$sshConnection?${remoteStoreUrl}" --derivation "${flake}#${flakeAttr}.system.build.toplevel"
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     nixosSystem=$(
       nixBuild "${flake}#${flakeAttr}.system.build.toplevel" \
-        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$tempDir%2Fnixos-anywhere&remote-store=local%3Froot=%2Fmnt&$sshStoreSettings"
+        --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$tempDir%2Fnixos-anywhere&${remoteStoreUrl}"
     )
   fi
 
   if [[ -n ${extraFiles} ]]; then
     step Copying extra files
-    tar -C "$extraFiles" -cpf- . | runSsh "tar -C /mnt -xf- --no-same-owner"
+    tar -C "$extraFiles" -cpf- . | runSsh "${maybeSudoCommand} tar -C /mnt -xf- --no-same-owner"
 
-    runSsh "chmod 755 /mnt" # tar also changes permissions of /mnt
+    runSsh "$(maybeSudo)chmod 755 /mnt" # tar also changes permissions of /mnt
   fi
 
   if [[ ${#extraFilesOwnership[@]} -gt 0 ]]; then
-    # shellcheck disable=SC2016
-    printf "%s\n" "${!extraFilesOwnership[@]}" "${extraFilesOwnership[@]}" | pr -2t | runSsh 'while read file ownership; do chown -R "$ownership" "/mnt/$file"; done'
+    # shellcheck disable=SC2016,SC2086
+    printf "%s\n" "${!extraFilesOwnership[@]}" "${extraFilesOwnership[@]}" | pr -2t | runSsh "while read file ownership; do $(maybeSudo)chown -R \$ownership /mnt/\$file; done"
   fi
 
   step Installing NixOS
+  # shellcheck disable=SC2016
   runSsh sh <<SSH
 set -eu ${enableDebug}
 # when running not in nixos we might miss this directory, but it's needed in the nixos chroot during installation
@@ -756,27 +916,27 @@ export PATH="\$PATH:/run/current-system/sw/bin"
 
 if [ ! -d "/mnt/tmp" ]; then
   # needed for installation if initrd-secrets are used
-  mkdir -p /mnt/tmp
-  chmod 777 /mnt/tmp
+  $(maybeSudo)mkdir -p /mnt/tmp
+  $(maybeSudo)chmod 777 /mnt/tmp
 fi
 
 if [ ${copyHostKeys-n} = "y" ]; then
   # NB we copy host keys that are in turn copied by kexec installer.
-  mkdir -m 755 -p /mnt/etc/ssh
+  $(maybeSudo)mkdir -m 755 -p /mnt/etc/ssh
   for p in /etc/ssh/ssh_host_*; do
     # Skip if the source file does not exist (i.e. glob did not match any files)
     # or the destination already exists (e.g. copied with --extra-files).
     if [ ! -e "\$p" ] || [ -e "/mnt/\$p" ]; then
       continue
     fi
-    cp -a "\$p" "/mnt/\$p"
+    $(maybeSudo)cp -a "\$p" "/mnt/\$p"
   done
 fi
 # https://stackoverflow.com/a/13864829
 if [ ! -z ${NIXOS_NO_CHECK+0} ]; then
   export NIXOS_NO_CHECK
 fi
-nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem"
+$(maybeSudo)nixos-install --no-root-passwd --no-channel-copy --system "$nixosSystem"
 SSH
 
 }
@@ -786,11 +946,11 @@ nixosReboot() {
   runSsh sh <<SSH
   if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
     # we always want to export the zfs pools so people can boot from it without force import
-    umount -Rv /mnt/
-    swapoff -a
-    zpool export -a || true
+    $(maybeSudo)umount -Rv /mnt/
+    $(maybeSudo)swapoff -a
+    $(maybeSudo)zpool export -a || true
   fi
-  nohup sh -c 'sleep 6 && reboot' >/dev/null &
+  $(maybeSudo)nohup sh -c 'sleep 6 && reboot' >/dev/null &
 SSH
 
   step Waiting for the machine to become unreachable due to reboot
@@ -840,7 +1000,6 @@ main() {
   fi
 
   sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
-  sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
   sshHost=$(echo "$sshSettings" | awk '/^hostname / { print $2 }')
 
   uploadSshKey
@@ -859,12 +1018,18 @@ main() {
     abort "no setsid command found, but required to run the kexec script under a new session"
   fi
 
-  maybeSudo=""
+  maybeSudoCommand=""
   if [[ ${hasSudo-n} == "y" ]]; then
-    maybeSudo="sudo"
+    maybeSudoCommand="sudo"
   elif [[ ${hasDoas-n} == "y" ]]; then
-    maybeSudo="doas"
+    maybeSudoCommand="doas"
+    if [[ -n ${SUDO_PASSWORD} ]]; then
+      abort "SUDO_PASSWORD environment variable is not supported with doas. Please configure passwordless doas or use sudo instead."
+    fi
   fi
+
+  # Test and cache sudo password if needed
+  testAndCacheSudoPassword
 
   if [[ ${isOs} != "Linux" ]]; then
     abort "This script requires Linux as the operating system, but got $isOs"
@@ -896,14 +1061,6 @@ main() {
     if [[ ${phases[install]} == 1 ]]; then
       nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
     fi
-  fi
-
-  # Installation will fail if non-root user is used for installer.
-  # Switch to root user by copying authorized_keys.
-  if [[ ${isInstaller} == "y" ]] && [[ ${sshUser} != "root" ]]; then
-    # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
-    runSsh "${maybeSudo} mkdir -p /root/.ssh; ${maybeSudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
-    sshConnection="root@${sshHost}"
   fi
 
   if [[ ${phases[disko]} == 1 ]]; then

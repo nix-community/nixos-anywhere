@@ -34,6 +34,10 @@ module "install" {
   nixos_system      = module.system-build.result.out
   nixos_partitioner = module.disko.result.out
   target_host       = local.ipv4
+  # Optional: SSH password authentication
+  # target_pass       = "your-ssh-password"
+  # Optional: Sudo password for remote operations
+  # target_sudo_pass  = "your-sudo-password"
 }
 ```
 
@@ -82,6 +86,7 @@ No modules.
 | <a name="input_target_host"></a> [target\_host](#input_target_host)                                                   | DNS host to deploy to                                                                                                                                                | `string`                                                                  | n/a                                                                          |   yes    |
 | <a name="input_target_pass"></a> [target\_pass](#input_target_pass)                                                   | Password used to connect to the target\_host                                                                                                                         | `string`                                                                  | `null`                                                                       |    no    |
 | <a name="input_target_port"></a> [target\_port](#input_target_port)                                                   | SSH port used to connect to the target\_host                                                                                                                         | `number`                                                                  | `22`                                                                         |    no    |
+| <a name="input_target_sudo_pass"></a> [target\_sudo\_pass](#input_target_sudo_pass)                                   | Sudo password for remote sudo operations on target\_host. Only supported with sudo, not doas.                                                                        | `string`                                                                  | `null`                                                                       |    no    |
 | <a name="input_target_user"></a> [target\_user](#input_target_user)                                                   | SSH user used to connect to the target\_host                                                                                                                         | `string`                                                                  | `"root"`                                                                     |    no    |
 
 ## Outputs
