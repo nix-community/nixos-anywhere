@@ -21,6 +21,7 @@ nixOptions=(
   "--no-write-lock-file"
 )
 SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY-}
+machineSubstituters="y"
 
 declare -A phases
 phases[kexec]=1
@@ -116,6 +117,9 @@ Options:
   after kexec but before installation. Can be repeated.
 * --no-substitute-on-destination
   disable passing --substitute-on-destination to nix-copy
+  implies --no-use-machine-substituters
+* --no-use-machine-substituters
+  don't copy the substituters from the machine to be installed into the installer environment
 * --debug
   enable debug output
 * --show-trace
@@ -332,6 +336,10 @@ parseArgs() {
       ;;
     --no-substitute-on-destination)
       substituteOnDestination=n
+      machineSubstituters=n
+      ;;
+    --no-use-machine-substituters)
+      machineSubstituters=n
       ;;
     --build-on-remote)
       echo "WARNING: --build-on-remote is deprecated, use --build-on remote instead" 2>&1
@@ -904,6 +912,18 @@ main() {
     # Allow copy to fail if authorized_keys does not exist, like if using /etc/ssh/authorized_keys.d/
     runSsh "${maybeSudo} mkdir -p /root/.ssh; ${maybeSudo} cp ~/.ssh/authorized_keys /root/.ssh || true"
     sshConnection="root@${sshHost}"
+  fi
+
+  # Get substituters from the machine and add them to the installer
+  if [[ ${machineSubstituters} == "y" && -n ${flake} ]]; then
+    substituters=$(nix --extra-experimental-features 'nix-command flakes' eval --apply toString "${flake}"#"${flakeAttr}".nix.settings.substituters)
+    trustedPublicKeys=$(nix --extra-experimental-features 'nix-command flakes' eval --apply toString "${flake}"#"${flakeAttr}".nix.settings.trusted-public-keys)
+
+    runSsh sh <<SSH || true
+mkdir -p ~/.config/nix
+echo "extra-substituters = ${substituters}" >> ~/.config/nix/nix.conf
+echo "extra-trusted-public-keys = ${trustedPublicKeys}" >> ~/.config/nix/nix.conf
+SSH
   fi
 
   if [[ ${phases[disko]} == 1 ]]; then
