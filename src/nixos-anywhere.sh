@@ -6,7 +6,7 @@ flake=""
 flakeAttr=""
 kexecUrl=""
 kexecExtraFlags=""
-sshStoreSettings=""
+sshStoreSettings="compress=true"
 enableDebug=""
 nixBuildFlags=()
 diskoAttr=""
