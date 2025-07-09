@@ -6,7 +6,7 @@ flake=""
 flakeAttr=""
 kexecUrl=""
 kexecExtraFlags=""
-sshStoreSettings=""
+sshStoreSettings="compress=true"
 enableDebug=""
 nixBuildFlags=()
 diskoAttr=""
@@ -711,11 +711,6 @@ runDisko() {
     nixCopy --to "ssh://$sshConnection?$sshStoreSettings" "$diskoScript"
   elif [[ ${buildOn} == "remote" ]]; then
     step Building disko script
-    # We need to do a nix copy first because nix build doesn't have --no-check-sigs
-    # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
-    nixCopy --to "ssh://$sshConnection?$sshStoreSettings" "${flake}#${flakeAttr}.system.build.${diskoMode}Script" \
-      --derivation --no-check-sigs
-    # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     diskoScript=$(
       nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}" \
         --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$tempDir%2Fnixos-anywhere&$sshStoreSettings"
@@ -733,11 +728,6 @@ nixosInstall() {
     nixCopy --to "ssh://$sshConnection?remote-store=local%3Froot=%2Fmnt&$sshStoreSettings" "$nixosSystem"
   elif [[ ${buildOn} == "remote" ]]; then
     step Building the system closure
-    # We need to do a nix copy first because nix build doesn't have --no-check-sigs
-    # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
-    nixCopy --to "ssh://$sshConnection?remote-store=local%3Froot=%2Fmnt&$sshStoreSettings" "${flake}#${flakeAttr}.system.build.toplevel" \
-      --derivation --no-check-sigs
-    # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     nixosSystem=$(
       nixBuild "${flake}#${flakeAttr}.system.build.toplevel" \
         --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$tempDir%2Fnixos-anywhere&remote-store=local%3Froot=%2Fmnt&$sshStoreSettings"
