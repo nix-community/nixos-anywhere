@@ -2,7 +2,7 @@
 
 **_Install NixOS everywhere via ssh_**
 
-<img title="" src="https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.png" alt="" width="141">
+<img title="" src="https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.svg" alt="" width="141">
 
 [Documentation Index](./INDEX.md)
 
