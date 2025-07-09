@@ -1,6 +1,7 @@
 resource "null_resource" "nixos-rebuild" {
   triggers = {
     store_path = var.nixos_system
+    packages_list = var.nixos_system_packages
   }
   provisioner "local-exec" {
     environment = {
