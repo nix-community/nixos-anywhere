@@ -231,7 +231,7 @@ step:</p>
 <code>hardware-configuration.nix</code></li>
 </ul>
 <p>Run <code>nixos-anywhere</code> as follows:</p>
-<pre><code class="language-bash">nixos-anywhere --store-paths $(nix-build -A config.system.build.formatScript -A config.system.build.toplevel --no-out-link) root@machine
+<pre><code class="language-bash">nixos-anywhere --store-paths $(nix-build -A config.system.build.diskoScript -A config.system.build.toplevel --no-out-link) root@machine
 </code></pre>
 
                     </main>
