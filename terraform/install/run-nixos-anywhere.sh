@@ -89,4 +89,8 @@ while [[ $# -gt 0 ]]; do
   keyIdx=$((keyIdx + 1))
 done
 
+while IFS= read -r -d '' value; do
+  args+=("--ssh-option" "$value")
+done < <(jq -j 'to_entries[] | (.value, "\u0000")' <<<"${SSH_OPTIONS}")
+
 nix run --extra-experimental-features 'nix-command flakes' "path:${SCRIPT_DIR}/../..#nixos-anywhere" -- "${args[@]}"

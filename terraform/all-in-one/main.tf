@@ -39,6 +39,7 @@ module "install" {
   nixos_generate_config_path  = var.nixos_generate_config_path
   nixos_facter_path           = var.nixos_facter_path
   build_on_remote             = var.build_on_remote
+  ssh_options                 = var.install_ssh_options
   # deprecated attributes
   stop_after_disko = var.stop_after_disko
   no_reboot        = var.no_reboot
@@ -59,6 +60,7 @@ module "nixos-rebuild" {
   target_user        = var.target_user
   target_port        = var.target_port
   install_bootloader = var.install_bootloader
+  ssh_options        = var.deployment_ssh_options
 }
 
 output "result" {
