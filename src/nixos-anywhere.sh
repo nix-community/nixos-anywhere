@@ -839,7 +839,7 @@ main() {
 
   sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
   sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
-  sshHost=$(echo "$sshSettings" | awk '/^host / { print $2 }')
+  sshHost="${sshConnection//*@/}"
 
   uploadSshKey
 
