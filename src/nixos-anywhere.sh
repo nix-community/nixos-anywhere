@@ -582,15 +582,17 @@ generateHardwareConfig() {
   case "$hardwareConfigBackend" in
   nixos-facter)
     if [[ ${isInstaller} == "y" ]]; then
-      if [[ ${hasNixOSFacter} == "n" ]]; then
-        abort "nixos-facter is not available in booted installer, use nixos-generate-config. For nixos-facter, you may want to boot an installer image from here instead: https://github.com/nix-community/nixos-images"
-      fi
-    else
       maybeSudo=""
     fi
-
-    step "Generating hardware-configuration.nix using nixos-facter"
-    runSshNoTty -o ConnectTimeout=10 ${maybeSudo} "nixos-facter" >"$hardwareConfigPath"
+    if [[ ${hasNixOSFacter} == "n" ]]; then
+      step "Generating hardware-configuration.nix using nixos-facter from nixpkgs"
+      runSshNoTty -o ConnectTimeout=10 "${maybeSudo}" \
+        nix run "${nixOptions[@]}" \
+        nixpkgs#nixos-facter >"$hardwareConfigPath"
+    else
+      step "Generating hardware-configuration.nix using nixos-facter"
+      runSshNoTty -o ConnectTimeout=10 "${maybeSudo}" "nixos-facter" >"$hardwareConfigPath"
+    fi
     ;;
   nixos-generate-config)
     step "Generating hardware-configuration.nix using nixos-generate-config"
