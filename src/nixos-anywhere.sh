@@ -586,9 +586,14 @@ generateHardwareConfig() {
     fi
     if [[ ${hasNixOSFacter} == "n" ]]; then
       step "Generating facter.json using nixos-facter from nixpkgs"
-      runSshNoTty -o ConnectTimeout=10 ${maybeSudo} \
-        nix run "${nixOptions[@]}" \
-        nixpkgs#nixos-facter >"$hardwareConfigPath"
+
+      # We need to quote all the flags before they get passed to SSH
+      # otherwise SSH will drop the quotes which is necessary for
+      # `--extra-experimental-features "nix-command flakes"`.
+      # We can use the following Bash-ism described at: https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html#Shell-Parameter-Expansion-1
+      # For more information: https://unix.stackexchange.com/questions/379181/escape-a-variable-for-use-as-content-of-another-script
+      runSshNoTty -o ConnectTimeout=10 \
+        nix shell "${nixOptions[@]@Q}" nixpkgs#nixos-facter -c ${maybeSudo} nixos-facter >"$hardwareConfigPath"
     else
       step "Generating facter.json using nixos-facter"
       runSshNoTty -o ConnectTimeout=10 ${maybeSudo} nixos-facter >"$hardwareConfigPath"
