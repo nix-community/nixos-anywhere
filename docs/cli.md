@@ -1,5 +1,7 @@
 # CLI
 
+<!-- `$ nix run . -- --help` -->
+
 ```
 Usage: nixos-anywhere [options] [<ssh-host>]
 
