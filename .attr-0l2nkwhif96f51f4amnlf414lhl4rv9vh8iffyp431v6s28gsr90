@@ -1,2 +1,2 @@
-cp -r /nix/store/vg2147vhqml9p81ssy4mx00mh4r2rccw-source/* .
+cp -r /nix/store/l24lsnz6gkdl2mklg94h10aa8ibvl7wq-source/* .
 /nix/store/9gqrf770cnm37pqkrkk86s8m0nwvn2lx-mdbook-0.4.51/bin/mdbook build --dest-dir "$out"
