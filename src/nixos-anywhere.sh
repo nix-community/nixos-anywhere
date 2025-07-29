@@ -692,7 +692,7 @@ runKexec() {
 
   # Define common remote commands template
   local remoteCommandTemplate
-  
+
   # If we need sudo and have a TTY, use a script that can handle password prompts
   if [[ -n ${maybeSudo} ]] && [[ ${sshTtyParam} == "-t" ]]; then
     remoteCommandTemplate="
@@ -729,8 +729,14 @@ ${maybeSudo} mkdir -p /root/kexec
 {
   %TAR_COMMAND% && TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
 } 2>&1 | tee /tmp/kexec-output.log
-exitcode=\${PIPESTATUS[0]}
-exit \$exitcode
+if grep -q 'machine will boot into nixos' /tmp/kexec-output.log; then
+  echo 'Kexec initiated successfully'
+  exit 0
+else
+  echo 'Kexec may have failed - check output above'
+  cat /tmp/kexec-output.log
+  exit 1
+fi
 "
   fi
 
@@ -769,7 +775,7 @@ exit \$exitcode
       runSsh sh -c "$(printf '%q' "$remoteCommands")"
     )
     sshExitCode=$?
-    
+
     # For the sudo case, exit code 0 means success, 1 means failure was detected
     if [[ -n ${maybeSudo} ]] && [[ ${sshTtyParam} == "-t" ]]; then
       if [[ $sshExitCode -eq 0 ]]; then
@@ -799,24 +805,24 @@ exit \$exitcode
           kexecSuccess=true
         fi
       fi
-      
+
       if [[ $sshExitCode -ne 0 ]] && [[ $kexecSuccess != true ]]; then
         echo "Error: Failed to execute kexec commands on remote host" >&2
-        
+
         if [[ -n $logContent ]]; then
           echo "Remote output log:" >&2
           echo "$logContent" >&2
         else
           echo "Could not retrieve remote log file" >&2
         fi
-        
+
         echo "Remote commands were: $remoteCommands" >&2
         exit 1
       elif [[ $kexecSuccess == true ]]; then
         echo "Kexec initiated successfully" >&2
       fi
     fi
-    
+
     # Clean up the log file
     (
       set +x
