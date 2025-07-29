@@ -572,11 +572,14 @@ importFacts() {
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
-  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
-    if [[ -z ${!var} ]]; then
-      abort "Failed to retrieve fact $var from host"
-    fi
-  done
+  (
+    set +x
+    for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+      if [[ -z ${!var} ]]; then
+        abort "Failed to retrieve fact $var from host"
+      fi
+    done
+  )
 }
 
 checkBuildLocally() {
@@ -720,14 +723,26 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
 
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
-    runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    (
+      set +x
+      runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    )
   else
     # Use local command with pipe to remote
     tarCommand="${maybeSudo} tar -C /root/kexec -xvzf-"
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
-    "${localUploadCommand[@]}" | runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    "${localUploadCommand[@]}" | (
+      set +x
+      runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    )
   fi
+
+  # Clean up the log file on success
+  (
+    set +x
+    runSsh "rm -f /tmp/kexec-output.log" 2>/dev/null || true
+  )
 
   # use the default SSH port to connect at this point
   local i
@@ -905,10 +920,12 @@ main() {
   fi
 
   maybeSudo=""
-  if [[ ${hasSudo-n} == "y" ]]; then
-    maybeSudo="sudo"
-  elif [[ ${hasDoas-n} == "y" ]]; then
-    maybeSudo="doas"
+  if [[ ${sshUser} != "root" ]]; then
+    if [[ ${hasSudo-n} == "y" ]]; then
+      maybeSudo="sudo"
+    elif [[ ${hasDoas-n} == "y" ]]; then
+      maybeSudo="doas"
+    fi
   fi
 
   if [[ ${isOs} != "Linux" ]]; then
