@@ -75,6 +75,7 @@ breakpoint() {
 
     # Create a temporary directory for debug files
     debugTmpDir=$(mktemp -d /tmp/nixos-anywhere-debug.XXXXXX)
+    # we need to export this var as the trap will access it outside of function context
     export debugTmpDir
 
     # Set up cleanup trap
@@ -698,19 +699,21 @@ runKexec() {
     remoteCommandTemplate="
 ${enableDebug:+set -x}
 # Create a script that we can run with sudo
-cat > /tmp/kexec-script.sh << 'KEXEC_SCRIPT'
-#!/bin/bash
+kexec_script_tmp=$(mktemp /tmp/kexec-script.XXXXXX.sh)
+trap 'rm -f \"\$kexec_script_tmp\"' EXIT
+cat > \"\$kexec_script_tmp\" << 'KEXEC_SCRIPT'
+#!/usr/bin/env bash
 set -eu ${enableDebug}
 rm -rf /root/kexec
 mkdir -p /root/kexec
 cd /root/kexec
-echo \"Downloading kexec tarball (this may take a moment)...\"
+echo 'Downloading kexec tarball (this may take a moment)...'
 # Execute tar command
 %TAR_COMMAND% && TMPDIR=/root/kexec setsid --wait /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
 KEXEC_SCRIPT
-chmod +x /tmp/kexec-script.sh
+
 # Run the script and let output flow naturally  
-${maybeSudo} /tmp/kexec-script.sh 2>&1 | tee /tmp/kexec-output.log || true
+${maybeSudo} bash \"\$kexec_script_tmp\" 2>&1 | tee /tmp/kexec-output.log || true
 # The script will likely disconnect us, so we consider it successful if we see the kexec message
 if grep -q 'machine will boot into nixos' /tmp/kexec-output.log; then
   echo 'Kexec initiated successfully'
