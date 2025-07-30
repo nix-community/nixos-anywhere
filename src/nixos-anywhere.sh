@@ -719,7 +719,11 @@ runDisko() {
   fi
 
   step Formatting hard drive with disko
-  runSsh "$diskoScript"
+  local installDeps=""
+  if [[ ${diskoDeps} == "n" ]]; then
+    installDeps="nix --extra-experimental-features 'nix-command flakes' profile install nixpkgs#jq &&"
+  fi
+  runSsh "$installDeps$diskoScript"
 }
 
 nixosInstall() {
