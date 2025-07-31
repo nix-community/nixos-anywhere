@@ -702,7 +702,6 @@ ${enableDebug:+set -x}
 kexec_script_tmp=$(mktemp /tmp/kexec-script.XXXXXX.sh)
 trap 'rm -f \"\$kexec_script_tmp\"' EXIT
 cat > \"\$kexec_script_tmp\" << 'KEXEC_SCRIPT'
-#!/usr/bin/env bash
 set -eu ${enableDebug}
 rm -rf /root/kexec
 mkdir -p /root/kexec
