@@ -586,7 +586,7 @@ generateHardwareConfig() {
     fi
     if [[ ${hasNixOSFacter} == "n" ]]; then
       step "Generating facter.json using nixos-facter from nixpkgs"
-      runSshNoTty -o ConnectTimeout=10 \
+      runSshNoTty -o ConnectTimeout=10 "${maybeSudo}" \
         nix run "${nixOptions[@]}" \
         nixpkgs#nixos-facter >"$hardwareConfigPath"
     else
