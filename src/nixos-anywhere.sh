@@ -718,7 +718,7 @@ if grep -q 'machine will boot into nixos' /tmp/kexec-output.log; then
   echo 'Kexec initiated successfully'
   exit 0
 else
-  echo 'Kexec may have failed - check output above'
+  echo 'Kexec may have failed:'
   cat /tmp/kexec-output.log
   exit 1
 fi
