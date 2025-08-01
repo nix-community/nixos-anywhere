@@ -789,7 +789,7 @@ nixosReboot() {
     swapoff -a
     zpool export -a || true
   fi
-  nohup sh -c 'sleep 6 && reboot' >/dev/null &
+  nohup sh -c 'sleep 6 && reboot' >/dev/null 2>&1 &
 SSH
 
   step Waiting for the machine to become unreachable due to reboot
