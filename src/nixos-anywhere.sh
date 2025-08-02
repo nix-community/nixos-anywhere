@@ -581,7 +581,7 @@ generateHardwareConfig() {
   mkdir -p "$(dirname "$hardwareConfigPath")"
   case "$hardwareConfigBackend" in
   nixos-facter)
-    if [[ ${isInstaller} == "y" ]]; then
+    if [[ ${isInstaller} == "n" ]]; then
       maybeSudo=""
     fi
     if [[ ${hasNixOSFacter} == "n" ]]; then
