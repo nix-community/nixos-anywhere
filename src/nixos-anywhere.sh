@@ -68,6 +68,53 @@ declare -A extraFilesOwnership=()
 declare -a nixCopyOptions=()
 declare -a sshArgs=("-o" "IdentitiesOnly=yes" "-i" "$tempDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
 
+breakpoint() {
+  (
+    set +x
+    echo "Breakpoint reached at line ${BASH_LINENO[0]}."
+
+    # Create a temporary directory for debug files
+    debugTmpDir=$(mktemp -d /tmp/nixos-anywhere-debug.XXXXXX)
+    # we need to export this var as the trap will access it outside of function context
+    export debugTmpDir
+
+    # Set up cleanup trap
+    trap 'rm -rf "$debugTmpDir"' RETURN
+
+    # Save all variables (local and exported) to a file
+    (
+      set -o posix
+      set
+    ) >"$debugTmpDir/debug_vars.sh"
+
+    # Create the rcfile with explicit terminal handling
+    cat >"$debugTmpDir/debug_rcfile.sh" <<EOF
+# Source all variables
+set +o posix
+source "$debugTmpDir/debug_vars.sh"
+
+# Force output to terminal
+exec 2>/dev/tty
+exec 1>/dev/tty
+exec 0</dev/tty
+
+# Show some helpful info
+echo "Debug shell started. All variables from parent scope are available."
+echo "Example: echo \\$tempDir"
+echo "Type 'exit' to continue execution."
+
+# Set a nice prompt
+PS1="[DEBUG]> "
+EOF
+
+    echo "Variables saved to $debugTmpDir/debug_vars.sh"
+    echo "Starting debug shell (redirecting to /dev/tty for interactivity)..."
+
+    # Start an interactive shell with explicit terminal redirection
+    bash --rcfile "$debugTmpDir/debug_rcfile.sh" </dev/tty >/dev/tty 2>&1
+  )
+}
+
 showUsage() {
   cat <<USAGE
 Usage: nixos-anywhere [options] [<ssh-host>]
@@ -526,11 +573,14 @@ importFacts() {
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
-  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
-    if [[ -z ${!var} ]]; then
-      abort "Failed to retrieve fact $var from host"
-    fi
-  done
+  (
+    set +x
+    for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+      if [[ -z ${!var} ]]; then
+        abort "Failed to retrieve fact $var from host"
+      fi
+    done
+  )
 }
 
 checkBuildLocally() {
@@ -643,13 +693,54 @@ runKexec() {
 
   # Define common remote commands template
   local remoteCommandTemplate
-  remoteCommandTemplate="
+
+  # If we need sudo and have a TTY, use a script that can handle password prompts
+  if [[ -n ${maybeSudo} ]] && [[ ${sshTtyParam} == "-t" ]]; then
+    remoteCommandTemplate="
+${enableDebug:+set -x}
+# Create a script that we can run with sudo
+kexec_script_tmp=$(mktemp /tmp/kexec-script.XXXXXX.sh)
+trap 'rm -f \"\$kexec_script_tmp\"' EXIT
+cat > \"\$kexec_script_tmp\" << 'KEXEC_SCRIPT'
+set -eu ${enableDebug}
+rm -rf /root/kexec
+mkdir -p /root/kexec
+cd /root/kexec
+echo 'Downloading kexec tarball (this may take a moment)...'
+# Execute tar command
+%TAR_COMMAND% && TMPDIR=/root/kexec setsid --wait /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
+KEXEC_SCRIPT
+
+# Run the script and let output flow naturally  
+${maybeSudo} bash \"\$kexec_script_tmp\" 2>&1 | tee /tmp/kexec-output.log || true
+# The script will likely disconnect us, so we consider it successful if we see the kexec message
+if grep -q 'machine will boot into nixos' /tmp/kexec-output.log; then
+  echo 'Kexec initiated successfully'
+  exit 0
+else
+  echo 'Kexec may have failed:'
+  cat /tmp/kexec-output.log
+  exit 1
+fi
+"
+  else
+    remoteCommandTemplate="
 set -eu ${enableDebug}
 ${maybeSudo} rm -rf /root/kexec
 ${maybeSudo} mkdir -p /root/kexec
-%TAR_COMMAND%
-TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
+{
+  %TAR_COMMAND% && TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
+} 2>&1 | tee /tmp/kexec-output.log
+if grep -q 'machine will boot into nixos' /tmp/kexec-output.log; then
+  echo 'Kexec initiated successfully'
+  exit 0
+else
+  echo 'Kexec may have failed - check output above'
+  cat /tmp/kexec-output.log
+  exit 1
+fi
 "
+  fi
 
   # Define upload commands
   local localUploadCommand=()
@@ -670,17 +761,93 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
   local remoteCommands
   if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
     # Use remote command for download and execution
-    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | ${maybeSudo} tar -C /root/kexec -xvzf-"
+    if [[ -n ${maybeSudo} ]] && [[ ${sshTtyParam} == "-t" ]]; then
+      # For sudo with TTY, tar runs inside the sudo script
+      tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xvzf-"
+    else
+      tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | ${maybeSudo} tar -C /root/kexec -xvzf-"
+    fi
 
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
-    runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    # Run the SSH command - for kexec with sudo, we expect it might disconnect
+    local sshExitCode
+    (
+      set +x
+      runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    )
+    sshExitCode=$?
+
+    # For the sudo case, exit code 0 means success, 1 means failure was detected
+    if [[ -n ${maybeSudo} ]] && [[ ${sshTtyParam} == "-t" ]]; then
+      if [[ $sshExitCode -eq 0 ]]; then
+        echo "Kexec initiated successfully" >&2
+      else
+        # Try to get more info if possible
+        local logContent=""
+        if logContent=$(
+          set +x
+          runSsh "cat /tmp/kexec-output.log 2>/dev/null" 2>/dev/null
+        ); then
+          echo "Remote output log:" >&2
+          echo "$logContent" >&2
+        fi
+        echo "Kexec command failed" >&2
+        exit 1
+      fi
+    else
+      # For non-sudo case, check the log as before
+      local kexecSuccess=false
+      local logContent=""
+      if logContent=$(
+        set +x
+        runSsh "cat /tmp/kexec-output.log 2>/dev/null" 2>/dev/null
+      ); then
+        if echo "$logContent" | grep -q "machine will boot into nixos"; then
+          kexecSuccess=true
+        fi
+      fi
+
+      if [[ $sshExitCode -ne 0 ]] && [[ $kexecSuccess != true ]]; then
+        echo "Error: Failed to execute kexec commands on remote host" >&2
+
+        if [[ -n $logContent ]]; then
+          echo "Remote output log:" >&2
+          echo "$logContent" >&2
+        else
+          echo "Could not retrieve remote log file" >&2
+        fi
+
+        echo "Remote commands were: $remoteCommands" >&2
+        exit 1
+      elif [[ $kexecSuccess == true ]]; then
+        echo "Kexec initiated successfully" >&2
+      fi
+    fi
+
+    # Clean up the log file
+    (
+      set +x
+      runSsh "rm -f /tmp/kexec-output.log" 2>/dev/null || true
+    )
   else
     # Use local command with pipe to remote
-    tarCommand="${maybeSudo} tar -C /root/kexec -xvzf-"
+    if [[ -n ${maybeSudo} ]] && [[ ${sshTtyParam} == "-t" ]]; then
+      # For sudo with TTY, tar runs inside the sudo script
+      tarCommand="tar -xvzf-"
+    else
+      tarCommand="${maybeSudo} tar -C /root/kexec -xvzf-"
+    fi
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
-    "${localUploadCommand[@]}" | runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    if ! "${localUploadCommand[@]}" | (
+      set +x
+      runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    ); then
+      echo "Error: Failed to upload and execute kexec on remote host" >&2
+      echo "Remote commands were: $remoteCommands" >&2
+      exit 1
+    fi
   fi
 
   # use the default SSH port to connect at this point
@@ -859,10 +1026,12 @@ main() {
   fi
 
   maybeSudo=""
-  if [[ ${hasSudo-n} == "y" ]]; then
-    maybeSudo="sudo"
-  elif [[ ${hasDoas-n} == "y" ]]; then
-    maybeSudo="doas"
+  if [[ ${sshUser} != "root" ]]; then
+    if [[ ${hasSudo-n} == "y" ]]; then
+      maybeSudo="sudo"
+    elif [[ ${hasDoas-n} == "y" ]]; then
+      maybeSudo="doas"
+    fi
   fi
 
   if [[ ${isOs} != "Linux" ]]; then
