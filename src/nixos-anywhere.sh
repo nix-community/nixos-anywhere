@@ -705,6 +705,12 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
 
   # waiting for machine to become available again
   until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
+
+  importFacts
+
+  if [[ ${isInstaller} == "n" ]]; then
+    abort "Failed to kexec into NixOS installer"
+  fi
 }
 
 runDisko() {
