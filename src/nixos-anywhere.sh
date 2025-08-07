@@ -48,6 +48,7 @@ isOs=
 isArch=
 isInstaller=
 isContainer=
+isRoot=
 hasIpv6Only=
 hasTar=
 hasCpio=
@@ -519,7 +520,7 @@ importFacts() {
   fi
   filteredFacts=$(echo "$facts" | grep -E '^(has|is)[A-Za-z0-9_]+=\S+')
   if [[ -z $filteredFacts ]]; then
-    abort "Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already"
+    abort "Retrieving host facts via SSH failed. Check with --debug for the root cause, unless you have done so already"
   fi
   # make facts available in script
   # shellcheck disable=SC2046
@@ -527,12 +528,23 @@ importFacts() {
 
   # Necessary to prevent Bash erroring before printing out which fact had an issue
   set +u
-  for var in isOs isArch isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
   done
   set -u
+
+  if [[ ${isRoot} == "y" ]]; then
+    maybeSudo=
+  elif [[ ${hasSudo} == "y" ]]; then
+    maybeSudo=sudo
+  elif [[ ${hasDoas} == "y" ]]; then
+    maybeSudo=doas
+  else
+    # shellcheck disable=SC2016
+    abort 'Unable to find a command to use to escalate privileges: Could not find `sudo` or `doas`'
+  fi
 }
 
 checkBuildLocally() {
@@ -579,7 +591,6 @@ checkBuildLocally() {
 }
 
 generateHardwareConfig() {
-  local maybeSudo="$maybeSudo"
   mkdir -p "$(dirname "$hardwareConfigPath")"
   case "$hardwareConfigBackend" in
   nixos-facter)
@@ -702,9 +713,6 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
 
   # After kexec we explicitly set the user to root@
   sshConnection="root@${sshHost}"
-
-  # TODO: remove this after we reimport facts post-kexec and set this as a fact
-  maybeSudo=""
 
   # waiting for machine to become available again
   until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
@@ -870,13 +878,6 @@ main() {
 
   if [[ ${hasSetsid-n} == "n" ]]; then
     abort "no setsid command found, but required to run the kexec script under a new session"
-  fi
-
-  maybeSudo=""
-  if [[ ${hasSudo-n} == "y" ]]; then
-    maybeSudo="sudo"
-  elif [[ ${hasDoas-n} == "y" ]]; then
-    maybeSudo="doas"
   fi
 
   if [[ ${isOs} != "Linux" ]]; then
