@@ -581,16 +581,19 @@ generateHardwareConfig() {
   mkdir -p "$(dirname "$hardwareConfigPath")"
   case "$hardwareConfigBackend" in
   nixos-facter)
-    if [[ ${isInstaller} == "y" ]]; then
-      maybeSudo=""
-    fi
     if [[ ${hasNixOSFacter} == "n" ]]; then
       step "Generating facter.json using nixos-facter from nixpkgs"
+
+      # We need to quote all the flags before they get passed to SSH
+      # otherwise SSH will drop the quotes which is necessary for
+      # `--extra-experimental-features "nix-command flakes"`.
+      # We can use the following Bash-ism described at: https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html#Shell-Parameter-Expansion-1
+      # For more information: https://unix.stackexchange.com/questions/379181/escape-a-variable-for-use-as-content-of-another-script
       runSshNoTty -o ConnectTimeout=10 \
-        nix run nixpkgs#nixos-facter "${nixOptions[@]}" >"$hardwareConfigPath"
+        nix shell "${nixOptions[@]@Q}" nixpkgs#nixos-facter -c ${maybeSudo} nixos-facter >"$hardwareConfigPath"
     else
       step "Generating facter.json using nixos-facter"
-      runSshNoTty -o ConnectTimeout=10 "${maybeSudo}" "nixos-facter" >"$hardwareConfigPath"
+      runSshNoTty -o ConnectTimeout=10 ${maybeSudo} nixos-facter >"$hardwareConfigPath"
     fi
     ;;
   nixos-generate-config)
@@ -697,6 +700,9 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
 
   # After kexec we explicitly set the user to root@
   sshConnection="root@${sshHost}"
+
+  # TODO: remove this after we reimport facts post-kexec and set this as a fact
+  maybeSudo=""
 
   # waiting for machine to become available again
   until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
