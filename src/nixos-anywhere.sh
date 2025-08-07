@@ -581,9 +581,6 @@ generateHardwareConfig() {
   mkdir -p "$(dirname "$hardwareConfigPath")"
   case "$hardwareConfigBackend" in
   nixos-facter)
-    if [[ ${isInstaller} == "y" ]]; then
-      maybeSudo=""
-    fi
     if [[ ${hasNixOSFacter} == "n" ]]; then
       step "Generating facter.json using nixos-facter from nixpkgs"
 
@@ -703,6 +700,9 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
 
   # After kexec we explicitly set the user to root@
   sshConnection="root@${sshHost}"
+
+  # TODO: remove this after we reimport facts post-kexec and set this as a fact
+  maybeSudo=""
 
   # waiting for machine to become available again
   until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
