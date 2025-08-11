@@ -46,7 +46,6 @@ envPassword=n
 # Facts set by get-facts.sh
 isOs=
 isArch=
-isKexec=
 isInstaller=
 isContainer=
 hasIpv6Only=
@@ -526,7 +525,7 @@ importFacts() {
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
-  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  for var in isOs isArch isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
@@ -618,7 +617,7 @@ generateHardwareConfig() {
 }
 
 runKexec() {
-  if [[ ${isKexec} == "y" ]] || [[ ${isInstaller} == "y" ]]; then
+  if [[ ${isInstaller} == "y" ]]; then
     return
   fi
 
