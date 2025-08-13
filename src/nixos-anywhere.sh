@@ -46,9 +46,9 @@ envPassword=n
 # Facts set by get-facts.sh
 isOs=
 isArch=
-isKexec=
 isInstaller=
 isContainer=
+isRoot=
 hasIpv6Only=
 hasTar=
 hasCpio=
@@ -520,17 +520,31 @@ importFacts() {
   fi
   filteredFacts=$(echo "$facts" | grep -E '^(has|is)[A-Za-z0-9_]+=\S+')
   if [[ -z $filteredFacts ]]; then
-    abort "Retrieving host facts via ssh failed. Check with --debug for the root cause, unless you have done so already"
+    abort "Retrieving host facts via SSH failed. Check with --debug for the root cause, unless you have done so already"
   fi
   # make facts available in script
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
-  for var in isOs isArch isKexec isInstaller isContainer hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  # Necessary to prevent Bash erroring before printing out which fact had an issue
+  set +u
+  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
   done
+  set -u
+
+  if [[ ${isRoot} == "y" ]]; then
+    maybeSudo=
+  elif [[ ${hasSudo} == "y" ]]; then
+    maybeSudo=sudo
+  elif [[ ${hasDoas} == "y" ]]; then
+    maybeSudo=doas
+  else
+    # shellcheck disable=SC2016
+    abort 'Unable to find a command to use to escalate privileges: Could not find `sudo` or `doas`'
+  fi
 }
 
 checkBuildLocally() {
@@ -577,7 +591,6 @@ checkBuildLocally() {
 }
 
 generateHardwareConfig() {
-  local maybeSudo="$maybeSudo"
   mkdir -p "$(dirname "$hardwareConfigPath")"
   case "$hardwareConfigBackend" in
   nixos-facter)
@@ -618,7 +631,7 @@ generateHardwareConfig() {
 }
 
 runKexec() {
-  if [[ ${isKexec} == "y" ]] || [[ ${isInstaller} == "y" ]]; then
+  if [[ ${isInstaller} == "y" ]]; then
     return
   fi
 
@@ -701,11 +714,14 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
   # After kexec we explicitly set the user to root@
   sshConnection="root@${sshHost}"
 
-  # TODO: remove this after we reimport facts post-kexec and set this as a fact
-  maybeSudo=""
-
   # waiting for machine to become available again
   until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
+
+  importFacts
+
+  if [[ ${isInstaller} == "n" ]]; then
+    abort "Failed to kexec into NixOS installer"
+  fi
 }
 
 runDisko() {
@@ -862,13 +878,6 @@ main() {
 
   if [[ ${hasSetsid-n} == "n" ]]; then
     abort "no setsid command found, but required to run the kexec script under a new session"
-  fi
-
-  maybeSudo=""
-  if [[ ${hasSudo-n} == "y" ]]; then
-    maybeSudo="sudo"
-  elif [[ ${hasDoas-n} == "y" ]]; then
-    maybeSudo="doas"
   fi
 
   if [[ ${isOs} != "Linux" ]]; then
