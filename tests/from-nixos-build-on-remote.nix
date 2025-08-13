@@ -38,7 +38,7 @@
           -i /root/.ssh/install_key \
           --debug \
           --build-on-remote \
-          --kexec /etc/nixos-anywhere/kexec-installer \
+          --kexec /etc/nixos-anywhere/kexec-installer.tar.gz \
           --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
           root@installed >&2
       """)
