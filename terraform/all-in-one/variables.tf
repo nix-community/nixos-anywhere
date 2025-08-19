@@ -149,3 +149,9 @@ variable "install_bootloader" {
   description = "Install/re-install the bootloader"
   default     = false
 }
+
+variable "copy_host_keys" {
+  type        = bool
+  description = "copy over existing /etc/ssh/ssh_host_* host keys to the installation"
+  default     = false
+}
