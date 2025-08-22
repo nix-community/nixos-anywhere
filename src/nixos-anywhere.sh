@@ -473,12 +473,12 @@ runSsh() {
   (
     set +x
     if [[ -n ${enableDebug} ]]; then
-      echo -e "\033[1;34mSSH COMMAND:\033[0m ssh $sshTtyParam ${sshArgs[*]} $sshConnection $*"
+      echo -e "\033[1;34mSSH COMMAND:\033[0m ssh $sshTtyParam ${sshArgs[*]} $sshConnection $*\n"
     fi
+    # shellcheck disable=SC2029
+    # We want to expand "$@" to get the command to run over SSH
+    ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
   )
-  # shellcheck disable=SC2029
-  # We want to expand "$@" to get the command to run over SSH
-  ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
 }
 
 nixCopy() {
@@ -805,8 +805,10 @@ fi
   # If no local upload command is defined, we use the remote command to download and execute
   if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
     # Use remote command for download and execution
-    local tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
-    local remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
+    local tarCommand
+    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
+    local remoteCommands
+    remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
     # Run the SSH command - for kexec with sudo, we expect it might disconnect
     local sshExitCode
@@ -1008,6 +1010,12 @@ main() {
   sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
   sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
   sshHost="${sshConnection//*@/}"
+
+  # If kexec phase is not present, we assume kexec has already been run
+  # and change the user to root@<sshHost> for the rest of the script.
+  if [[ ${phases[kexec]} != 1 ]]; then
+    sshConnection="root@${sshHost}"
+  fi
 
   uploadSshKey
 
