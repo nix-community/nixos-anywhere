@@ -575,6 +575,8 @@ importFacts() {
   if [[ -z $filteredFacts ]]; then
     abort "Retrieving host facts via SSH failed. Check with --debug for the root cause, unless you have done so already"
   fi
+
+  set +x
   # make facts available in script
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
@@ -587,6 +589,10 @@ importFacts() {
     fi
   done
   set -u
+
+  if [[ -n ${enableDebug} ]]; then
+    set -x
+  fi
 
   if [[ ${isRoot} == "y" ]]; then
     maybeSudo=
