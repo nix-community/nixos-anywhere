@@ -470,6 +470,12 @@ runSshTimeout() {
   timeout 10 ssh "${sshArgs[@]}" "$sshConnection" "$@"
 }
 runSsh() {
+  (
+    set +x
+    if [[ -n ${enableDebug} ]]; then
+      echo -e "\033[1;34mSSH COMMAND:\033[0m ssh $sshTtyParam ${sshArgs[*]} $sshConnection $*"
+    fi
+  )
   # shellcheck disable=SC2029
   # We want to expand "$@" to get the command to run over SSH
   ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
