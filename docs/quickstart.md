@@ -73,6 +73,18 @@ ssh-keygen -y -f /path/to/your/key.pem
 
 then paste the result in between the quotes like "ssh-rsa AAA..."
 
+**Note:** If you use an `~/.ssh/config` entry **make sure the entry for your machine **does
+not include `IdentitiesOnly yes`\*\* since that will block the on-the-fly generated
+SSH key of `nixos-anywhere` during install. Delete this setting or set it to `no`
+and re-enable it after the install, e.g.
+
+```
+Host mymachine
+    HostName 1.1.1.1
+    IdentityFile ~/.ssh/my-ssh-private-key
+    IdentitiesOnly no
+```
+
 ### 4. Configure Storage
 
 In the same directory, create a file called `disk-config.nix`. This file will
