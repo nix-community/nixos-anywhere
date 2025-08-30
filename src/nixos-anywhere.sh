@@ -1,36 +1,94 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# =============================================================================
+# NIXOS-ANYWHERE INSTALLATION SCRIPT
+# =============================================================================
+# 
+# WARNING: This script will install a NEW OPERATING SYSTEM (NixOS) on your computer!
+# This will completely replace your current operating system and all data on the target machine.
+# 
+# To continue with the installation, press ENTER.
+# To abort, press Ctrl+C.
+# =============================================================================
+
+# Display warning and wait for user confirmation
+echo "============================================================================="
+echo "WARNING: NEW OPERATING SYSTEM INSTALLATION"
+echo "============================================================================="
+echo "This script will install NixOS on the target machine."
+echo "This will completely replace the current operating system and all data."
+echo ""
+if [[ $# -gt 0 ]]; then
+  echo "Target machine: $1"
+else
+  echo "Target machine: <will be specified via command line arguments>"
+fi
+echo ""
+echo "Press ENTER to continue with the installation, or Ctrl+C to abort..."
+read -r
+
+echo "Installation confirmed. Proceeding with Nixos-anywhere..."
+
+# Script directory path
 here=$(dirname "${BASH_SOURCE[0]}")
+
+# Flake configuration
 flake=""
 flakeAttr=""
+
+# Kexec bootloader configuration
 kexecUrl=""
 kexecExtraFlags=""
+
+# SSH store settings for Nix
 sshStoreSettings="compress=true"
+
+# Debug mode flag
 enableDebug=""
+
+# Nix build flags
 nixBuildFlags=()
+
+# Disko disk partitioning configuration
 diskoAttr=""
 diskoScript=""
 diskoMode=""
 diskoDeps=y
+
+# NixOS system configuration
 nixosSystem=""
+
+# Extra files to copy during installation
 extraFiles=""
+
+# VM test mode flag
 vmTest="n"
+
+# Nix options for experimental features
 nixOptions=(
   --extra-experimental-features 'nix-command flakes'
   "--no-write-lock-file"
 )
+
+# SSH private key environment variable
 SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY-}
+
+# Machine substituters flag
 machineSubstituters="y"
 
+# Installation phases configuration
 declare -A phases
-phases[kexec]=1
-phases[disko]=1
-phases[install]=1
-phases[reboot]=1
+phases[kexec]=1      # Phase 1: Boot into kexec installer
+phases[disko]=1      # Phase 2: Format and partition disks
+phases[install]=1    # Phase 3: Install NixOS system
+phases[reboot]=1     # Phase 4: Reboot into new system
 
+# Hardware configuration generation settings
 hardwareConfigBackend=none
 hardwareConfigPath=
+
+# SSH configuration
 sshPrivateKeyFile=
 if [ -t 0 ]; then # stdin is a tty, we allow interactive input to ssh i.e. passwords
   sshTtyParam="-t"
@@ -39,6 +97,8 @@ else
 fi
 sshConnection=
 postKexecSshPort=22
+
+# Build configuration
 buildOnRemote=n
 buildOn=auto
 envPassword=n
@@ -156,15 +216,18 @@ Options:
 USAGE
 }
 
+# Abort the script with an error message
 abort() {
   echo "aborted: $*" >&2
   exit 1
 }
 
+# Display a step header for better user experience
 step() {
   echo "### $* ###"
 }
 
+# Parse command line arguments and set configuration variables
 parseArgs() {
   local substituteOnDestination=y
   local printBuildLogs=n
@@ -364,6 +427,7 @@ parseArgs() {
     shift
   done
 
+  # Validate disko mode configuration
   if [[ ${diskoMode} != "" ]]; then
     if [[ ${diskoScript} != "" ]]; then
       abort "--disko-mode cannot be used if --store-paths is used"
@@ -372,20 +436,24 @@ parseArgs() {
     diskoMode=disko
   fi
 
+  # Set disko attribute based on mode and dependencies
   diskoAttr="${diskoMode}Script"
 
   if [[ ${diskoDeps} == "n" ]]; then
     diskoAttr="${diskoAttr}NoDeps"
   fi
 
+  # Configure build logging
   if [[ ${printBuildLogs} == "y" ]]; then
     nixOptions+=("-L")
   fi
 
+  # Configure substitution on destination
   if [[ $substituteOnDestination == "y" ]]; then
     nixCopyOptions+=("--substitute-on-destination")
   fi
 
+  # Validate required parameters
   if [[ $vmTest == "n" ]] && [[ -z ${sshConnection} ]]; then
     abort "ssh-host must be set"
   fi
@@ -394,6 +462,7 @@ parseArgs() {
     abort "Conflicting flags: --build-on local and --build-on-remote used."
   fi
 
+  # Parse flake configuration
   if [[ -n ${flake} ]]; then
     if [[ $flake =~ ^(.*)\#([^\#\"]*)$ ]]; then
       flake="${BASH_REMATCH[1]}"
@@ -428,12 +497,17 @@ runSsh() {
   ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
 }
 
+# Nix operations wrapper functions
+
+# Copy Nix store paths to remote machine
 nixCopy() {
   NIX_SSHOPTS="${sshArgs[*]}" nix copy \
     "${nixOptions[@]}" \
     "${nixCopyOptions[@]}" \
     "$@"
 }
+
+# Build Nix derivations
 nixBuild() {
   NIX_SSHOPTS="${sshArgs[*]}" nix build \
     --print-out-paths \
@@ -830,9 +904,11 @@ SSH
   while runSshTimeout -- exit 0; do sleep 1; done
 }
 
+# Main execution function - orchestrates the entire NixOS installation process
 main() {
   parseArgs "$@"
 
+  # Handle VM test mode if requested
   if [[ ${vmTest} == y ]]; then
     if [[ ${hardwareConfigBackend} != "none" ]]; then
       abort "--vm-test is not supported with --generate-hardware-config. You need to generate the hardware configuration before you can run the VM test." >&2
@@ -841,6 +917,7 @@ main() {
     exit 0
   fi
 
+  # Determine build location (local vs remote)
   if [[ ${buildOn} == "auto" ]]; then
     checkBuildLocally
   fi
@@ -863,6 +940,7 @@ main() {
     abort "--flake or --store-paths must be set"
   fi
 
+  # Handle SSH private key from environment variable
   if [[ -n ${SSH_PRIVATE_KEY} ]] && [[ -z ${sshPrivateKeyFile} ]]; then
     # $tempDir is getting deleted on trap EXIT
     sshPrivateKeyFile="$tempDir/from-env"
@@ -872,14 +950,18 @@ main() {
     )
   fi
 
+  # Extract SSH connection details
   sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
   sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
   sshHost="${sshConnection//*@/}"
 
+  # Upload SSH keys for authentication
   uploadSshKey
 
+  # Gather system facts from target machine
   importFacts
 
+  # Validate required tools on target machine
   if [[ ${hasTar-n} == "n" ]]; then
     abort "no tar command found, but required to unpack kexec tarball"
   fi
@@ -892,14 +974,17 @@ main() {
     abort "no setsid command found, but required to run the kexec script under a new session"
   fi
 
+  # Validate operating system
   if [[ ${isOs} != "Linux" ]]; then
     abort "This script requires Linux as the operating system, but got $isOs"
   fi
 
+  # Execute kexec phase if enabled
   if [[ ${phases[kexec]} == 1 ]]; then
     runKexec
   fi
 
+  # Generate hardware configuration if requested
   if [[ ${hardwareConfigBackend} != "none" ]]; then
     generateHardwareConfig
   fi
@@ -915,6 +1000,7 @@ main() {
     fi
   fi
 
+  # Build system components locally if not building remotely
   if [[ ${buildOn} != "remote" ]] && [[ -n ${flake} ]] && [[ -z ${diskoScript} ]]; then
     if [[ ${phases[disko]} == 1 ]]; then
       diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}")
@@ -944,14 +1030,17 @@ echo "extra-trusted-public-keys = ${trustedPublicKeys}" >> ~/.config/nix/nix.con
 SSH
   fi
 
+  # Execute disko phase if enabled
   if [[ ${phases[disko]} == 1 ]]; then
     runDisko "$diskoScript"
   fi
 
+  # Execute install phase if enabled
   if [[ ${phases[install]} == 1 ]]; then
     nixosInstall "$nixosSystem"
   fi
 
+  # Execute reboot phase if enabled
   if [[ ${phases[reboot]} == 1 ]]; then
     nixosReboot
   fi
