@@ -1048,6 +1048,27 @@ echo "extra-trusted-public-keys = ${trustedPublicKeys}" >> ~/.config/nix/nix.con
 SSH
   fi
 
+  # Get system-features with a specific cpu architecture from the machine and add them to the installer
+  if [[ -n ${flake} ]]; then
+    system_features=$(nix --extra-experimental-features 'nix-command flakes' eval --apply toString "${flake}"#"${flakeAttr}".nix.settings.system-features)
+    if [[ -z ${system_features} ]]; then
+      system_features=$(nix config show system-features)
+    fi
+
+    platform_arch=$(nix --extra-experimental-features 'nix-command flakes' eval --apply 'x: toString (x.nixpkgs.hostPlatform.gcc.arch or "")' "${flake}#${flakeAttr}")
+    if [[ -n ${platform_arch} ]]; then
+      system_features="${system_features} gccarch-${platform_arch}"
+    fi
+
+    # deduplicate the features
+    system_features=$(echo "${system_features}" | tr ' ' '\n' | sort -u | tr '\n' ' ' | sed 's/ $//')
+
+    runSsh sh <<SSH || true
+mkdir -p ~/.config/nix
+echo "system-features = ${system_features}" >> ~/.config/nix/nix.conf
+SSH
+  fi
+
   if [[ ${phases[disko]} == 1 ]]; then
     runDisko "$diskoScript"
   fi
