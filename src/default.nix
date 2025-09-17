@@ -33,7 +33,7 @@ let
 in
 stdenv.mkDerivation {
   pname = "nixos-anywhere";
-  version = "1.11.0";
+  version = "1.12.0";
   src = ./..;
   nativeBuildInputs = [ makeWrapper ];
   installPhase = ''
