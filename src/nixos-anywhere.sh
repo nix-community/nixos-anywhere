@@ -1036,16 +1036,44 @@ main() {
     sshConnection="root@${sshHost}"
   fi
 
-  # Get substituters from the machine and add them to the installer
-  if [[ ${machineSubstituters} == "y" && -n ${flake} ]]; then
-    substituters=$(nix --extra-experimental-features 'nix-command flakes' eval --apply toString "${flake}"#"${flakeAttr}".nix.settings.substituters)
-    trustedPublicKeys=$(nix --extra-experimental-features 'nix-command flakes' eval --apply toString "${flake}"#"${flakeAttr}".nix.settings.trusted-public-keys)
+  # Get substituters and system-features from the machine and add them to the installer
+  if [[ -n ${flake} ]]; then
+    # Consolidate all nix settings evaluation into a single call
+    nixConfContent=$(nix --extra-experimental-features 'nix-command flakes' eval --raw --apply "
+      config:
+      let
+        settings = config.nix.settings or {};
+        hostPlatform = config.nixpkgs.hostPlatform or null;
+        gccArch = if hostPlatform != null then hostPlatform.gcc.arch or null else null;
 
-    runSsh sh <<SSH || true
+        # Combine system-features with platform-specific feature
+        baseFeatures = settings.system-features or [];
+        allFeatures = baseFeatures ++ (if gccArch != null then [\"gccarch-\${gccArch}\"] else []);
+        # Deduplicate using listToAttrs trick
+        uniqueFeatures = builtins.attrNames (builtins.listToAttrs (map (f: { name = f; value = true; }) allFeatures));
+
+        substituters = builtins.toString (settings.substituters or []);
+        trustedPublicKeys = builtins.toString (settings.trusted-public-keys or []);
+        systemFeatures = builtins.toString uniqueFeatures;
+
+        # Helper function for optional config lines
+        optionalLine = cond: line: if cond then line + \"\n\" else \"\";
+
+        # Build nix.conf content
+        useSubstituters = \"${machineSubstituters}\" == \"y\";
+      in
+        optionalLine (useSubstituters && substituters != \"\") \"extra-substituters = \${substituters}\"
+        + optionalLine (useSubstituters && trustedPublicKeys != \"\") \"extra-trusted-public-keys = \${trustedPublicKeys}\"
+        + optionalLine (systemFeatures != \"\") \"system-features = \${systemFeatures}\"
+    " "${flake}#${flakeAttr}")
+
+    # Write to nix.conf if we have any content
+    if [[ -n ${nixConfContent} ]]; then
+      runSsh sh <<SSH || true
 mkdir -p ~/.config/nix
-echo "extra-substituters = ${substituters}" >> ~/.config/nix/nix.conf
-echo "extra-trusted-public-keys = ${trustedPublicKeys}" >> ~/.config/nix/nix.conf
+echo "${nixConfContent}" >> ~/.config/nix/nix.conf
 SSH
+    fi
   fi
 
   if [[ ${phases[disko]} == 1 ]]; then
