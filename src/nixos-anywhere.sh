@@ -58,6 +58,7 @@ hasWget=
 hasCurl=
 hasSetsid=
 hasNixOSFacter=
+remoteHomeDir=
 
 tempDir=$(mktemp -d)
 trap 'rm -rf "$tempDir"' EXIT
@@ -571,22 +572,33 @@ importFacts() {
   if ! facts=$(runSsh -o ConnectTimeout=10 enableDebug=$enableDebug sh -- <"$here"/get-facts.sh); then
     exit 1
   fi
-  filteredFacts=$(echo "$facts" | grep -E '^(has|is)[A-Za-z0-9_]+=\S+')
+  filteredFacts=$(echo "$facts" | grep -E '^(has|is|remote)[A-Za-z0-9_]+=\S+')
   if [[ -z $filteredFacts ]]; then
     abort "Retrieving host facts via SSH failed. Check with --debug for the root cause, unless you have done so already"
   fi
+
+  # disable debug output temporarily to prevent log spam
+  set +x
+
   # make facts available in script
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
   # Necessary to prevent Bash erroring before printing out which fact had an issue
   set +u
-  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid remoteHomeDir; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
   done
   set -u
+
+  # Compute the log file path from the home directory
+  remoteLogFile="${remoteHomeDir}/.nixos-anywhere.log"
+
+  if [[ -n ${enableDebug} ]]; then
+    set -x
+  fi
 
   if [[ ${isRoot} == "y" ]]; then
     maybeSudo=
