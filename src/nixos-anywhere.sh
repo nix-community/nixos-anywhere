@@ -58,7 +58,6 @@ hasWget=
 hasCurl=
 hasSetsid=
 hasNixOSFacter=
-remoteHomeDir=
 
 tempDir=$(mktemp -d)
 trap 'rm -rf "$tempDir"' EXIT
@@ -586,7 +585,7 @@ importFacts() {
 
   # Necessary to prevent Bash erroring before printing out which fact had an issue
   set +u
-  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid remoteHomeDir; do
+  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
@@ -727,7 +726,7 @@ runKexec() {
     local logContent=""
     if logContent=$(
       set +x
-      runSsh "cat \"$remoteHomeDir/kexec/nixos-anywhere.log\" 2>/dev/null" 2>/dev/null
+      runSsh 'cat "$HOME/kexec/nixos-anywhere.log" 2>/dev/null' 2>/dev/null
     ); then
       echo "Remote output log:" >&2
       echo "$logContent" >&2
@@ -736,28 +735,23 @@ runKexec() {
     exit 1
   }
 
-  # Extract directly to the user's home directory
-  if [[ -z $remoteHomeDir ]]; then
-    abort "Could not determine home directory for user $sshUser"
-  fi
-
   # Define common remote commands template
   local remoteCommandTemplate
   remoteCommandTemplate="
 # Run kexec commands with sudo if needed
 {
   set -eu ${enableDebug}
-  ${maybeSudo} rm -rf \"$remoteHomeDir/kexec\"
-  mkdir -p \"$remoteHomeDir/kexec\"
-  cd \"$remoteHomeDir/kexec\"
+  ${maybeSudo} rm -rf \"\$HOME/kexec\"
+  mkdir -p \"\$HOME/kexec\"
+  cd \"\$HOME/kexec\"
   echo Downloading kexec tarball, this may take a moment...
   # Execute tar command
   %TAR_COMMAND%
-  TMPDIR=\"$remoteHomeDir/kexec\" ${maybeSudo} setsid --wait \"$remoteHomeDir/kexec/kexec/run\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
-} 2>&1 | tee \"$remoteHomeDir/kexec/nixos-anywhere.log\" || true
+  TMPDIR=\"\$HOME/kexec\" ${maybeSudo} setsid --wait \"\$HOME/kexec/kexec/run\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
+} 2>&1 | tee \"\$HOME/kexec/nixos-anywhere.log\" || true
 
 # The script will likely disconnect us, so we consider it successful if we see the kexec message
-if ! grep -q 'machine will boot into nixos' \"$remoteHomeDir/kexec/nixos-anywhere.log\"; then
+if ! grep -q 'machine will boot into nixos' \"\$HOME/kexec/nixos-anywhere.log\"; then
   echo 'Kexec may have failed - check output above'
   exit 1
 fi
@@ -797,19 +791,19 @@ fi
     tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
   else
     # Upload the kexec tarball first
-    "${localUploadCommand[@]}" | runSsh "cat > \"$remoteHomeDir\"/kexec-tarball.tar.gz"
+    "${localUploadCommand[@]}" | runSsh 'cat > "$HOME/kexec-tarball.tar.gz"'
     # Use local file for extraction
-    tarCommand="cat \"$remoteHomeDir\"/kexec-tarball.tar.gz | tar -xv ${tarDecomp}"
+    tarCommand="cat \"\$HOME/kexec-tarball.tar.gz\" | tar -xv ${tarDecomp}"
   fi
 
   local remoteCommands
   remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
   # Create and execute the script on the remote system
-  runSsh "mkdir -p \"$remoteHomeDir/kexec\" && cat > \"$remoteHomeDir/kexec/unpack.sh\"" <<EOF
+  runSsh 'mkdir -p "$HOME/kexec" && cat > "$HOME/kexec/nixos-anywhere-kexec.sh"' <<EOF
 $remoteCommands
 EOF
-  runSsh "bash $remoteHomeDir/kexec/unpack.sh" || handleKexecFailure "Kexec"
+  runSsh 'bash "$HOME/kexec/nixos-anywhere-kexec.sh"' || handleKexecFailure "Kexec"
 
   # use the default SSH port to connect at this point
   local i
