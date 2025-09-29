@@ -1016,6 +1016,12 @@ main() {
   sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
   sshHost="${sshConnection//*@/}"
 
+  # If kexec phase is not present, we assume kexec has already been run
+  # and change the user to root@<sshHost> for the rest of the script.
+  if [[ ${phases[kexec]} != 1 ]]; then
+    sshConnection="root@${sshHost}"
+  fi
+
   uploadSshKey
 
   importFacts
