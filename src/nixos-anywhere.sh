@@ -726,6 +726,7 @@ runKexec() {
     local logContent=""
     if logContent=$(
       set +x
+      # shellcheck disable=SC2016 # We want $HOME to expand on the remote server
       runSsh 'cat "$HOME/kexec/nixos-anywhere.log" 2>/dev/null' 2>/dev/null
     ); then
       echo "Remote output log:" >&2
@@ -741,8 +742,6 @@ runKexec() {
 # Run kexec commands with sudo if needed
 {
   set -eu ${enableDebug}
-  ${maybeSudo} rm -rf \"\$HOME/kexec\"
-  mkdir -p \"\$HOME/kexec\"
   cd \"\$HOME/kexec\"
   echo Downloading kexec tarball, this may take a moment...
   # Execute tar command
@@ -790,19 +789,24 @@ fi
     # Use remote command for download
     tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
   else
-    # Upload the kexec tarball first
-    "${localUploadCommand[@]}" | runSsh 'cat > "$HOME/kexec-tarball.tar.gz"'
     # Use local file for extraction
-    tarCommand="cat \"\$HOME/kexec-tarball.tar.gz\" | tar -xv ${tarDecomp}"
+    tarCommand="cat \"\$HOME/kexec/kexec-tarball.tar.gz\" | tar -xv ${tarDecomp}"
   fi
 
   local remoteCommands
   remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
   # Create and execute the script on the remote system
+  # shellcheck disable=SC2016 # We want $HOME to expand on the remote server
   runSsh 'mkdir -p "$HOME/kexec" && cat > "$HOME/kexec/nixos-anywhere-kexec.sh"' <<EOF
 $remoteCommands
 EOF
+  if [[ ${#localUploadCommand[@]} -gt 0 ]]; then
+    # Upload the kexec tarball first
+    # shellcheck disable=SC2016 # We want $HOME to expand on the remote server
+    "${localUploadCommand[@]}" | runSsh 'cat > "$HOME/kexec/kexec-tarball.tar.gz"'
+  fi
+  # shellcheck disable=SC2016 # We want $HOME to expand on the remote server
   runSsh 'bash "$HOME/kexec/nixos-anywhere-kexec.sh"' || handleKexecFailure "Kexec"
 
   # use the default SSH port to connect at this point
