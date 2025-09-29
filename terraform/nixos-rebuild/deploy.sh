@@ -38,6 +38,10 @@ if [[ -n ${SSH_KEY+x} && ${SSH_KEY} != "-" ]]; then
 fi
 set -x
 
+while IFS= read -r -d '' value; do
+  sshOpts+=(-o "$value")
+done < <(jq -j 'to_entries[] | (.value, "\u0000")' <<<"${SSH_OPTIONS}")
+
 try=1
 until NIX_SSHOPTS="${sshOpts[*]}" nix copy -s --experimental-features nix-command --to "ssh://$TARGET" "$NIXOS_SYSTEM"; do
   if [[ $try -gt 10 ]]; then

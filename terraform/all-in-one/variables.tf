@@ -149,3 +149,15 @@ variable "install_bootloader" {
   description = "Install/re-install the bootloader"
   default     = false
 }
+
+variable "install_ssh_options" {
+  type        = list(string)
+  description = "Additional SSH options to use during installation"
+  default     = []
+}
+
+variable "deployment_ssh_options" {
+  type        = list(string)
+  description = "Additional SSH options to use during deploy"
+  default     = []
+}
