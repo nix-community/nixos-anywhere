@@ -722,14 +722,60 @@ runKexec() {
     kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
   fi
 
+  if [[ -z $remoteLogFile ]]; then
+    abort "Could not create a temporary log file for $sshUser"
+  fi
+
+  # Unified kexec error handling function
+  handleKexecResult() {
+    local exitCode=$1
+    local operation=$2
+
+    if [[ $exitCode -eq 0 ]]; then
+      echo "$operation completed successfully" >&2
+    else
+      # If operation failed, try to fetch the log file
+      local logContent=""
+      if logContent=$(
+        set +x
+        runSsh "cat \"$remoteLogFile\" 2>/dev/null" 2>/dev/null
+      ); then
+        echo "Remote output log:" >&2
+        echo "$logContent" >&2
+      fi
+      echo "$operation failed" >&2
+      exit 1
+    fi
+  }
+
   # Define common remote commands template
   local remoteCommandTemplate
   remoteCommandTemplate="
+${enableDebug:+set -x}
+# Create a script that we can run with sudo
+kexec_script_tmp=\$(mktemp /tmp/kexec-script.XXXXXX.sh)
+trap 'rm -f \"\$kexec_script_tmp\"' EXIT
+cat > \"\$kexec_script_tmp\" << 'KEXEC_SCRIPT'
+#!/usr/bin/env bash
 set -eu ${enableDebug}
-${maybeSudo} rm -rf /root/kexec
-${maybeSudo} mkdir -p /root/kexec
-%TAR_COMMAND%
-TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
+rm -rf /root/kexec
+mkdir -p /root/kexec
+cd /root/kexec
+echo 'Downloading kexec tarball (this may take a moment)...'
+# Execute tar command
+%TAR_COMMAND% && TMPDIR=/root/kexec setsid --wait /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
+KEXEC_SCRIPT
+
+# Run the script and let output flow naturally
+${maybeSudo} bash \"\$kexec_script_tmp\" 2>&1 | tee \"$remoteLogFile\" || true
+# The script will likely disconnect us, so we consider it successful if we see the kexec message
+if grep -q 'machine will boot into nixos' \"$remoteLogFile\"; then
+  echo 'Kexec initiated successfully'
+  exit 0
+else
+  echo 'Kexec may have failed - check output above'
+  exit 1
+fi
 "
 
   # Define upload commands
@@ -759,21 +805,50 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
     localUploadCommand=(curl --fail -Ss -L "${kexecUrl}")
   fi
 
-  local tarCommand
-  local remoteCommands
+  # If no local upload command is defined, we use the remote command to download and execute
   if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
     # Use remote command for download and execution
-    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | ${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}"
-
+    local tarCommand
+    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
+    local remoteCommands
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
-    runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    # Run the SSH command - for kexec with sudo, we expect it might disconnect
+    local sshExitCode
+    (
+      set +x
+      runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    )
+    sshExitCode=$?
+
+    handleKexecResult $sshExitCode "Kexec"
   else
-    # Use local command with pipe to remote
-    tarCommand="${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}"
-    remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
+    # Why do we need $remoteHomeDir?
+    # In the case where the ssh user is not root, we need to upload the kexec tarball
+    # to a location where the user has write permissions. We then use sudo to run
+    # kexec from that location.
+    if [[ -z $remoteHomeDir ]]; then
+      abort "Could not determine home directory for user $sshUser"
+    fi
 
-    "${localUploadCommand[@]}" | runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    (
+      set +x
+      "${localUploadCommand[@]}" | runSsh "cat > \"$remoteHomeDir\"/kexec-tarball.tar.gz"
+    )
+
+    # Use local command with pipe to remote
+    local tarCommand="cat \"$remoteHomeDir\"/kexec-tarball.tar.gz | tar -xv ${tarDecomp}"
+    local remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
+
+    # Execute the local upload command and check for success
+    local uploadExitCode
+    (
+      set +x
+      runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    )
+    uploadExitCode=$?
+
+    handleKexecResult $uploadExitCode "Upload"
   fi
 
   # use the default SSH port to connect at this point
