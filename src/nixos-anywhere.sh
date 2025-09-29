@@ -593,9 +593,6 @@ importFacts() {
   done
   set -u
 
-  # Compute the log file path from the home directory
-  remoteLogFile="${remoteHomeDir}/.nixos-anywhere.log"
-
   if [[ -n ${enableDebug} ]]; then
     set -x
   fi
@@ -722,10 +719,6 @@ runKexec() {
     kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
   fi
 
-  if [[ -z $remoteLogFile ]]; then
-    abort "Could not create a temporary log file for $sshUser"
-  fi
-
   # Handle kexec operation failures
   handleKexecFailure() {
     local operation=$1
@@ -734,7 +727,7 @@ runKexec() {
     local logContent=""
     if logContent=$(
       set +x
-      runSsh "cat \"$remoteLogFile\" 2>/dev/null" 2>/dev/null
+      runSsh "cat \"$remoteHomeDir/kexec/nixos-anywhere.log\" 2>/dev/null" 2>/dev/null
     ); then
       echo "Remote output log:" >&2
       echo "$logContent" >&2
@@ -761,10 +754,10 @@ runKexec() {
   # Execute tar command
   %TAR_COMMAND%
   TMPDIR=\"$remoteHomeDir/kexec\" ${maybeSudo} setsid --wait \"$remoteHomeDir/kexec/kexec/run\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
-} 2>&1 | tee \"$remoteLogFile\" || true
+} 2>&1 | tee \"$remoteHomeDir/kexec/nixos-anywhere.log\" || true
 
 # The script will likely disconnect us, so we consider it successful if we see the kexec message
-if ! grep -q 'machine will boot into nixos' \"$remoteLogFile\"; then
+if ! grep -q 'machine will boot into nixos' \"$remoteHomeDir/kexec/nixos-anywhere.log\"; then
   echo 'Kexec may have failed - check output above'
   exit 1
 fi
