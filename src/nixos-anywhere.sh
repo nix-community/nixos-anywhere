@@ -68,6 +68,53 @@ declare -A extraFilesOwnership=()
 declare -a nixCopyOptions=()
 declare -a sshArgs=("-o" "IdentitiesOnly=yes" "-i" "$tempDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
 
+breakpoint() {
+  (
+    set +x
+    echo "Breakpoint reached at line ${BASH_LINENO[0]}."
+
+    # Create a temporary directory for debug files
+    debugTmpDir=$(mktemp -d /tmp/nixos-anywhere-debug.XXXXXX)
+    chmod 700 "$debugTmpDir" # Secure the directory
+
+    # Set up cleanup trap
+    # shellcheck disable=SC2064
+    trap "rm -rf \"$debugTmpDir\"" EXIT
+
+    # Save all variables (local and exported) to a file
+    (
+      set -o posix
+      set
+    ) >"$debugTmpDir/debug_vars.sh"
+
+    # Create the rcfile with explicit terminal handling
+    cat >"$debugTmpDir/debug_rcfile.sh" <<EOF
+# Source all variables
+set +o posix
+source "$debugTmpDir/debug_vars.sh"
+
+# Force output to terminal
+exec 2>/dev/tty
+exec 1>/dev/tty
+exec 0</dev/tty
+
+# Show some helpful info
+echo "Debug shell started. All variables from parent scope are available."
+echo "Example: echo \\\$tempDir"
+echo "Type 'exit' to continue execution."
+
+# Set a nice prompt
+PS1="[DEBUG]> "
+EOF
+
+    echo "Variables saved to $debugTmpDir/debug_vars.sh"
+    echo "Starting debug shell (redirecting to /dev/tty for interactivity)..."
+
+    # Start an interactive shell with explicit terminal redirection
+    bash --rcfile "$debugTmpDir/debug_rcfile.sh" </dev/tty >/dev/tty 2>&1
+  )
+}
+
 showUsage() {
   cat <<USAGE
 Usage: nixos-anywhere [options] [<ssh-host>]
