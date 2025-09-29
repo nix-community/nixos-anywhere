@@ -726,53 +726,45 @@ runKexec() {
     abort "Could not create a temporary log file for $sshUser"
   fi
 
-  # Unified kexec error handling function
-  handleKexecResult() {
-    local exitCode=$1
-    local operation=$2
+  # Handle kexec operation failures
+  handleKexecFailure() {
+    local operation=$1
 
-    if [[ $exitCode -eq 0 ]]; then
-      echo "$operation completed successfully" >&2
-    else
-      # If operation failed, try to fetch the log file
-      local logContent=""
-      if logContent=$(
-        set +x
-        runSsh "cat \"$remoteLogFile\" 2>/dev/null" 2>/dev/null
-      ); then
-        echo "Remote output log:" >&2
-        echo "$logContent" >&2
-      fi
-      echo "$operation failed" >&2
-      exit 1
+    # Try to fetch the log file
+    local logContent=""
+    if logContent=$(
+      set +x
+      runSsh "cat \"$remoteLogFile\" 2>/dev/null" 2>/dev/null
+    ); then
+      echo "Remote output log:" >&2
+      echo "$logContent" >&2
     fi
+    echo "$operation failed" >&2
+    exit 1
   }
+
+  # Extract directly to the user's home directory
+  if [[ -z $remoteHomeDir ]]; then
+    abort "Could not determine home directory for user $sshUser"
+  fi
 
   # Define common remote commands template
   local remoteCommandTemplate
   remoteCommandTemplate="
-${enableDebug:+set -x}
-# Create a script that we can run with sudo
-kexec_script_tmp=\$(mktemp /tmp/kexec-script.XXXXXX.sh)
-trap 'rm -f \"\$kexec_script_tmp\"' EXIT
-cat > \"\$kexec_script_tmp\" << 'KEXEC_SCRIPT'
-#!/usr/bin/env bash
-set -eu ${enableDebug}
-rm -rf /root/kexec
-mkdir -p /root/kexec
-cd /root/kexec
-echo 'Downloading kexec tarball (this may take a moment)...'
-# Execute tar command
-%TAR_COMMAND% && TMPDIR=/root/kexec setsid --wait /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
-KEXEC_SCRIPT
+# Run kexec commands with sudo if needed
+{
+  set -eu ${enableDebug}
+  ${maybeSudo} rm -rf \"$remoteHomeDir/kexec\"
+  mkdir -p \"$remoteHomeDir/kexec\"
+  cd \"$remoteHomeDir/kexec\"
+  echo Downloading kexec tarball, this may take a moment...
+  # Execute tar command
+  %TAR_COMMAND%
+  TMPDIR=\"$remoteHomeDir/kexec\" ${maybeSudo} setsid --wait \"$remoteHomeDir/kexec/kexec/run\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
+} 2>&1 | tee \"$remoteLogFile\" || true
 
-# Run the script and let output flow naturally
-${maybeSudo} bash \"\$kexec_script_tmp\" 2>&1 | tee \"$remoteLogFile\" || true
 # The script will likely disconnect us, so we consider it successful if we see the kexec message
-if grep -q 'machine will boot into nixos' \"$remoteLogFile\"; then
-  echo 'Kexec initiated successfully'
-  exit 0
-else
+if ! grep -q 'machine will boot into nixos' \"$remoteLogFile\"; then
   echo 'Kexec may have failed - check output above'
   exit 1
 fi
@@ -805,51 +797,26 @@ fi
     localUploadCommand=(curl --fail -Ss -L "${kexecUrl}")
   fi
 
-  # If no local upload command is defined, we use the remote command to download and execute
+  # Determine the tar command based on upload method
+  local tarCommand
   if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
-    # Use remote command for download and execution
-    local tarCommand
+    # Use remote command for download
     tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
-    local remoteCommands
-    remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
-
-    # Run the SSH command - for kexec with sudo, we expect it might disconnect
-    local sshExitCode
-    (
-      set +x
-      runSsh sh -c "$(printf '%q' "$remoteCommands")"
-    )
-    sshExitCode=$?
-
-    handleKexecResult $sshExitCode "Kexec"
   else
-    # Why do we need $remoteHomeDir?
-    # In the case where the ssh user is not root, we need to upload the kexec tarball
-    # to a location where the user has write permissions. We then use sudo to run
-    # kexec from that location.
-    if [[ -z $remoteHomeDir ]]; then
-      abort "Could not determine home directory for user $sshUser"
-    fi
-
-    (
-      set +x
-      "${localUploadCommand[@]}" | runSsh "cat > \"$remoteHomeDir\"/kexec-tarball.tar.gz"
-    )
-
-    # Use local command with pipe to remote
-    local tarCommand="cat \"$remoteHomeDir\"/kexec-tarball.tar.gz | tar -xv ${tarDecomp}"
-    local remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
-
-    # Execute the local upload command and check for success
-    local uploadExitCode
-    (
-      set +x
-      runSsh sh -c "$(printf '%q' "$remoteCommands")"
-    )
-    uploadExitCode=$?
-
-    handleKexecResult $uploadExitCode "Upload"
+    # Upload the kexec tarball first
+    "${localUploadCommand[@]}" | runSsh "cat > \"$remoteHomeDir\"/kexec-tarball.tar.gz"
+    # Use local file for extraction
+    tarCommand="cat \"$remoteHomeDir\"/kexec-tarball.tar.gz | tar -xv ${tarDecomp}"
   fi
+
+  local remoteCommands
+  remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
+
+  # Create and execute the script on the remote system
+  runSsh "mkdir -p \"$remoteHomeDir/kexec\" && cat > \"$remoteHomeDir/kexec/unpack.sh\"" <<EOF
+$remoteCommands
+EOF
+  runSsh "bash $remoteHomeDir/kexec/unpack.sh" || handleKexecFailure "Kexec"
 
   # use the default SSH port to connect at this point
   local i
