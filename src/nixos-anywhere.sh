@@ -58,6 +58,7 @@ hasWget=
 hasCurl=
 hasSetsid=
 hasNixOSFacter=
+remoteHomeDir=
 
 tempDir=$(mktemp -d)
 trap 'rm -rf "$tempDir"' EXIT
@@ -67,6 +68,53 @@ declare -A diskEncryptionKeys=()
 declare -A extraFilesOwnership=()
 declare -a nixCopyOptions=()
 declare -a sshArgs=("-o" "IdentitiesOnly=yes" "-i" "$tempDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
+
+breakpoint() {
+  (
+    set +x
+    echo "Breakpoint reached at line ${BASH_LINENO[0]}."
+
+    # Create a temporary directory for debug files
+    debugTmpDir=$(mktemp -d /tmp/nixos-anywhere-debug.XXXXXX)
+    chmod 700 "$debugTmpDir" # Secure the directory
+
+    # Set up cleanup trap
+    # shellcheck disable=SC2064
+    trap "rm -rf \"$debugTmpDir\"" EXIT
+
+    # Save all variables (local and exported) to a file
+    (
+      set -o posix
+      set
+    ) >"$debugTmpDir/debug_vars.sh"
+
+    # Create the rcfile with explicit terminal handling
+    cat >"$debugTmpDir/debug_rcfile.sh" <<EOF
+# Source all variables
+set +o posix
+source "$debugTmpDir/debug_vars.sh"
+
+# Force output to terminal
+exec 2>/dev/tty
+exec 1>/dev/tty
+exec 0</dev/tty
+
+# Show some helpful info
+echo "Debug shell started. All variables from parent scope are available."
+echo "Example: echo \\\$tempDir"
+echo "Type 'exit' to continue execution."
+
+# Set a nice prompt
+PS1="[DEBUG]> "
+EOF
+
+    echo "Variables saved to $debugTmpDir/debug_vars.sh"
+    echo "Starting debug shell (redirecting to /dev/tty for interactivity)..."
+
+    # Start an interactive shell with explicit terminal redirection
+    bash --rcfile "$debugTmpDir/debug_rcfile.sh" </dev/tty >/dev/tty 2>&1
+  )
+}
 
 showUsage() {
   cat <<USAGE
@@ -423,9 +471,15 @@ runSshTimeout() {
   timeout 10 ssh "${sshArgs[@]}" "$sshConnection" "$@"
 }
 runSsh() {
-  # shellcheck disable=SC2029
-  # We want to expand "$@" to get the command to run over SSH
-  ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
+  (
+    set +x
+    if [[ -n ${enableDebug} ]]; then
+      echo -e "\033[1;34mSSH COMMAND:\033[0m ssh $sshTtyParam ${sshArgs[*]} $sshConnection $*\n"
+    fi
+    # shellcheck disable=SC2029
+    # We want to expand "$@" to get the command to run over SSH
+    ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
+  )
 }
 
 nixCopy() {
@@ -518,22 +572,33 @@ importFacts() {
   if ! facts=$(runSsh -o ConnectTimeout=10 enableDebug=$enableDebug sh -- <"$here"/get-facts.sh); then
     exit 1
   fi
-  filteredFacts=$(echo "$facts" | grep -E '^(has|is)[A-Za-z0-9_]+=\S+')
+  filteredFacts=$(echo "$facts" | grep -E '^(has|is|remote)[A-Za-z0-9_]+=\S+')
   if [[ -z $filteredFacts ]]; then
     abort "Retrieving host facts via SSH failed. Check with --debug for the root cause, unless you have done so already"
   fi
+
+  # disable debug output temporarily to prevent log spam
+  set +x
+
   # make facts available in script
   # shellcheck disable=SC2046
   export $(echo "$filteredFacts" | xargs)
 
   # Necessary to prevent Bash erroring before printing out which fact had an issue
   set +u
-  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid remoteHomeDir; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
   done
   set -u
+
+  # Compute the log file path from the home directory
+  remoteLogFile="${remoteHomeDir}/.nixos-anywhere.log"
+
+  if [[ -n ${enableDebug} ]]; then
+    set -x
+  fi
 
   if [[ ${isRoot} == "y" ]]; then
     maybeSudo=
@@ -657,14 +722,60 @@ runKexec() {
     kexecUrl=${kexecUrl/"github.com"/"gh-v6.com"}
   fi
 
+  if [[ -z $remoteLogFile ]]; then
+    abort "Could not create a temporary log file for $sshUser"
+  fi
+
+  # Unified kexec error handling function
+  handleKexecResult() {
+    local exitCode=$1
+    local operation=$2
+
+    if [[ $exitCode -eq 0 ]]; then
+      echo "$operation completed successfully" >&2
+    else
+      # If operation failed, try to fetch the log file
+      local logContent=""
+      if logContent=$(
+        set +x
+        runSsh "cat \"$remoteLogFile\" 2>/dev/null" 2>/dev/null
+      ); then
+        echo "Remote output log:" >&2
+        echo "$logContent" >&2
+      fi
+      echo "$operation failed" >&2
+      exit 1
+    fi
+  }
+
   # Define common remote commands template
   local remoteCommandTemplate
   remoteCommandTemplate="
+${enableDebug:+set -x}
+# Create a script that we can run with sudo
+kexec_script_tmp=\$(mktemp /tmp/kexec-script.XXXXXX.sh)
+trap 'rm -f \"\$kexec_script_tmp\"' EXIT
+cat > \"\$kexec_script_tmp\" << 'KEXEC_SCRIPT'
+#!/usr/bin/env bash
 set -eu ${enableDebug}
-${maybeSudo} rm -rf /root/kexec
-${maybeSudo} mkdir -p /root/kexec
-%TAR_COMMAND%
-TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
+rm -rf /root/kexec
+mkdir -p /root/kexec
+cd /root/kexec
+echo 'Downloading kexec tarball (this may take a moment)...'
+# Execute tar command
+%TAR_COMMAND% && TMPDIR=/root/kexec setsid --wait /root/kexec/kexec/run --kexec-extra-flags $(printf '%q ' "$kexecExtraFlags")
+KEXEC_SCRIPT
+
+# Run the script and let output flow naturally
+${maybeSudo} bash \"\$kexec_script_tmp\" 2>&1 | tee \"$remoteLogFile\" || true
+# The script will likely disconnect us, so we consider it successful if we see the kexec message
+if grep -q 'machine will boot into nixos' \"$remoteLogFile\"; then
+  echo 'Kexec initiated successfully'
+  exit 0
+else
+  echo 'Kexec may have failed - check output above'
+  exit 1
+fi
 "
 
   # Define upload commands
@@ -694,21 +805,50 @@ TMPDIR=/root/kexec setsid --wait ${maybeSudo} /root/kexec/kexec/run --kexec-extr
     localUploadCommand=(curl --fail -Ss -L "${kexecUrl}")
   fi
 
-  local tarCommand
-  local remoteCommands
+  # If no local upload command is defined, we use the remote command to download and execute
   if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
     # Use remote command for download and execution
-    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | ${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}"
-
+    local tarCommand
+    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
+    local remoteCommands
     remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
 
-    runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    # Run the SSH command - for kexec with sudo, we expect it might disconnect
+    local sshExitCode
+    (
+      set +x
+      runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    )
+    sshExitCode=$?
+
+    handleKexecResult $sshExitCode "Kexec"
   else
-    # Use local command with pipe to remote
-    tarCommand="${maybeSudo} tar -C /root/kexec -xv ${tarDecomp}"
-    remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
+    # Why do we need $remoteHomeDir?
+    # In the case where the ssh user is not root, we need to upload the kexec tarball
+    # to a location where the user has write permissions. We then use sudo to run
+    # kexec from that location.
+    if [[ -z $remoteHomeDir ]]; then
+      abort "Could not determine home directory for user $sshUser"
+    fi
 
-    "${localUploadCommand[@]}" | runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    (
+      set +x
+      "${localUploadCommand[@]}" | runSsh "cat > \"$remoteHomeDir\"/kexec-tarball.tar.gz"
+    )
+
+    # Use local command with pipe to remote
+    local tarCommand="cat \"$remoteHomeDir\"/kexec-tarball.tar.gz | tar -xv ${tarDecomp}"
+    local remoteCommands=${remoteCommandTemplate//'%TAR_COMMAND%'/$tarCommand}
+
+    # Execute the local upload command and check for success
+    local uploadExitCode
+    (
+      set +x
+      runSsh sh -c "$(printf '%q' "$remoteCommands")"
+    )
+    uploadExitCode=$?
+
+    handleKexecResult $uploadExitCode "Upload"
   fi
 
   # use the default SSH port to connect at this point
@@ -875,6 +1015,12 @@ main() {
   sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
   sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
   sshHost="${sshConnection//*@/}"
+
+  # If kexec phase is not present, we assume kexec has already been run
+  # and change the user to root@<sshHost> for the rest of the script.
+  if [[ ${phases[kexec]} != 1 ]]; then
+    sshConnection="root@${sshHost}"
+  fi
 
   uploadSshKey
 
