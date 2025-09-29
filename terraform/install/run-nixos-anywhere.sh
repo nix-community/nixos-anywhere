@@ -44,6 +44,9 @@ if [[ ${input[target_pass]} != null ]]; then
   export SSHPASS=${input[target_pass]}
   args+=("--env-password")
 fi
+if [[ ${input[copy_host_keys]} == "true" ]]; then
+  args+=("--copy-host-keys")
+fi
 
 tmpdir=$(mktemp -d)
 cleanup() {
