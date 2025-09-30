@@ -1050,7 +1050,7 @@ SSH
 
   # Get system-features with a specific cpu architecture from the machine and add them to the installer
   if [[ -n ${flake} ]]; then
-    system_features=$(nix --extra-experimental-features 'nix-command flakes' eval --apply toString "${flake}"#"${flakeAttr}".nix.settings.system-features)
+    system_features=$(nix --extra-experimental-features 'nix-command flakes' eval --apply 'x: toString (x.nix.settings.system-features or "")' "${flake}#${flakeAttr}")
     if [[ -z ${system_features} ]]; then
       system_features=$(runSshNoTty -o ConnectTimeout=10 nix --extra-experimental-features 'nix-command' config show system-features)
     fi
