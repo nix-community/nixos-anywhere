@@ -1052,7 +1052,7 @@ SSH
   if [[ -n ${flake} ]]; then
     system_features=$(nix --extra-experimental-features 'nix-command flakes' eval --apply toString "${flake}"#"${flakeAttr}".nix.settings.system-features)
     if [[ -z ${system_features} ]]; then
-      system_features=$(nix config show system-features)
+      system_features=$(runSshNoTty -o ConnectTimeout=10 nix --extra-experimental-features 'nix-command' config show system-features)
     fi
 
     platform_arch=$(nix --extra-experimental-features 'nix-command flakes' eval --apply 'x: toString (x.nixpkgs.hostPlatform.gcc.arch or "")' "${flake}#${flakeAttr}")
