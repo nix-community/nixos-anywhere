@@ -1092,7 +1092,7 @@ SSH
         + optionalLine (systemFeatures != \"\") \"system-features = \${systemFeatures}\"
     " "${flake}#${flakeAttr}")
 
-      # Write to nix.conf if we have any content
+    # Write to nix.conf if we have any content
     if [[ -n ${nixConfContent} ]]; then
       runSsh sh <<SSH
 mkdir -p ~/.config/nix
