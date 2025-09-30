@@ -1063,7 +1063,7 @@ SSH
     # deduplicate the features
     system_features=$(echo "${system_features}" | tr ' ' '\n' | sort -u | tr '\n' ' ' | sed 's/ $//')
 
-    runSsh sh <<SSH || true
+    runSsh sh <<SSH
 mkdir -p ~/.config/nix
 echo "system-features = ${system_features}" >> ~/.config/nix/nix.conf
 SSH
