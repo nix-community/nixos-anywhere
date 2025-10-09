@@ -993,7 +993,7 @@ main() {
   fi
 
   if [[ ${hasSetsid-n} == "n" ]]; then
-    abort "no setsid command found, but required to run the kexec script under a new session"
+    abort "no setsid command respecting --wait found, but required to run the kexec script under a new session"
   fi
 
   if [[ ${isOs} != "Linux" ]]; then
