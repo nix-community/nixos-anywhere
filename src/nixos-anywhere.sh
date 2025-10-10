@@ -1038,8 +1038,8 @@ main() {
 
   # Get substituters from the machine and add them to the installer
   if [[ ${machineSubstituters} == "y" && -n ${flake} ]]; then
-    substituters=$(nix --extra-experimental-features 'nix-command flakes' eval --apply toString "${flake}"#"${flakeAttr}".nix.settings.substituters)
-    trustedPublicKeys=$(nix --extra-experimental-features 'nix-command flakes' eval --apply toString "${flake}"#"${flakeAttr}".nix.settings.trusted-public-keys)
+    substituters=$(nix eval "${nixOptions[@]}" --apply toString "${flake}"#"${flakeAttr}".nix.settings.substituters)
+    trustedPublicKeys=$(nix eval "${nixOptions[@]}" --apply toString "${flake}"#"${flakeAttr}".nix.settings.trusted-public-keys)
 
     runSsh sh <<SSH || true
 mkdir -p ~/.config/nix
