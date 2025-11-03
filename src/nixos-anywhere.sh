@@ -914,6 +914,29 @@ SSH
 
 nixosReboot() {
   step Rebooting
+
+  # disable debug output temporarily to prevent log spam
+  set +x
+  
+  local inhibited
+  inhibited=$(
+    runSsh sh <<SSH
+  if command -v systemd-inhibit 2>/dev/null; then 
+    systemd-inhibit --list | grep "shutdown"
+  fi
+SSH
+  )
+  if [[ -n "${inhibited}" ]]; then
+    echo "WARNING: Reboot is currently inhibited. Manual reboot may be required. Run 'systemd-inhibit --list' on the target for further details" 2>&1
+    if [[ -n ${enableDebug} ]]; then
+      echo "${inhibited}" 2>&1
+    fi
+  fi
+  
+  if [[ -n ${enableDebug} ]]; then
+    set -x
+  fi
+
   runSsh sh <<SSH
   if command -v zpool >/dev/null && [ "\$(zpool list)" != "no pools available" ]; then
     # we always want to export the zfs pools so people can boot from it without force import
