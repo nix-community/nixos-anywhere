@@ -19,5 +19,7 @@ hasDoas=$(has doas)
 hasWget=$(has wget)
 hasCurl=$(has curl)
 hasSetsid=$(if [ "$(has setsid)" = "y" ] && setsid --wait true 2>/dev/null; then echo "y"; else echo "n"; fi)
+hasGrep=$(has grep)
+hasSystemdInhibit=$(has systemd-inhibit)
 hasNixOSFacter=$(command -v nixos-facter >/dev/null && echo "y" || echo "n")
 FACTS

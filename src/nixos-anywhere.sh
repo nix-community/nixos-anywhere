@@ -57,6 +57,8 @@ hasDoas=
 hasWget=
 hasCurl=
 hasSetsid=
+hasGrep=
+hasSystemdInhibit=
 hasNixOSFacter=
 
 tempDir=$(mktemp -d)
@@ -585,7 +587,7 @@ importFacts() {
 
   # Necessary to prevent Bash erroring before printing out which fact had an issue
   set +u
-  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid; do
+  for var in isOs isArch isInstaller isContainer isRoot hasIpv6Only hasTar hasCpio hasSudo hasDoas hasWget hasCurl hasSetsid hasGrep hasSystemdInhibit; do
     if [[ -z ${!var} ]]; then
       abort "Failed to retrieve fact $var from host"
     fi
@@ -915,26 +917,28 @@ SSH
 nixosReboot() {
   step Rebooting
 
-  # disable debug output temporarily to prevent log spam
-  set +x
+  if [[ $hasSystemdInhibit == "y" ]] && [[ $hasGrep == "y" ]]; then
+    # disable debug output temporarily to prevent log spam
+    set +x
 
-  local inhibited
-  inhibited=$(
-    runSsh sh <<SSH
-  if command -v systemd-inhibit >/dev/null && systemd-inhibit --list | grep -q 'shutdown'; then
-    systemd-inhibit --list
-  fi
-SSH
-  )
-  if [ -n "${inhibited}" ]; then
-    echo "WARNING: Reboot is currently inhibited. Manual reboot may be required. Run 'systemd-inhibit --list' on the target for further details" 2>&1
-    if [[ -n ${enableDebug} ]]; then
-      echo "${inhibited}" 2>&1
+    local inhibited
+    inhibited=$(
+      runSsh sh <<SSH
+    if systemd-inhibit --list | grep -q 'shutdown'; then
+      systemd-inhibit --list
     fi
-  fi
+SSH
+    )
+    if [ -n "${inhibited}" ]; then
+      echo "WARNING: Reboot is currently inhibited. Manual reboot may be required. Run 'systemd-inhibit --list' on the target for further details" 2>&1
+      if [[ -n ${enableDebug} ]]; then
+        echo "${inhibited}" 2>&1
+      fi
+    fi
 
-  if [[ -n ${enableDebug} ]]; then
-    set -x
+    if [[ -n ${enableDebug} ]]; then
+      set -x
+    fi
   fi
 
   runSsh sh <<SSH
