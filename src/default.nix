@@ -15,6 +15,12 @@
 , lib
 , makeWrapper
 , mkShellNoCC
+, mypy
+, pixiecore
+, dnsmasq
+, python3
+, qemu_kvm
+, OVMF
 }:
 let
   runtimeDeps = [
@@ -47,7 +53,15 @@ stdenv.mkDerivation {
 
   # Dependencies for our devshell
   passthru.devShell = mkShellNoCC {
-    packages = runtimeDeps ++ [ openssh terraform-docs ];
+    OVMF = "${OVMF.fd}/FV/OVMF.fd";
+    packages = runtimeDeps ++ [
+      openssh
+      terraform-docs
+      mypy
+      pixiecore
+      dnsmasq
+      qemu_kvm
+    ];
   };
 
   meta = with lib; {
