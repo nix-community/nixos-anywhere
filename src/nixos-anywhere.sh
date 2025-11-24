@@ -1048,6 +1048,63 @@ echo "extra-trusted-public-keys = ${trustedPublicKeys}" >> ~/.config/nix/nix.con
 SSH
   fi
 
+  # Get system-features with a specific cpu architecture from the machine and add them to the installer
+  if [[ -n ${flake} ]]; then
+    system_features=$(runSshNoTty -o ConnectTimeout=10 nix --extra-experimental-features 'nix-command' config show system-features)
+    # Escape the bash variable for safe interpolation into Nix
+    system_features="$(printf '%s' "$system_features" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+    # First, try to evaluate all nix settings from the flake in one go
+    nixConfContent=$(nix --extra-experimental-features 'nix-command flakes' eval --raw --apply "
+      config:
+      let
+        settings = config.nix.settings or {};
+        gccArch = config.nixpkgs.hostPlatform.gcc.arch or null;
+
+        # Check if system-features are defined in configuration
+        configFeatures = settings.system-features or null;
+        hasConfigFeatures = configFeatures != null && configFeatures != [];
+
+        remoteFeatures = let
+            remoteFeaturesStr = \"${system_features}\";
+            # Parse remote features string (space-separated) into list
+            remoteFeaturesList = if remoteFeaturesStr != \"\" then
+              builtins.filter (x: builtins.isString x && x != \"\") (builtins.split \" +\" remoteFeaturesStr)
+            else [];
+          in remoteFeaturesList;
+
+        # Combine base features (config or remote) with platform-specific features
+        baseFeatures = if hasConfigFeatures then configFeatures else remoteFeatures;
+        # At least one of nix.settings.system-features or nixpkgs.hostPlatform.gcc.arch has been explicitly defined
+        allFeatures = if (gccArch != null) || hasConfigFeatures then baseFeatures ++ (if gccArch != null then [\"gccarch-\${gccArch}\"] else []) else [];
+
+        # Deduplicate using listToAttrs trick
+        uniqueFeatures = builtins.attrNames (builtins.listToAttrs (map (f: { name = f; value = true; }) allFeatures));
+
+        substituters = builtins.toString (settings.substituters or []);
+        trustedPublicKeys = builtins.toString (settings.trusted-public-keys or []);
+        systemFeatures = builtins.toString uniqueFeatures;
+
+        # Helper function for optional config lines
+        optionalLine = cond: line: if cond then line + \"\n\" else \"\";
+        useSubstituters = \"${machineSubstituters}\" == \"y\";
+      in
+        optionalLine (useSubstituters && substituters != \"\") \"extra-substituters = \${substituters}\"
+        + optionalLine (useSubstituters && trustedPublicKeys != \"\") \"extra-trusted-public-keys = \${trustedPublicKeys}\"
+        + optionalLine (systemFeatures != \"\") \"system-features = \${systemFeatures}\"
+    " "${flake}#${flakeAttr}")
+
+    # Write to nix.conf if we have any content
+    if [[ -n ${nixConfContent} ]]; then
+      runSsh sh <<SSH
+mkdir -p ~/.config/nix
+printf '%s\n' "\$(cat <<'CONTENT'
+${nixConfContent}
+CONTENT
+)" >> ~/.config/nix/nix.conf
+SSH
+    fi
+  fi
+
   if [[ ${phases[disko]} == 1 ]]; then
     runDisko "$diskoScript"
   fi
