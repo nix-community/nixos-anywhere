@@ -22,6 +22,8 @@ nixOptions=(
 )
 SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY-}
 machineSubstituters="y"
+substituters=""
+trustedPublicKeys=""
 
 declare -A phases
 phases[kexec]=1
@@ -167,6 +169,10 @@ Options:
   implies --no-use-machine-substituters
 * --no-use-machine-substituters
   don't copy the substituters from the machine to be installed into the installer environment
+* --substituters
+  override default substituters copied to the installer environment
+* --trusted-public-keys
+  override default trusted public keys copied to the installer environment
 * --debug
   enable debug output
 * --show-trace
@@ -387,6 +393,14 @@ parseArgs() {
       ;;
     --no-use-machine-substituters)
       machineSubstituters=n
+      ;;
+    --substituters)
+      substituters="$2"
+      shift
+      ;;
+    --trusted-public-keys)
+      trustedPublicKeys="$2"
+      shift
       ;;
     --build-on-remote)
       echo "WARNING: --build-on-remote is deprecated, use --build-on remote instead" 2>&1
@@ -1038,13 +1052,28 @@ main() {
 
   # Get substituters from the machine and add them to the installer
   if [[ ${machineSubstituters} == "y" && -n ${flake} ]]; then
-    substituters=$(nix eval "${nixOptions[@]}" --apply toString "${flake}"#"${flakeAttr}".nix.settings.substituters)
-    trustedPublicKeys=$(nix eval "${nixOptions[@]}" --apply toString "${flake}"#"${flakeAttr}".nix.settings.trusted-public-keys)
+    if [[ -z ${substituters} ]]; then
+      substituters=$(nix eval "${nixOptions[@]}" --apply toString "${flake}"#"${flakeAttr}".nix.settings.substituters)
+    fi
+    if [[ -z ${trustedPublicKeys} ]]; then
+      trustedPublicKeys=$(nix eval "${nixOptions[@]}" --apply toString "${flake}"#"${flakeAttr}".nix.settings.trusted-public-keys)
+    fi
+  fi
 
+  if [[ -n ${substituters} ]] || [[ -n ${trustedPublicKeys} ]]; then
     runSsh sh <<SSH || true
 mkdir -p ~/.config/nix
-echo "extra-substituters = ${substituters}" >> ~/.config/nix/nix.conf
-echo "extra-trusted-public-keys = ${trustedPublicKeys}" >> ~/.config/nix/nix.conf
+if [ -f ~/.config/nix/nix.conf.orig ]; then
+  cp -v ~/.config/nix/nix.conf.orig ~/.config/nix/nix.conf
+else
+  if [ -f ~/.config/nix/nix.conf ]; then
+    cp -v ~/.config/nix/nix.conf ~/.config/nix/nix.conf.orig
+  else
+    touch ~/.config/nix/nix.conf.orig
+  fi
+fi
+[ "${#substituters}" != 0 ] && echo "extra-substituters = ${substituters}" >> ~/.config/nix/nix.conf
+[ "${#trustedPublicKeys}" != 0 ] && echo "extra-trusted-public-keys = ${trustedPublicKeys}" >> ~/.config/nix/nix.conf
 SSH
   fi
 
