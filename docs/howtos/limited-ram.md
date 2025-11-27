@@ -1,9 +1,12 @@
 # Kexec on Systems with Limited RAM
 
 When working with nixos-anywhere on systems with limited RAM (around 1GB), you
-can use the `--no-disko-deps` option to reduce memory usage during installation.
+can:
 
-## How it works
+* use the `--no-disko-deps` option to reduce memory usage during installation.
+* ensure the disk has a swap partition
+
+## How `--no-disko-deps` works
 
 The `--no-disko-deps` option uploads only the disko partitioning script without
 including its dependencies. This significantly reduces memory usage because:
