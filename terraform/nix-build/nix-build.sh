@@ -47,5 +47,20 @@ else
 
   # shellcheck disable=SC2086
   out=$(nix build --no-link --json ${options} --expr "${nix_expr}" "${config_attribute}")
+  output_path=$(echo "$out" | jq -r '.[].outputs.out')
+  packages_json=$(nvd list --selected --root "$output_path" | awk '
+  BEGIN { first=1; printf "[" }
+  {
+    if (match($0, /^\[I\*\]\s+#([0-9]+)\s+([^ ]+)\s+(.*)$/, arr)) {
+      if (!first) { printf "," }
+      first=0
+      printf "{\"name\": \"%s\", \"versions\": \"%s\"}", arr[2], arr[3]
+    }
+  }
+  END { print "]" }
+  ')
 fi
-printf '%s' "$out" | jq -c '.[].outputs'
+jq -n \
+  --arg out "$output_path" \
+  --arg packages "$packages_json" \
+  '{ "out": $out, "packages": $packages }'
