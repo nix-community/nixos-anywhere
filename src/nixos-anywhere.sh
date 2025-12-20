@@ -5,6 +5,7 @@ here=$(dirname "${BASH_SOURCE[0]}")
 flake=""
 flakeAttr=""
 kexecUrl=""
+kexecLaunchPath="kexec/run"
 kexecExtraFlags=""
 sshStoreSettings="compress=true"
 enableDebug=""
@@ -145,6 +146,10 @@ Options:
   if this is given, flake is not needed
 * --kexec <path>
   use another kexec tarball to bootstrap NixOS
+* --kexec-launch-path <path>
+  use custom kexec run script path. this is the path where the launch binary is placed inside of the kexec tarball
+  for example: 'nixos_kexec'
+  default: 'kexec/run'
 * --kexec-extra-flags
   extra flags to add into the call to kexec, e.g. "--no-sync"
 * --ssh-store-setting <key> <value>
@@ -272,6 +277,10 @@ parseArgs() {
       ;;
     --kexec)
       kexecUrl=$2
+      shift
+      ;;
+    --kexec-launch-path)
+      kexecLaunchPath=$2
       shift
       ;;
     --kexec-extra-flags)
@@ -745,7 +754,7 @@ runKexec() {
   echo Downloading kexec tarball, this may take a moment...
   # Execute tar command
   %TAR_COMMAND%
-  TMPDIR=\"\$HOME/kexec\" ${maybeSudo} setsid --wait \"\$HOME/kexec/kexec/run\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
+  TMPDIR=\"\$HOME/kexec\" ${maybeSudo} setsid --wait \"\$HOME/kexec/$kexecLaunchPath\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
 } 2>&1 | tee \"\$HOME/kexec/nixos-anywhere.log\" || true
 
 # The script will likely disconnect us, so we consider it successful if we see the kexec message
