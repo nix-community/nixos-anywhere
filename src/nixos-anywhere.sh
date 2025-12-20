@@ -803,7 +803,7 @@ fi
   local tarCommand
   if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
     # Use remote command for download
-    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
+    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp} -C ${kexecExtractPath}"
   else
     # Use local file for extraction
     tarCommand="cat \"\$HOME/kexec/kexec-tarball.tar.gz\" | tar -xv ${tarDecomp} -C ${kexecExtractPath}"
