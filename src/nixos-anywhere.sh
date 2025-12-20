@@ -5,6 +5,7 @@ here=$(dirname "${BASH_SOURCE[0]}")
 flake=""
 flakeAttr=""
 kexecUrl=""
+kexecExtractPath="$HOME/kexec"
 kexecLaunchPath="kexec/run"
 kexecExtraFlags=""
 sshStoreSettings="compress=true"
@@ -146,8 +147,11 @@ Options:
   if this is given, flake is not needed
 * --kexec <path>
   use another kexec tarball to bootstrap NixOS
+* --kexec-extract-path <path>
+  extract kexec to a custom path. 
+  default: '\$HOME/kexec'
 * --kexec-launch-path <path>
-  use custom kexec run script path. this is the path where the launch binary is placed inside of the kexec tarball
+  which path to call after extracting the kexec tarball. relative to the kexec extract path
   for example: 'nixos_kexec'
   default: 'kexec/run'
 * --kexec-extra-flags
@@ -277,6 +281,10 @@ parseArgs() {
       ;;
     --kexec)
       kexecUrl=$2
+      shift
+      ;;
+    --kexec-extract-path)
+      kexecExtractPath=$2
       shift
       ;;
     --kexec-launch-path)
@@ -754,7 +762,7 @@ runKexec() {
   echo Downloading kexec tarball, this may take a moment...
   # Execute tar command
   %TAR_COMMAND%
-  TMPDIR=\"\$HOME/kexec\" ${maybeSudo} setsid --wait \"\$HOME/kexec/$kexecLaunchPath\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
+  TMPDIR=\"\$HOME/kexec\" ${maybeSudo} setsid --wait \"${kexecExtractPath}/$kexecLaunchPath\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
 } 2>&1 | tee \"\$HOME/kexec/nixos-anywhere.log\" || true
 
 # The script will likely disconnect us, so we consider it successful if we see the kexec message
@@ -798,7 +806,7 @@ fi
     tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
   else
     # Use local file for extraction
-    tarCommand="cat \"\$HOME/kexec/kexec-tarball.tar.gz\" | tar -xv ${tarDecomp}"
+    tarCommand="cat \"\$HOME/kexec/kexec-tarball.tar.gz\" | tar -xv ${tarDecomp} -C ${kexecExtractPath}"
   fi
 
   local remoteCommands
