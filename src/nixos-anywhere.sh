@@ -1058,27 +1058,53 @@ SSH
       config:
       let
         settings = config.nix.settings or {};
-        gccArch = config.nixpkgs.hostPlatform.gcc.arch or null;
+
+        # Safely access hostPlatform - use tryEval to catch undefined options
+        # and check existence at each level for nested attributes
+        hostPlatformResult = builtins.tryEval (
+          if config ? nixpkgs && config.nixpkgs ? hostPlatform
+          then config.nixpkgs.hostPlatform
+          else null
+        );
+        hostPlatform = if hostPlatformResult.success then hostPlatformResult.value else null;
+
+        # Safely extract gcc.arch from hostPlatform if it exists
+        gccArch =
+          if hostPlatform != null
+             && builtins.isAttrs hostPlatform
+             && hostPlatform ? gcc
+             && builtins.isAttrs hostPlatform.gcc
+             && hostPlatform.gcc ? arch
+             && hostPlatform.gcc.arch != null
+          then hostPlatform.gcc.arch
+          else null;
 
         # Check if system-features are defined in configuration
         configFeatures = settings.system-features or null;
         hasConfigFeatures = configFeatures != null && configFeatures != [];
 
         remoteFeatures = let
-            remoteFeaturesStr = \"${system_features}\";
-            # Parse remote features string (space-separated) into list
-            remoteFeaturesList = if remoteFeaturesStr != \"\" then
-              builtins.filter (x: builtins.isString x && x != \"\") (builtins.split \" +\" remoteFeaturesStr)
-            else [];
-          in remoteFeaturesList;
+          remoteFeaturesStr = \"${system_features}\";
+          # Parse remote features string (space-separated) into list
+          remoteFeaturesList = if remoteFeaturesStr != \"\" then
+            builtins.filter (x: builtins.isString x && x != \"\") (builtins.split \" +\" remoteFeaturesStr)
+          else [];
+        in remoteFeaturesList;
 
         # Combine base features (config or remote) with platform-specific features
         baseFeatures = if hasConfigFeatures then configFeatures else remoteFeatures;
-        # At least one of nix.settings.system-features or nixpkgs.hostPlatform.gcc.arch has been explicitly defined
-        allFeatures = if (gccArch != null) || hasConfigFeatures then baseFeatures ++ (if gccArch != null then [\"gccarch-\${gccArch}\"] else []) else [];
+
+        # At least one of nix.settings.system-features or nixpkgs.hostPlatform.gcc.arch
+        # has been explicitly defined
+        allFeatures =
+          if (gccArch != null) || hasConfigFeatures
+          then baseFeatures ++ (if gccArch != null then [\"gccarch-\${gccArch}\"] else [])
+          else [];
 
         # Deduplicate using listToAttrs trick
-        uniqueFeatures = builtins.attrNames (builtins.listToAttrs (map (f: { name = f; value = true; }) allFeatures));
+        uniqueFeatures = builtins.attrNames (
+          builtins.listToAttrs (map (f: { name = f; value = true; }) allFeatures)
+        );
 
         substituters = builtins.toString (settings.substituters or []);
         trustedPublicKeys = builtins.toString (settings.trusted-public-keys or []);
@@ -1092,6 +1118,7 @@ SSH
         + optionalLine (useSubstituters && trustedPublicKeys != \"\") \"extra-trusted-public-keys = \${trustedPublicKeys}\"
         + optionalLine (systemFeatures != \"\") \"system-features = \${systemFeatures}\"
     " "${flake}#${flakeAttr}")
+
 
     # Write to nix.conf if we have any content
     if [[ -n ${nixConfContent} ]]; then
