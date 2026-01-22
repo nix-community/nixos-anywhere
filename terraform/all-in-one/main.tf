@@ -170,8 +170,10 @@ module "nixos-rebuild" {
     module.install-after-kexec
   ]
 
-  # Do not execute this step if var.stop_after_disko == true
-  count = var.stop_after_disko ? 0 : 1
+  # Skip if:
+  # - stop_after_disko is true
+  # - build_on_remote is true (nixos-anywhere already did the full install)
+  count = var.stop_after_disko || local.skip_local_build ? 0 : 1
 
   source             = "../nixos-rebuild"
   nixos_system       = local.skip_local_build ? "" : module.system-build[0].result.out
