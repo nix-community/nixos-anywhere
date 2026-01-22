@@ -1,19 +1,27 @@
 module "system-build" {
-  source        = "../nix-build"
-  attribute     = var.nixos_system_attr
-  debug_logging = var.debug_logging
-  file          = var.file
-  nix_options   = var.nix_options
-  special_args  = var.special_args
+  source                = "../nix-build"
+  attribute             = var.nixos_system_attr
+  debug_logging         = var.debug_logging
+  file                  = var.file
+  nix_options           = var.nix_options
+  special_args          = var.special_args
+  target_host           = var.target_host
+  target_user           = var.install_user != null ? var.install_user : var.target_user
+  target_port           = var.install_port != null ? var.install_port : var.target_port
+  use_target_as_builder = var.use_target_as_builder
 }
 
 module "partitioner-build" {
-  source        = "../nix-build"
-  attribute     = var.nixos_partitioner_attr
-  debug_logging = var.debug_logging
-  file          = var.file
-  nix_options   = var.nix_options
-  special_args  = var.special_args
+  source                = "../nix-build"
+  attribute             = var.nixos_partitioner_attr
+  debug_logging         = var.debug_logging
+  file                  = var.file
+  nix_options           = var.nix_options
+  special_args          = var.special_args
+  target_host           = var.target_host
+  target_user           = var.install_user != null ? var.install_user : var.target_user
+  target_port           = var.install_port != null ? var.install_port : var.target_port
+  use_target_as_builder = var.use_target_as_builder
 }
 
 locals {

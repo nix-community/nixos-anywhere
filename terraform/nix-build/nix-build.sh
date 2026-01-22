@@ -1,24 +1,69 @@
 #!/usr/bin/env bash
 set -efu
 
-declare file attribute nix_options special_args debug_logging
-eval "$(jq -r '@sh "attribute=\(.attribute) file=\(.file) nix_options=\(.nix_options) special_args=\(.special_args) debug_logging=\(.debug_logging)"')"
+declare file attribute nix_options special_args debug_logging target_host target_user target_port use_target_as_builder
+eval "$(jq -r '@sh "attribute=\(.attribute) file=\(.file) nix_options=\(.nix_options) special_args=\(.special_args) debug_logging=\(.debug_logging) target_host=\(.target_host) target_user=\(.target_user) target_port=\(.target_port) use_target_as_builder=\(.use_target_as_builder)"')"
+
 if [ "${debug_logging}" = "true" ]; then
   set -x
 fi
+
+# Parse nix options
 if [ "${nix_options}" != '{"options":{}}' ]; then
   options=$(echo "${nix_options}" | jq -r '.options | to_entries | map("--option \(.key) \(.value)") | join(" ")')
 else
   options=""
 fi
+
+# Check if target can be used as remote builder
+remote_builder=""
+if [ "${use_target_as_builder}" = "true" ] && [ "${target_host}" != "null" ] && [ -n "${target_host}" ]; then
+  ssh_target="${target_user}@${target_host}"
+  ssh_opts=(-o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)
+  if [ "${target_port}" != "22" ]; then
+    ssh_opts+=(-p "${target_port}")
+  fi
+
+  # Test if target has nix available
+  if ssh "${ssh_opts[@]}" "${ssh_target}" "command -v nix >/dev/null 2>&1" 2>/dev/null; then
+    # Get system type from target
+    system_type=$(ssh "${ssh_opts[@]}" "${ssh_target}" "nix eval --raw --impure --expr 'builtins.currentSystem'" 2>/dev/null || echo "")
+
+    if [ -n "${system_type}" ]; then
+      if [ "${debug_logging}" = "true" ]; then
+        echo "Using ${ssh_target} as remote builder (${system_type})" >&2
+      fi
+
+      # Build SSH URI with port if non-standard
+      if [ "${target_port}" != "22" ]; then
+        ssh_uri="ssh://${ssh_target}:${target_port}"
+      else
+        ssh_uri="ssh://${ssh_target}"
+      fi
+
+      # Configure remote builder
+      # Format: URI system max-jobs speed-factor supported-features mandatory-features
+      remote_builder="--builders '${ssh_uri} ${system_type} - - - - nixos-test,big-parallel,kvm'"
+
+      # Use substitutes from cache.nixos.org on the builder
+      options="${options} --option builders-use-substitutes true"
+    fi
+  else
+    if [ "${debug_logging}" = "true" ]; then
+      echo "Target ${ssh_target} does not have nix available, building locally" >&2
+    fi
+  fi
+fi
+
+# Execute nix build
 if [[ ${special_args-} == "{}" ]]; then
   # no special arguments, proceed as normal
   if [[ -n ${file-} ]] && [[ -e ${file-} ]]; then
     # shellcheck disable=SC2086
-    out=$(nix build --no-link --json $options -f "$file" "$attribute")
+    out=$(eval nix build --no-link --json $options $remote_builder -f "$file" "$attribute")
   else
     # shellcheck disable=SC2086
-    out=$(nix build --no-link --json ${options} "$attribute")
+    out=$(eval nix build --no-link --json ${options} ${remote_builder} "$attribute")
   fi
 else
   if [[ ${file-} != 'null' ]]; then
@@ -46,6 +91,6 @@ else
   # inject `special_args` into nixos config's `specialArgs`
 
   # shellcheck disable=SC2086
-  out=$(nix build --no-link --json ${options} --expr "${nix_expr}" "${config_attribute}")
+  out=$(eval nix build --no-link --json ${options} ${remote_builder} --expr "${nix_expr}" "${config_attribute}")
 fi
 printf '%s' "$out" | jq -c '.[].outputs'
