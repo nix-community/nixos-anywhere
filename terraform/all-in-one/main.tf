@@ -41,6 +41,7 @@ module "kexec-boot" {
   extra_environment           = var.extra_environment
   instance_id                 = "${var.instance_id}-kexec"
   phases                      = ["kexec"]
+  flake                       = local.flake_uri # Required by nixos-anywhere even for kexec-only
   build_on_remote             = false
   copy_host_keys              = var.copy_host_keys
   extra_files_script          = null
