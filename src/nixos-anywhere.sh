@@ -58,6 +58,11 @@ hasWget=
 hasCurl=
 hasSetsid=
 hasNixOSFacter=
+hasRsync=
+
+kexecUploadRetries=5
+kexecUploadWait=300
+kexecNoResume=n
 
 tempDir=$(mktemp -d)
 trap 'rm -rf "$tempDir"' EXIT
@@ -147,6 +152,12 @@ Options:
   use another kexec tarball to bootstrap NixOS
 * --kexec-extra-flags
   extra flags to add into the call to kexec, e.g. "--no-sync"
+* --kexec-upload-retries <n>
+  how often to retry an interrupted upload of a local --kexec tarball (default 5)
+* --kexec-upload-wait <seconds>
+  seconds to wait for ssh to come back between upload retries (default 300)
+* --kexec-no-resume
+  always re-upload a local --kexec tarball from scratch instead of resuming
 * --ssh-store-setting <key> <value>
   ssh store settings appended to the store URI, e.g. "compress true". <value> needs to be URI encoded.
 * --post-kexec-ssh-port <ssh_port>
@@ -277,6 +288,17 @@ parseArgs() {
     --kexec-extra-flags)
       kexecExtraFlags=$2
       shift
+      ;;
+    --kexec-upload-retries)
+      kexecUploadRetries=$2
+      shift
+      ;;
+    --kexec-upload-wait)
+      kexecUploadWait=$2
+      shift
+      ;;
+    --kexec-no-resume)
+      kexecNoResume=y
       ;;
     --ssh-store-setting)
       key=$2
@@ -478,6 +500,175 @@ runSsh() {
     # We want to expand "$@" to get the command to run over SSH
     ssh "$sshTtyParam" "${sshArgs[@]}" "$sshConnection" "$@"
   )
+}
+
+# Wait until the target accepts ssh again, or give up after `maxWait` seconds.
+waitForSsh() {
+  local maxWait=$1 waited=0
+  while ! runSshTimeout -- true >/dev/null 2>&1; do
+    if ((waited >= maxWait)); then
+      return 1
+    fi
+    sleep 5
+    waited=$((waited + 5))
+  done
+}
+
+# Probe `stat`/`sha256sum` of a remote file. Prints "<size> <sha256>"; sha256
+# is empty if the remote lacks sha256sum. Missing file reports "0 ".
+remoteFileInfo() {
+  local remotePath=$1
+  local quoted
+  quoted=$(printf '%q' "$remotePath")
+  # ssh joins argv with spaces into a single remote command, so positional
+  # params can't be passed; interpolate the path directly into the script.
+  # sync first so stat doesn't race behind pending writes from rsync.
+  runSshNoTty "
+    f=$quoted
+    sync 2>/dev/null || true
+    if [ -f \"\$f\" ]; then
+      if command -v stat >/dev/null 2>&1; then
+        sz=\$(stat -c%s \"\$f\" 2>/dev/null || stat -f%z \"\$f\" 2>/dev/null || wc -c <\"\$f\")
+      else
+        sz=\$(wc -c <\"\$f\")
+      fi
+      if command -v sha256sum >/dev/null 2>&1; then
+        h=\$(sha256sum \"\$f\" | cut -d' ' -f1)
+      else
+        h=
+      fi
+      echo \"\$sz \$h\"
+    else
+      echo '0 '
+    fi
+  " 2>/dev/null || echo "0 "
+}
+
+# Upload a local file to the target, resuming after interruptions and
+# retrying on network failure.
+#
+# Prefers rsync --partial --inplace --append-verify when available, otherwise
+# falls back to streaming the missing byte range through ssh. The result is
+# checked by size and, when both sides have sha256sum, by hash.
+#
+# Usage: uploadFileResumable <local_path> <remote_path>
+uploadFileResumable() {
+  local localPath=$1 remotePath=$2
+
+  [[ -e $localPath ]] || abort "local file not found: $localPath"
+  # Resolve symlinks so stat/sha256sum and rsync all see the same bytes
+  if command -v readlink >/dev/null 2>&1; then
+    localPath=$(readlink -f -- "$localPath" 2>/dev/null || echo "$localPath")
+  fi
+  [[ -f $localPath ]] || abort "not a regular file: $localPath"
+
+  local localSize localHash=""
+  localSize=$(stat -c%s "$localPath" 2>/dev/null || stat -f%z "$localPath")
+  if [[ $(command -v sha256sum) ]]; then
+    localHash=$(sha256sum "$localPath" | cut -d' ' -f1)
+  elif [[ $(command -v shasum) ]]; then
+    localHash=$(shasum -a 256 "$localPath" | cut -d' ' -f1)
+  fi
+
+  runSsh "mkdir -p $(printf '%q' "$(dirname "$remotePath")")"
+
+  local useRsync=n
+  if [[ $hasRsync == "y" && $(command -v rsync) && $kexecNoResume != "y" ]]; then
+    useRsync=y
+  fi
+
+  local attempt=1 backoff=2
+  while ((attempt <= kexecUploadRetries)); do
+    step "Uploading $(basename "$localPath") (${localSize} bytes), attempt ${attempt}/${kexecUploadRetries}"
+
+    local info remoteSize remoteHash
+    info=$(remoteFileInfo "$remotePath")
+    remoteSize=${info%% *}
+    remoteHash=${info#* }
+    [[ $remoteSize =~ ^[0-9]+$ ]] || remoteSize=0
+
+    if [[ $remoteSize == "$localSize" ]]; then
+      if [[ -z $localHash || -z $remoteHash || $localHash == "$remoteHash" ]]; then
+        echo "remote file already complete, skipping upload" >&2
+        return 0
+      fi
+      echo "remote size matches but hash differs, re-uploading" >&2
+      runSsh "rm -f $(printf '%q' "$remotePath")"
+      remoteSize=0
+    fi
+
+    if [[ $kexecNoResume == "y" ]] || ((remoteSize > localSize)); then
+      runSsh "rm -f $(printf '%q' "$remotePath")"
+      remoteSize=0
+    fi
+
+    local rc=0
+    if [[ $useRsync == "y" ]]; then
+      # rsync splits -e on whitespace and doesn't understand shell quoting,
+      # so hand it a wrapper script that exec's ssh with our args verbatim.
+      local rsyncSshWrapper="$tempDir/rsync-ssh"
+      {
+        echo "#!/usr/bin/env bash"
+        # shellcheck disable=SC1003 # literal backslash is a shell line continuation
+        echo 'exec ssh \'
+        local a
+        for a in "${sshArgs[@]}"; do
+          echo "  $(printf '%q' "$a") \\"
+        done
+        echo '  "$@"'
+      } >"$rsyncSshWrapper"
+      chmod +x "$rsyncSshWrapper"
+      # --append-verify resumes, but if the existing tail doesn't match it
+      # aborts with exit 23. Only use it when there's something to resume.
+      local rsyncResume=()
+      if ((remoteSize > 0)); then
+        rsyncResume=(--append-verify)
+      fi
+      rsync --copy-links --partial --inplace "${rsyncResume[@]}" --progress \
+        -e "$rsyncSshWrapper" \
+        "$localPath" "$sshConnection:$remotePath" || rc=$?
+      if ((rc != 0)); then
+        # rsync may have left a corrupt partial; wipe it and fall back to the
+        # portable ssh-cat path on subsequent retries.
+        runSsh "rm -f $(printf '%q' "$remotePath")" || true
+        useRsync=n
+      fi
+    elif ((remoteSize > 0)); then
+      echo "resuming from byte ${remoteSize}" >&2
+      # tail -c +N is 1-indexed
+      tail -c "+$((remoteSize + 1))" "$localPath" |
+        runSsh "cat >> $(printf '%q' "$remotePath")" || rc=$?
+    else
+      runSsh "cat > $(printf '%q' "$remotePath")" <"$localPath" || rc=$?
+    fi
+
+    if ((rc == 0)); then
+      info=$(remoteFileInfo "$remotePath")
+      local vSize=${info%% *} vHash=${info#* }
+      [[ $vSize =~ ^[0-9]+$ ]] || vSize=0
+      if [[ $vSize == "$localSize" ]] &&
+        [[ -z $localHash || -z $vHash || $localHash == "$vHash" ]]; then
+        return 0
+      fi
+      echo "verification failed (remote size=${vSize}, expected=${localSize})" >&2
+      # Never resume on top of an unverified file; always wipe and retry fresh.
+      runSsh "rm -f $(printf '%q' "$remotePath")"
+    else
+      echo "upload failed (exit ${rc}), waiting for ssh before retry" >&2
+    fi
+
+    attempt=$((attempt + 1))
+    ((attempt <= kexecUploadRetries)) || break
+    sleep "$backoff"
+    backoff=$((backoff * 2))
+    ((backoff > 60)) && backoff=60
+    if ! waitForSsh "$kexecUploadWait"; then
+      echo "timed out waiting ${kexecUploadWait}s for ssh" >&2
+      return 1
+    fi
+  done
+
+  return 1
 }
 
 nixCopy() {
@@ -771,8 +962,21 @@ fi
     tarDecomp=""
   fi
 
+  # Keep the original extension on the remote so the extraction flag stays
+  # consistent with what we detected above.
+  local remoteTarballName="kexec-tarball.tar.gz"
+  if [[ ${kexecUrl} =~ \.tar\.xz$ ]]; then
+    remoteTarballName="kexec-tarball.tar.xz"
+  elif [[ ${kexecUrl} =~ \.tar\.zst$ ]]; then
+    remoteTarballName="kexec-tarball.tar.zst"
+  elif [[ ${kexecUrl} =~ \.tar$ ]]; then
+    remoteTarballName="kexec-tarball.tar"
+  fi
+  local remoteTarballPath="\$HOME/kexec/${remoteTarballName}"
+
+  local useResumableUpload=n
   if [[ -f $kexecUrl ]]; then
-    localUploadCommand=(cat "$kexecUrl")
+    useResumableUpload=y
   elif [[ $hasWget == "y" ]]; then
     remoteUploadCommand=(wget "$kexecUrl" -O-)
   elif [[ $hasCurl == "y" ]]; then
@@ -782,14 +986,11 @@ fi
     localUploadCommand=(curl --fail -Ss -L "${kexecUrl}")
   fi
 
-  # Determine the tar command based on upload method
   local tarCommand
-  if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
-    # Use remote command for download
-    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
+  if [[ $useResumableUpload == "y" || ${#localUploadCommand[@]} -gt 0 ]]; then
+    tarCommand="cat \"${remoteTarballPath}\" | tar -xv ${tarDecomp}"
   else
-    # Use local file for extraction
-    tarCommand="cat \"\$HOME/kexec/kexec-tarball.tar.gz\" | tar -xv ${tarDecomp}"
+    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
   fi
 
   local remoteCommands
@@ -800,10 +1001,19 @@ fi
   runSsh 'mkdir -p "$HOME/kexec" && cat > "$HOME/kexec/nixos-anywhere-kexec.sh"' <<EOF
 $remoteCommands
 EOF
-  if [[ ${#localUploadCommand[@]} -gt 0 ]]; then
-    # Upload the kexec tarball first
+  if [[ $useResumableUpload == "y" ]]; then
+    # Resolve $HOME once; uploadFileResumable needs a concrete path since it
+    # runs several ssh commands against the same file.
+    local remoteHome
     # shellcheck disable=SC2016 # We want $HOME to expand on the remote server
-    "${localUploadCommand[@]}" | runSsh 'cat > "$HOME/kexec/kexec-tarball.tar.gz"'
+    remoteHome=$(runSshNoTty 'printf %s "$HOME"')
+    # shellcheck disable=SC2016 # literal $HOME intended in the message
+    [[ -n $remoteHome ]] || abort 'could not determine remote $HOME'
+    uploadFileResumable "$kexecUrl" "${remoteHome}/kexec/${remoteTarballName}" ||
+      handleKexecFailure "Kexec tarball upload"
+  elif [[ ${#localUploadCommand[@]} -gt 0 ]]; then
+    # shellcheck disable=SC2016 # We want $HOME to expand on the remote server
+    "${localUploadCommand[@]}" | runSsh "cat > \"\$HOME/kexec/${remoteTarballName}\""
   fi
   # shellcheck disable=SC2016 # We want $HOME to expand on the remote server
   runSsh 'bash "$HOME/kexec/nixos-anywhere-kexec.sh"' || handleKexecFailure "Kexec"
