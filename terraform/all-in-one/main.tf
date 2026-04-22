@@ -85,9 +85,10 @@ module "partitioner-build" {
   use_target_as_builder = var.use_target_as_builder
 }
 
-# Step 3a: Full install - local build mode (original flow, use_target_as_builder=false)
+# Step 3a: Install with local nix-build (original flow, or local build after kexec)
 module "install" {
-  count = !var.use_target_as_builder ? 1 : 0
+  count      = !local.skip_local_build ? 1 : 0
+  depends_on = [module.kexec-boot]
 
   source                      = "../install"
   kexec_tarball_url           = var.kexec_tarball_url
@@ -102,11 +103,12 @@ module "install" {
   disk_encryption_key_scripts = var.disk_encryption_key_scripts
   extra_environment           = var.extra_environment
   instance_id                 = var.instance_id
-  phases                      = var.phases
+  phases                      = var.use_target_as_builder ? local.remaining_phases : var.phases
   nixos_generate_config_path  = var.nixos_generate_config_path
   nixos_facter_path           = var.nixos_facter_path
   build_on_remote             = var.build_on_remote
-  copy_host_keys              = var.copy_host_keys
+  copy_host_keys              = var.use_target_as_builder ? false : var.copy_host_keys
+  # deprecated attributes
   stop_after_disko            = var.stop_after_disko
   no_reboot                   = var.no_reboot
 }
@@ -133,32 +135,7 @@ module "install-remote-build" {
   nixos_facter_path           = var.nixos_facter_path
   build_on_remote             = true
   copy_host_keys              = false # Already copied in kexec-boot
-  stop_after_disko            = var.stop_after_disko
-  no_reboot                   = var.no_reboot
-}
-
-# Step 3c: Install after kexec - local build with remote builder (nix store NOT preserved)
-module "install-after-kexec" {
-  count = var.use_target_as_builder && !var.build_on_remote ? 1 : 0
-
-  source                      = "../install"
-  kexec_tarball_url           = var.kexec_tarball_url
-  target_user                 = local.install_user
-  target_host                 = var.target_host
-  target_port                 = local.install_port
-  nixos_partitioner           = module.partitioner-build[0].result.out
-  nixos_system                = module.system-build[0].result.out
-  ssh_private_key             = var.install_ssh_key
-  debug_logging               = var.debug_logging
-  extra_files_script          = var.extra_files_script
-  disk_encryption_key_scripts = var.disk_encryption_key_scripts
-  extra_environment           = var.extra_environment
-  instance_id                 = var.instance_id
-  phases                      = local.remaining_phases
-  nixos_generate_config_path  = var.nixos_generate_config_path
-  nixos_facter_path           = var.nixos_facter_path
-  build_on_remote             = false
-  copy_host_keys              = false # Already copied in kexec-boot
+  # deprecated attributes
   stop_after_disko            = var.stop_after_disko
   no_reboot                   = var.no_reboot
 }
@@ -166,17 +143,14 @@ module "install-after-kexec" {
 module "nixos-rebuild" {
   depends_on = [
     module.install,
-    module.install-remote-build,
-    module.install-after-kexec
+    module.install-remote-build
   ]
 
-  # Skip if:
-  # - stop_after_disko is true
-  # - build_on_remote is true (nixos-anywhere already did the full install)
+  # Skip when stop_after_disko or when build_on_remote handles the full install
   count = var.stop_after_disko || local.skip_local_build ? 0 : 1
 
   source             = "../nixos-rebuild"
-  nixos_system       = local.skip_local_build ? "" : module.system-build[0].result.out
+  nixos_system       = module.system-build[0].result.out
   ssh_private_key    = var.deployment_ssh_key
   target_host        = var.target_host
   target_user        = var.target_user

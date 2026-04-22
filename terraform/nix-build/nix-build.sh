@@ -16,7 +16,7 @@ else
 fi
 
 # Check if target can be used as remote builder
-remote_builder=""
+builder_args=()
 if [ "${use_target_as_builder}" = "true" ] && [ "${target_host}" != "null" ] && [ -n "${target_host}" ]; then
   ssh_target="${target_user}@${target_host}"
   ssh_opts=(-o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)
@@ -43,10 +43,8 @@ if [ "${use_target_as_builder}" = "true" ] && [ "${target_host}" != "null" ] && 
 
       # Configure remote builder
       # Format: URI system max-jobs speed-factor supported-features mandatory-features
-      remote_builder="--builders '${ssh_uri} ${system_type} - - - - nixos-test,big-parallel,kvm'"
-
-      # Use substitutes from cache.nixos.org on the builder
-      options="${options} --option builders-use-substitutes true"
+      builder_args=(--builders "${ssh_uri} ${system_type} - - - - nixos-test,big-parallel,kvm")
+      builder_args+=(--option builders-use-substitutes true)
     fi
   else
     if [ "${debug_logging}" = "true" ]; then
@@ -60,10 +58,10 @@ if [[ ${special_args-} == "{}" ]]; then
   # no special arguments, proceed as normal
   if [[ -n ${file-} ]] && [[ -e ${file-} ]]; then
     # shellcheck disable=SC2086
-    out=$(eval nix build --no-link --json $options $remote_builder -f "$file" "$attribute")
+    out=$(nix build --no-link --json $options "${builder_args[@]}" -f "$file" "$attribute")
   else
     # shellcheck disable=SC2086
-    out=$(eval nix build --no-link --json ${options} ${remote_builder} "$attribute")
+    out=$(nix build --no-link --json ${options} "${builder_args[@]}" "$attribute")
   fi
 else
   if [[ ${file-} != 'null' ]]; then
@@ -91,6 +89,6 @@ else
   # inject `special_args` into nixos config's `specialArgs`
 
   # shellcheck disable=SC2086
-  out=$(eval nix build --no-link --json ${options} ${remote_builder} --expr "${nix_expr}" "${config_attribute}")
+  out=$(nix build --no-link --json ${options} "${builder_args[@]}" --expr "${nix_expr}" "${config_attribute}")
 fi
 printf '%s' "$out" | jq -c '.[].outputs'
