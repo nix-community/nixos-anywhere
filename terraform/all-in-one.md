@@ -186,14 +186,13 @@ No providers.
 
 ## Modules
 
-| Name                                                                                                    | Source           | Version |
-| ------------------------------------------------------------------------------------------------------- | ---------------- | ------- |
-| <a name="module_install"></a> [install](#module_install)                                                | ../install       | n/a     |
-| <a name="module_install-remote-build"></a> [install-remote-build](#module_install-remote-build)         | ../install       | n/a     |
-| <a name="module_kexec-boot"></a> [kexec-boot](#module_kexec-boot)                                      | ../install       | n/a     |
-| <a name="module_nixos-rebuild"></a> [nixos-rebuild](#module_nixos-rebuild)                              | ../nixos-rebuild | n/a     |
-| <a name="module_partitioner-build"></a> [partitioner-build](#module_partitioner-build)                  | ../nix-build     | n/a     |
-| <a name="module_system-build"></a> [system-build](#module_system-build)                                 | ../nix-build     | n/a     |
+| Name                                                                                   | Source           | Version |
+| -------------------------------------------------------------------------------------- | ---------------- | ------- |
+| <a name="module_install"></a> [install](#module_install)                               | ../install       | n/a     |
+| <a name="module_kexec-boot"></a> [kexec-boot](#module_kexec-boot)                     | ../install       | n/a     |
+| <a name="module_nixos-rebuild"></a> [nixos-rebuild](#module_nixos-rebuild)             | ../nixos-rebuild | n/a     |
+| <a name="module_partitioner-build"></a> [partitioner-build](#module_partitioner-build) | ../nix-build     | n/a     |
+| <a name="module_system-build"></a> [system-build](#module_system-build)                | ../nix-build     | n/a     |
 
 ## Resources
 
