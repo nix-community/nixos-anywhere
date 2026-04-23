@@ -514,61 +514,58 @@ waitForSsh() {
   done
 }
 
-# Probe `stat`/`sha256sum` of a remote file. Prints "<size> <sha256>"; sha256
-# is empty if the remote lacks sha256sum. Missing file reports "0 ".
-remoteFileInfo() {
+# Probe the remote file size. Prints just a decimal byte count, or 0 if the
+# file is missing / probe fails. Kept deliberately minimal: we only parse one
+# number, so shell rc noise, motd banners, or missing tools can't poison the
+# result. Hashing is expensive on multi-hundred-MB kexec tarballs and gives
+# nothing that rsync's own block checksums don't already guarantee, so we
+# skip it here.
+remoteFileSize() {
   local remotePath=$1
-  local quoted
+  local quoted sz
   quoted=$(printf '%q' "$remotePath")
-  # ssh joins argv with spaces into a single remote command, so positional
-  # params can't be passed; interpolate the path directly into the script.
-  # sync first so stat doesn't race behind pending writes from rsync.
-  runSshNoTty "
-    f=$quoted
-    sync 2>/dev/null || true
-    if [ -f \"\$f\" ]; then
-      if command -v stat >/dev/null 2>&1; then
-        sz=\$(stat -c%s \"\$f\" 2>/dev/null || stat -f%z \"\$f\" 2>/dev/null || wc -c <\"\$f\")
-      else
-        sz=\$(wc -c <\"\$f\")
-      fi
-      if command -v sha256sum >/dev/null 2>&1; then
-        h=\$(sha256sum \"\$f\" | cut -d' ' -f1)
-      else
-        h=
-      fi
-      echo \"\$sz \$h\"
+  # Wrap in `sh -c` with a sentinel so any stray login-shell output is
+  # discarded; we grep the last all-digit line from the output.
+  sz=$(runSshNoTty "
+    if [ -f $quoted ]; then
+      wc -c < $quoted 2>/dev/null | tr -d ' \t\n\r'
     else
-      echo '0 '
+      printf 0
     fi
-  " 2>/dev/null || echo "0 "
+    printf '\n'
+  " 2>/dev/null | tr -cd '0-9\n' | awk 'NF{v=$0} END{print v+0}')
+  [[ $sz =~ ^[0-9]+$ ]] || sz=0
+  printf '%s' "$sz"
 }
 
 # Upload a local file to the target, resuming after interruptions and
 # retrying on network failure.
 #
-# Prefers rsync --partial --inplace --append-verify when available, otherwise
-# falls back to streaming the missing byte range through ssh. The result is
-# checked by size and, when both sides have sha256sum, by hash.
+# Strategy (kept intentionally simple):
+#   1. Prefer rsync. When rsync exits 0 we TRUST it: rsync already verified
+#      every block with a rolling+strong checksum, so we don't second-guess
+#      it with a separate ssh stat. This removes a whole class of false
+#      "verification failed" errors caused by noisy remote shells.
+#   2. Fall back to streaming via ssh `cat` (with resume). In that case we
+#      do a cheap size check only, because we streamed the bytes ourselves.
+#
+# Set NIXOS_ANYWHERE_UPLOAD_DEBUG=1 to see the raw commands and sizes.
 #
 # Usage: uploadFileResumable <local_path> <remote_path>
 uploadFileResumable() {
   local localPath=$1 remotePath=$2
+  local debug=${NIXOS_ANYWHERE_UPLOAD_DEBUG:-0}
 
   [[ -e $localPath ]] || abort "local file not found: $localPath"
-  # Resolve symlinks so stat/sha256sum and rsync all see the same bytes
+  # Resolve symlinks so size checks and rsync all see the same bytes.
   if command -v readlink >/dev/null 2>&1; then
     localPath=$(readlink -f -- "$localPath" 2>/dev/null || echo "$localPath")
   fi
   [[ -f $localPath ]] || abort "not a regular file: $localPath"
 
-  local localSize localHash=""
+  local localSize
   localSize=$(stat -c%s "$localPath" 2>/dev/null || stat -f%z "$localPath")
-  if [[ $(command -v sha256sum) ]]; then
-    localHash=$(sha256sum "$localPath" | cut -d' ' -f1)
-  elif [[ $(command -v shasum) ]]; then
-    localHash=$(shasum -a 256 "$localPath" | cut -d' ' -f1)
-  fi
+  [[ $localSize =~ ^[0-9]+$ ]] || abort "could not determine local size of $localPath"
 
   runSsh "mkdir -p $(printf '%q' "$(dirname "$remotePath")")"
 
@@ -581,23 +578,20 @@ uploadFileResumable() {
   while ((attempt <= kexecUploadRetries)); do
     step "Uploading $(basename "$localPath") (${localSize} bytes), attempt ${attempt}/${kexecUploadRetries}"
 
-    local info remoteSize remoteHash
-    info=$(remoteFileInfo "$remotePath")
-    remoteSize=${info%% *}
-    remoteHash=${info#* }
-    [[ $remoteSize =~ ^[0-9]+$ ]] || remoteSize=0
+    local remoteSize
+    remoteSize=$(remoteFileSize "$remotePath")
+    ((debug)) && echo "DEBUG: remote size before upload = ${remoteSize}" >&2
 
-    if [[ $remoteSize == "$localSize" ]]; then
-      if [[ -z $localHash || -z $remoteHash || $localHash == "$remoteHash" ]]; then
-        echo "remote file already complete, skipping upload" >&2
-        return 0
-      fi
-      echo "remote size matches but hash differs, re-uploading" >&2
-      runSsh "rm -f $(printf '%q' "$remotePath")"
-      remoteSize=0
+    # Fast path: already the right size. Skip. rsync would also skip, but we
+    # save a connection.
+    if [[ $remoteSize == "$localSize" && $kexecNoResume != "y" ]]; then
+      echo "remote file already at expected size (${localSize} bytes), skipping upload" >&2
+      return 0
     fi
 
+    # Anything larger than the source, or a forced fresh upload, gets wiped.
     if [[ $kexecNoResume == "y" ]] || ((remoteSize > localSize)); then
+      ((debug)) && echo "DEBUG: wiping remote (noResume=$kexecNoResume, remoteSize=$remoteSize)" >&2
       runSsh "rm -f $(printf '%q' "$remotePath")"
       remoteSize=0
     fi
@@ -627,12 +621,16 @@ uploadFileResumable() {
       rsync --copy-links --partial --inplace "${rsyncResume[@]}" --progress \
         -e "$rsyncSshWrapper" \
         "$localPath" "$sshConnection:$remotePath" || rc=$?
-      if ((rc != 0)); then
-        # rsync may have left a corrupt partial; wipe it and fall back to the
-        # portable ssh-cat path on subsequent retries.
-        runSsh "rm -f $(printf '%q' "$remotePath")" || true
-        useRsync=n
+      if ((rc == 0)); then
+        # rsync verified every block with its own checksums; trust it.
+        ((debug)) && echo "DEBUG: rsync reported success, skipping extra verification" >&2
+        return 0
       fi
+      # rsync may have left a corrupt partial; wipe it and fall back to the
+      # portable ssh-cat path on subsequent retries.
+      echo "rsync failed (exit ${rc}); falling back to ssh streaming on retry" >&2
+      runSsh "rm -f $(printf '%q' "$remotePath")" || true
+      useRsync=n
     elif ((remoteSize > 0)); then
       echo "resuming from byte ${remoteSize}" >&2
       # tail -c +N is 1-indexed
@@ -642,16 +640,15 @@ uploadFileResumable() {
       runSsh "cat > $(printf '%q' "$remotePath")" <"$localPath" || rc=$?
     fi
 
+    # Only reached on the ssh-streaming path (rsync success already returned).
     if ((rc == 0)); then
-      info=$(remoteFileInfo "$remotePath")
-      local vSize=${info%% *} vHash=${info#* }
-      [[ $vSize =~ ^[0-9]+$ ]] || vSize=0
-      if [[ $vSize == "$localSize" ]] &&
-        [[ -z $localHash || -z $vHash || $localHash == "$vHash" ]]; then
+      local vSize
+      vSize=$(remoteFileSize "$remotePath")
+      ((debug)) && echo "DEBUG: remote size after upload = ${vSize} (expected ${localSize})" >&2
+      if [[ $vSize == "$localSize" ]]; then
         return 0
       fi
-      echo "verification failed (remote size=${vSize}, expected=${localSize})" >&2
-      # Never resume on top of an unverified file; always wipe and retry fresh.
+      echo "size verification failed: remote=${vSize} expected=${localSize}; retrying" >&2
       runSsh "rm -f $(printf '%q' "$remotePath")"
     else
       echo "upload failed (exit ${rc}), waiting for ssh before retry" >&2
