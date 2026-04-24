@@ -11,6 +11,7 @@
       programs.terraform.enable = true;
       programs.deno.enable = !pkgs.deno.meta.broken;
       settings.formatter.shellcheck.options = [ "-s" "bash" ];
+      settings.formatter.shfmt.excludes = [ "src/nixos-anywhere.sh" ];
     };
     formatter = config.treefmt.build.wrapper;
   };
