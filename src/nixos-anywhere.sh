@@ -5,6 +5,7 @@ here=$(dirname "${BASH_SOURCE[0]}")
 flake=""
 flakeAttr=""
 kexecUrl=""
+forceKexec=false
 kexecExtraFlags=""
 sshStoreSettings="compress=true"
 enableDebug=""
@@ -145,6 +146,8 @@ Options:
   if this is given, flake is not needed
 * --kexec <path>
   use another kexec tarball to bootstrap NixOS
+* --force-kexec
+  don't check if we're in the installer, run kexec anyway
 * --kexec-extra-flags
   extra flags to add into the call to kexec, e.g. "--no-sync"
 * --ssh-store-setting <key> <value>
@@ -272,6 +275,10 @@ parseArgs() {
       ;;
     --kexec)
       kexecUrl=$2
+      shift
+      ;;
+    --force-kexec)
+      forceKexec=true
       shift
       ;;
     --kexec-extra-flags)
@@ -691,7 +698,7 @@ generateHardwareConfig() {
 }
 
 runKexec() {
-  if [[ ${isInstaller} == "y" ]]; then
+  if [[ ${isInstaller} == "y" ]] && [[ ! ${forceKexec} ]]; then
     return
   fi
 
