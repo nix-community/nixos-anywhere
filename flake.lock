@@ -72,18 +72,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1777031316,
-        "narHash": "sha256-qmxSz9icdvGy/X2zmrL7HkUShVd3fjg1MyOYbmi57vs=",
-        "ref": "refs/pull/397/head",
-        "rev": "7022c975470ea83fbc25a38e758d3376110d8695",
-        "revCount": 674,
-        "type": "git",
-        "url": "https://github.com/nix-community/nixos-images"
+        "lastModified": 1778754897,
+        "narHash": "sha256-UlPBPrqOYTDB9g/8pUaIUzYpGgjQL/YMK3Ein6m9DkY=",
+        "owner": "nix-community",
+        "repo": "nixos-images",
+        "rev": "66fe34a02cc29c825fdb4ece1a79c17e8f2ade2e",
+        "type": "github"
       },
       "original": {
-        "ref": "refs/pull/397/head",
-        "type": "git",
-        "url": "https://github.com/nix-community/nixos-images"
+        "owner": "nix-community",
+        "repo": "nixos-images",
+        "type": "github"
       }
     },
     "nixos-stable": {

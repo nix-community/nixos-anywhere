@@ -8,7 +8,7 @@
     # used for testing
     disko = { url = "github:nix-community/disko/master"; inputs.nixpkgs.follows = "nixpkgs"; };
     nixos-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
-    nixos-images.url = "git+https://github.com/nix-community/nixos-images?ref=refs/pull/397/head";
+    nixos-images.url = "github:nix-community/nixos-images";
     nixos-images.inputs.nixos-unstable.follows = "nixpkgs";
     nixos-images.inputs.nixos-stable.follows = "nixos-stable";
     # https://github.com/numtide/nix-vm-test/pull/105
