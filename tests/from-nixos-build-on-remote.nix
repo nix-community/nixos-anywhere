@@ -24,7 +24,7 @@
               "virtio-blk-pci,drive=drive1",
           ]
           machine = create_machine(start_command=" ".join(start_command), **kwargs)
-          driver.machines.append(machine)
+          driver.machines_qemu.append(machine)
           return machine
       start_all()
 

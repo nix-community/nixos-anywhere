@@ -35,7 +35,7 @@
       });
       fedora-kexec-test = import ./linux-kexec-test.nix (linuxTestInputs // {
         distribution = "fedora";
-        version = "40";
+        version = "43";
       });
       debian-kexec-test = import ./linux-kexec-test.nix (linuxTestInputs // {
         distribution = "debian";

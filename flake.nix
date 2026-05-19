@@ -12,7 +12,7 @@
     nixos-images.inputs.nixos-unstable.follows = "nixpkgs";
     nixos-images.inputs.nixos-stable.follows = "nixos-stable";
     # https://github.com/numtide/nix-vm-test/pull/105
-    nix-vm-test = { url = "github:Enzime/nix-vm-test/pr-105-latest"; inputs.nixpkgs.follows = "nixpkgs"; };
+    nix-vm-test = { url = "github:a-kenji/nix-vm-test/pr-105-latest"; inputs.nixpkgs.follows = "nixpkgs"; };
 
     # used for development
     treefmt-nix = { url = "github:numtide/treefmt-nix"; inputs.nixpkgs.follows = "nixpkgs"; };
