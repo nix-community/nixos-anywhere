@@ -10,12 +10,15 @@ and `aarch64`, since they don't have a pre-build image.
 To do this, use the `--kexec` command line switch followed by the path to your
 image file. The image will be uploaded prior to execution.
 
+If your kexec image uses a custom launch path, you can change it by using `--kexec-launch-path` command line switch followed by the apropriate path within the kexec tarball. This path will be called after unpacking the kexec tarball. The default is `kexec/run`.
+
 Here's an example command that demonstrates how to use a custom kexec image with
 `nixos-anywhere`:
 
 ```
 nix run github:nix-community/nixos-anywhere -- \
   --kexec "$(nix build --print-out-paths github:nix-community/nixos-images#packages.aarch64-linux.kexec-installer-nixos-unstable-noninteractive)/nixos-kexec-installer-noninteractive-aarch64-linux.tar.gz" \
+  --kexec-launch-path "kexec_nixos" \
   --flake 'github:your-user/your-repo#your-system' \
   root@yourip
 ```

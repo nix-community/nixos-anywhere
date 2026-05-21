@@ -5,6 +5,8 @@ here=$(dirname "${BASH_SOURCE[0]}")
 flake=""
 flakeAttr=""
 kexecUrl=""
+kexecExtractPath="$HOME/kexec"
+kexecLaunchPath="kexec/run"
 kexecExtraFlags=""
 sshStoreSettings="compress=true"
 enableDebug=""
@@ -145,6 +147,13 @@ Options:
   if this is given, flake is not needed
 * --kexec <path>
   use another kexec tarball to bootstrap NixOS
+* --kexec-extract-path <path>
+  extract kexec to a custom path. 
+  default: '\$HOME/kexec'
+* --kexec-launch-path <path>
+  which path to call after extracting the kexec tarball. relative to the kexec extract path
+  for example: 'nixos_kexec'
+  default: 'kexec/run'
 * --kexec-extra-flags
   extra flags to add into the call to kexec, e.g. "--no-sync"
 * --ssh-store-setting <key> <value>
@@ -272,6 +281,14 @@ parseArgs() {
       ;;
     --kexec)
       kexecUrl=$2
+      shift
+      ;;
+    --kexec-extract-path)
+      kexecExtractPath=$2
+      shift
+      ;;
+    --kexec-launch-path)
+      kexecLaunchPath=$2
       shift
       ;;
     --kexec-extra-flags)
@@ -745,7 +762,7 @@ runKexec() {
   echo Downloading kexec tarball, this may take a moment...
   # Execute tar command
   %TAR_COMMAND%
-  TMPDIR=\"\$HOME/kexec\" ${maybeSudo} setsid --wait \"\$HOME/kexec/kexec/run\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
+  TMPDIR=\"\$HOME/kexec\" ${maybeSudo} setsid --wait \"${kexecExtractPath}/$kexecLaunchPath\" --kexec-extra-flags $(printf '%q' "$kexecExtraFlags")
 } 2>&1 | tee \"\$HOME/kexec/nixos-anywhere.log\" || true
 
 # The script will likely disconnect us, so we consider it successful if we see the kexec message
@@ -786,10 +803,10 @@ fi
   local tarCommand
   if [[ ${#localUploadCommand[@]} -eq 0 ]]; then
     # Use remote command for download
-    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp}"
+    tarCommand="$(printf '%q ' "${remoteUploadCommand[@]}") | tar -xv ${tarDecomp} -C ${kexecExtractPath}"
   else
     # Use local file for extraction
-    tarCommand="cat \"\$HOME/kexec/kexec-tarball.tar.gz\" | tar -xv ${tarDecomp}"
+    tarCommand="cat \"\$HOME/kexec/kexec-tarball.tar.gz\" | tar -xv ${tarDecomp} -C ${kexecExtractPath}"
   fi
 
   local remoteCommands
