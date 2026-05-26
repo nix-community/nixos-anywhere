@@ -3,7 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable-small";
-    flake-parts = { url = "github:hercules-ci/flake-parts"; inputs.nixpkgs-lib.follows = "nixpkgs"; };
 
     # used for testing
     disko = { url = "github:nix-community/disko/master"; inputs.nixpkgs.follows = "nixpkgs"; };
@@ -18,25 +17,62 @@
     treefmt-nix = { url = "github:numtide/treefmt-nix"; inputs.nixpkgs.follows = "nixpkgs"; };
   };
 
-
-  outputs = inputs:
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = inputs@{ self, nixpkgs, ... }:
+    let
+      lib = nixpkgs.lib;
       systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
-      imports = [
-        ./src/flake-module.nix
-        ./tests/flake-module.nix
-        ./docs/flake-module.nix
-        ./terraform/flake-module.nix
-        # allow to disable treefmt in downstream flakes
-      ] ++ inputs.nixpkgs.lib.optional (inputs.treefmt-nix ? flakeModule) ./treefmt/flake-module.nix;
+      eachSystem = f: lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
 
-      perSystem = { self', lib, ... }: {
-        checks =
-          let
-            packages = lib.mapAttrs' (n: lib.nameValuePair "package-${n}") self'.packages;
-            devShells = lib.mapAttrs' (n: lib.nameValuePair "devShell-${n}") self'.devShells;
-          in
-          packages // devShells;
+      # allow to disable treefmt in downstream flakes
+      hasTreefmt = inputs.treefmt-nix ? lib;
+      treefmtEval = eachSystem (pkgs: inputs.treefmt-nix.lib.evalModule pkgs ./treefmt.nix);
+    in
+    {
+      packages = eachSystem (pkgs: {
+        nixos-anywhere = pkgs.callPackage ./src { };
+        default = self.packages.${pkgs.stdenv.hostPlatform.system}.nixos-anywhere;
+        docs = pkgs.callPackage ./docs { };
+      });
+
+      devShells = eachSystem (pkgs: {
+        default = self.packages.${pkgs.stdenv.hostPlatform.system}.nixos-anywhere.devShell;
+        terraform = pkgs.callPackage ./terraform/shell.nix { };
+      });
+
+      formatter = lib.optionalAttrs hasTreefmt
+        (eachSystem (pkgs: treefmtEval.${pkgs.stdenv.hostPlatform.system}.config.build.wrapper));
+
+      nixosConfigurations.terraform-test = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./tests/modules/system-to-install.nix
+          inputs.disko.nixosModules.disko
+          (args: {
+            # Example usage of special args from terraform
+            networking.hostName = args.terraform.hostname or "nixos-anywhere";
+
+            # Create testable files in /etc based on terraform special_args
+            environment.etc = {
+              "terraform-config.json" = {
+                text = builtins.toJSON args.terraform or { };
+                mode = "0644";
+              };
+            };
+          })
+        ];
       };
+
+      checks = eachSystem (pkgs:
+        let
+          system = pkgs.stdenv.hostPlatform.system;
+          packages = lib.mapAttrs' (n: lib.nameValuePair "package-${n}") self.packages.${system};
+          devShells = lib.mapAttrs' (n: lib.nameValuePair "devShell-${n}") self.devShells.${system};
+          vmTests = lib.optionalAttrs (system == "x86_64-linux")
+            (import ./tests {
+              inherit pkgs inputs;
+              nixos-anywhere = self.packages.${system}.nixos-anywhere;
+            });
+        in
+        packages // devShells // vmTests);
     };
 }
