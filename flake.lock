@@ -28,16 +28,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1776950483,
-        "narHash": "sha256-ciWvxGmVY4axQSVpUpCUFM1ejHb1LyZ54TrTPeDL3aU=",
-        "owner": "a-kenji",
+        "lastModified": 1779783233,
+        "narHash": "sha256-k87sSQg203qCIfoTzbNly6ZKC6ENjAzp2x14JJO2V4U=",
+        "owner": "Mic92",
         "repo": "nix-vm-test",
-        "rev": "f02b5e1bb5bcb0dbdb60e402fa567f1ceab1af11",
+        "rev": "028f808a0c24ba3efb190d1d933dbb4eb285cf8b",
         "type": "github"
       },
       "original": {
-        "owner": "a-kenji",
-        "ref": "pr-105-latest",
+        "owner": "Mic92",
+        "ref": "rebased-pr-105",
         "repo": "nix-vm-test",
         "type": "github"
       }
