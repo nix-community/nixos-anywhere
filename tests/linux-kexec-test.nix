@@ -1,6 +1,6 @@
 { pkgs, nixos-anywhere, kexec-installer, nix-vm-test, system-to-install, distribution, version, ... }:
 
-(nix-vm-test.lib.${pkgs.system}.${distribution}.${version} {
+(nix-vm-test.lib.${pkgs.stdenv.hostPlatform.system}.${distribution}.${version} {
   sharedDirs = { };
   diskSize = "+1G";
 
