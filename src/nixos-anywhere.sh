@@ -698,7 +698,7 @@ generateHardwareConfig() {
 }
 
 runKexec() {
-  if [[ ${isInstaller} == "y" ]] && [[ ! ${forceKexec} ]]; then
+  if [[ ${isInstaller} == "y" ]] && [[ ${forceKexec} != "true" ]]; then
     return
   fi
 
