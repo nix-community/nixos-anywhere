@@ -6,12 +6,12 @@ mkShell {
   buildInputs = [
     terraform-docs
     (opentofu.withPlugins (p: [
-      p.digitalocean
-      p.external
-      p.hcloud
-      p.local
-      p.null
-      p.tls
+      p.digitalocean_digitalocean
+      p.hashicorp_external
+      p.hetznercloud_hcloud
+      p.hashicorp_local
+      p.hashicorp_null
+      p.hashicorp_tls
     ]))
   ];
 
