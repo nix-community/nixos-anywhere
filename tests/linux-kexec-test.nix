@@ -4,10 +4,7 @@
   sharedDirs = { };
   diskSize = "+1G";
 
-  # Configure VM with 2GB memory
-  machineConfigModule = { ... }: {
-    nodes.vm.virtualisation.memorySize = 1500;
-  };
+  memorySize = 1500;
 
   # The test script
   testScript = ''

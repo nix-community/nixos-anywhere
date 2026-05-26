@@ -28,16 +28,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1779783233,
-        "narHash": "sha256-k87sSQg203qCIfoTzbNly6ZKC6ENjAzp2x14JJO2V4U=",
+        "lastModified": 1779784078,
+        "narHash": "sha256-kMBQRZjb2A+qVpuNCiRoqMhDElkP/jR2m9Lu7PAt7M4=",
         "owner": "Mic92",
         "repo": "nix-vm-test",
-        "rev": "028f808a0c24ba3efb190d1d933dbb4eb285cf8b",
+        "rev": "2ed46e2601ddb3df2130495a0e7dbf0165a8fe51",
         "type": "github"
       },
       "original": {
         "owner": "Mic92",
-        "ref": "rebased-pr-105",
+        "ref": "main",
         "repo": "nix-vm-test",
         "type": "github"
       }
