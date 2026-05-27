@@ -8,7 +8,7 @@
     };
     testScript = ''
       def create_test_machine(
-          oldmachine=None, **kwargs
+          oldmachine: QemuMachine, **kwargs
       ):  # taken from <nixpkgs/nixos/tests/installer.nix>
           start_command = [
               "${pkgs.qemu_test}/bin/qemu-kvm",

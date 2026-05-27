@@ -1,13 +1,10 @@
 { pkgs, nixos-anywhere, kexec-installer, nix-vm-test, system-to-install, distribution, version, ... }:
 
-(nix-vm-test.lib.${pkgs.system}.${distribution}.${version} {
+(nix-vm-test.lib.${pkgs.stdenv.hostPlatform.system}.${distribution}.${version} {
   sharedDirs = { };
   diskSize = "+1G";
 
-  # Configure VM with 2GB memory
-  machineConfigModule = { ... }: {
-    nodes.vm.virtualisation.memorySize = 1500;
-  };
+  memorySize = 1500;
 
   # The test script
   testScript = ''
