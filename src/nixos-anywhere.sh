@@ -5,6 +5,7 @@ here=$(dirname "${BASH_SOURCE[0]}")
 flake=""
 flakeAttr=""
 kexecUrl=""
+forceKexec=false
 kexecExtraFlags=""
 sshStoreSettings="compress=true"
 enableDebug=""
@@ -150,6 +151,8 @@ Options:
   if this is given, flake is not needed
 * --kexec <path>
   use another kexec tarball to bootstrap NixOS
+* --force-kexec
+  don't check if we're in the installer, run kexec anyway
 * --kexec-extra-flags
   extra flags to add into the call to kexec, e.g. "--no-sync"
 * --kexec-upload-retries <n>
@@ -283,6 +286,10 @@ parseArgs() {
       ;;
     --kexec)
       kexecUrl=$2
+      shift
+      ;;
+    --force-kexec)
+      forceKexec=true
       shift
       ;;
     --kexec-extra-flags)
@@ -879,7 +886,7 @@ generateHardwareConfig() {
 }
 
 runKexec() {
-  if [[ ${isInstaller} == "y" ]]; then
+  if [[ ${isInstaller} == "y" ]] && [[ ${forceKexec} != "true" ]]; then
     return
   fi
 
@@ -890,7 +897,7 @@ runKexec() {
   if [[ $kexecUrl == "" ]]; then
     case "${isArch}" in
     x86_64 | aarch64)
-      kexecUrl="https://github.com/nix-community/nixos-images/releases/download/nixos-25.05/nixos-kexec-installer-noninteractive-${isArch}-linux.tar.gz"
+      kexecUrl="https://github.com/nix-community/nixos-images/releases/download/nixos-25.11/nixos-kexec-installer-noninteractive-${isArch}-linux.tar.gz"
       ;;
     *)
       abort "Unsupported architecture: ${isArch}. Our default kexec images only support x86_64 and aarch64 CPUs. Check out https://nix-community.github.io/nixos-anywhere/howtos/custom-kexec.html for more information."
