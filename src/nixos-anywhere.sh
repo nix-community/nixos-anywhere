@@ -191,8 +191,8 @@ Options:
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
   install: install the system
   reboot: unmount the filesystems, export any ZFS pools and reboot the machine
-* --disko-mode disko|mount|format
-  set the disko mode to format, mount or destroy. Default is disko.
+* --disko-mode destroy,format,mount|mount|format|format,mount|
+  set the disko mode to format, mount or destroy. Default is destroy,format,mount (aka 'disko').
   disko: first unmount and destroy all filesystems on the disks we want to format, then run the create and mount mode
 * --no-disko-deps
   This will only upload the disko script and not the partitioning tools dependencies.
@@ -309,11 +309,11 @@ parseArgs() {
       ;;
     --disko-mode)
       case "$2" in
-      format | mount | disko)
+      format | mount | format,mount | destroy,format,mount | disko)
         diskoMode=$2
         ;;
       *)
-        abort "Supported values for --disko-mode are disko, mount and format. Unknown mode : $2"
+        abort "Supported values for --disko-mode are 'destroy,format,mount' (aka. 'disko'), 'format,mount', 'mount' and 'format'. Unknown mode : $2"
         ;;
       esac
 
@@ -425,7 +425,20 @@ parseArgs() {
     diskoMode=disko
   fi
 
-  diskoAttr="${diskoMode}Script"
+  case "${diskoMode}" in
+  destroy,format,mount | disko)
+    diskoAttr="destroyFormatMount"
+    diskoScriptName="disko-destroy-format-mount"
+    ;;
+  format,mount)
+    diskoAttr="formatMount"
+    diskoScriptName="disko-format-mount"
+    ;;
+  *)
+    diskoAttr="${diskoMode}"
+    diskoScriptName="disko-${diskoMode}"
+    ;;
+  esac
 
   if [[ ${diskoDeps} == "n" ]]; then
     diskoAttr="${diskoAttr}NoDeps"
@@ -853,7 +866,7 @@ runDisko() {
     diskoScript=$(
       nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}" \
         --eval-store auto --store "ssh-ng://$sshConnection?ssh-key=$tempDir%2Fnixos-anywhere&$sshStoreSettings"
-    )
+    )/bin/${diskoScriptName}
   fi
 
   step Formatting hard drive with disko
@@ -953,7 +966,7 @@ main() {
   if [[ -n ${flake} ]]; then
     if [[ ${buildOn} == "local" ]] && [[ ${hardwareConfigBackend} == "none" ]]; then
       if [[ ${phases[disko]} == 1 ]]; then
-        diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}")
+        diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}")/bin/${diskoScriptName}
       fi
       if [[ ${phases[install]} == 1 ]]; then
         nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
@@ -1027,7 +1040,7 @@ main() {
 
   if [[ ${buildOn} != "remote" ]] && [[ -n ${flake} ]] && [[ -z ${diskoScript} ]]; then
     if [[ ${phases[disko]} == 1 ]]; then
-      diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}")
+      diskoScript=$(nixBuild "${flake}#${flakeAttr}.system.build.${diskoAttr}")/bin/${diskoScriptName}
     fi
     if [[ ${phases[install]} == 1 ]]; then
       nixosSystem=$(nixBuild "${flake}#${flakeAttr}.system.build.toplevel")
