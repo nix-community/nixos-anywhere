@@ -38,6 +38,10 @@ No modules.
 | <a name="input_file"></a> [file](#input_file)                             | the nix file to evaluate, if not run in flake mode  | `string`      | `null`  |    no    |
 | <a name="input_nix_options"></a> [nix\_options](#input_nix_options)       | the options of nix                                  | `map(string)` | `{}`    |    no    |
 | <a name="input_special_args"></a> [special\_args](#input_special_args)    | A map exposed as NixOS's `specialArgs` thru a file. | `any`         | `{}`    |    no    |
+| <a name="input_target_host"></a> [target\_host](#input_target_host)       | Target host to potentially use as remote builder    | `string`      | `null`  |    no    |
+| <a name="input_target_user"></a> [target\_user](#input_target_user)       | SSH user for target host                            | `string`      | `"root"`|    no    |
+| <a name="input_target_port"></a> [target\_port](#input_target_port)       | SSH port for target host                            | `number`      | `22`    |    no    |
+| <a name="input_use_target_as_builder"></a> [use\_target\_as\_builder](#input_use_target_as_builder) | Use target host as remote nix builder if it has nix available | `bool` | `false` | no |
 
 ## Outputs
 
