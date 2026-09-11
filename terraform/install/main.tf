@@ -28,7 +28,7 @@ resource "null_resource" "nixos-remote" {
   }
   provisioner "local-exec" {
     environment = merge({
-      ARGUMENTS = local.arguments
+      ARGUMENTS = var.suppress_sensitive ? local.arguments : nonsensitive(local.arguments)
     }, var.extra_environment)
     command = "${path.module}/run-nixos-anywhere.sh ${join(" ", local.disk_encryption_key_scripts)}"
   }
