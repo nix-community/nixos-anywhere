@@ -33,6 +33,12 @@ Options:
   use another kexec tarball to bootstrap NixOS
 * --kexec-extra-flags
   extra flags to add into the call to kexec, e.g. "--no-sync"
+* --kexec-upload-retries <n>
+  how often to retry an interrupted upload of a local --kexec tarball, defaults to 5
+* --kexec-upload-wait <seconds>
+  seconds to wait for ssh to come back between upload retries, defaults to 300
+* --kexec-no-resume
+  always re-upload a local --kexec tarball from scratch instead of resuming
 * --ssh-store-setting <key> <value>
   ssh store settings appended to the store URI, e.g. "compress true". <value> needs to be URI encoded.
 * --post-kexec-ssh-port <ssh_port>
