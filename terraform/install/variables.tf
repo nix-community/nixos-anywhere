@@ -127,3 +127,9 @@ variable "copy_host_keys" {
   description = "copy over existing /etc/ssh/ssh_host_* host keys to the installation"
   default     = false
 }
+
+variable "suppress_sensitive" {
+  type        = bool
+  description = "Suppress sensitive values in output."
+  default     = true
+}
