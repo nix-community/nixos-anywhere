@@ -990,23 +990,23 @@ main() {
 
   importFacts
 
-  if [[ ${hasTar-n} == "n" ]]; then
-    abort "no tar command found, but required to unpack kexec tarball"
-  fi
-
-  if [[ ${hasCpio-n} == "n" ]]; then
-    abort "no cpio command found, but required to build the new initrd"
-  fi
-
-  if [[ ${hasSetsid-n} == "n" ]]; then
-    abort "no setsid command respecting --wait found, but required to run the kexec script under a new session"
-  fi
-
   if [[ ${isOs} != "Linux" ]]; then
     abort "This script requires Linux as the operating system, but got $isOs"
   fi
 
   if [[ ${phases[kexec]} == 1 ]]; then
+    if [[ ${hasTar-n} == "n" ]]; then
+      abort "no tar command found, but required to unpack kexec tarball"
+    fi
+
+    if [[ ${hasCpio-n} == "n" ]]; then
+      abort "no cpio command found, but required to build the new initrd"
+    fi
+
+    if [[ ${hasSetsid-n} == "n" ]]; then
+      abort "no setsid command respecting --wait found, but required to run the kexec script under a new session"
+    fi
+
     runKexec
   fi
 
