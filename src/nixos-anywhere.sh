@@ -488,13 +488,13 @@ runSsh() {
 }
 
 nixCopy() {
-  NIX_SSHOPTS="${sshArgs[*]}" nix copy \
+  NIX_SSHOPTS="$(printf '%q ' "${sshArgs[@]}")" nix copy \
     "${nixOptions[@]}" \
     "${nixCopyOptions[@]}" \
     "$@"
 }
 nixBuild() {
-  NIX_SSHOPTS="${sshArgs[*]}" nix build \
+  NIX_SSHOPTS="$(printf '%q ' "${sshArgs[@]}")" nix build \
     --print-out-paths \
     --no-link \
     "${nixBuildFlags[@]}" \
@@ -574,7 +574,11 @@ uploadSshKey() {
 importFacts() {
   step Gathering machine facts
   local facts filteredFacts
-  if ! facts=$(runSsh -o ConnectTimeout=10 enableDebug=$enableDebug sh -- <"$here"/get-facts.sh); then
+  # shellcheck disable=SC2030,SC2031
+  if ! facts=$(
+    sshArgs+=("-o" "ConnectTimeout=10")
+    runSsh enableDebug=$enableDebug sh -- <"$here"/get-facts.sh
+  ); then
     exit 1
   fi
   filteredFacts=$(echo "$facts" | grep -E '^(has|is|remote)[A-Za-z0-9_]+=\S+')
@@ -669,16 +673,28 @@ generateHardwareConfig() {
       # `--extra-experimental-features "nix-command flakes"`.
       # We can use the following Bash-ism described at: https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html#Shell-Parameter-Expansion-1
       # For more information: https://unix.stackexchange.com/questions/379181/escape-a-variable-for-use-as-content-of-another-script
-      runSshNoTty -o ConnectTimeout=10 \
-        nix shell "${nixOptions[@]@Q}" nixpkgs#nixos-facter -c ${maybeSudo} nixos-facter >"$hardwareConfigPath"
+      # shellcheck disable=SC2030,SC2031
+      (
+        sshArgs+=("-o" "ConnectTimeout=10")
+        runSshNoTty \
+          nix shell "${nixOptions[@]@Q}" nixpkgs#nixos-facter -c ${maybeSudo} nixos-facter
+      ) >"$hardwareConfigPath"
     else
       step "Generating facter.json using nixos-facter"
-      runSshNoTty -o ConnectTimeout=10 ${maybeSudo} nixos-facter >"$hardwareConfigPath"
+      # shellcheck disable=SC2030,SC2031
+      (
+        sshArgs+=("-o" "ConnectTimeout=10")
+        runSshNoTty ${maybeSudo} nixos-facter
+      ) >"$hardwareConfigPath"
     fi
     ;;
   nixos-generate-config)
     step "Generating hardware-configuration.nix using nixos-generate-config"
-    runSshNoTty -o ConnectTimeout=10 nixos-generate-config --show-hardware-config --no-filesystems >"$hardwareConfigPath"
+    # shellcheck disable=SC2030,SC2031
+    (
+      sshArgs+=("-o" "ConnectTimeout=10")
+      runSshNoTty nixos-generate-config --show-hardware-config --no-filesystems
+    ) >"$hardwareConfigPath"
     ;;
   *)
     abort "Unknown hardware config backend: $hardwareConfigBackend"
@@ -817,6 +833,7 @@ EOF
 
   # use the default SSH port to connect at this point
   local i
+  # shellcheck disable=SC2031
   for i in "${!sshArgs[@]}"; do
     if [[ ${sshArgs[i]} == "-p" ]]; then
       sshArgs[i + 1]=$postKexecSshPort
@@ -831,7 +848,11 @@ EOF
   sshConnection="root@${sshHost}"
 
   # waiting for machine to become available again
-  until runSsh -o ConnectTimeout=10 -- exit 0; do sleep 5; done
+  # shellcheck disable=SC2030,SC2031
+  until (
+    sshArgs+=("-o" "ConnectTimeout=10")
+    runSsh -- exit 0
+  ); do sleep 5; done
 
   importFacts
 
@@ -975,7 +996,7 @@ main() {
       printf '%s\n' "$SSH_PRIVATE_KEY" >"$sshPrivateKeyFile"
     )
   fi
-
+  # shellcheck disable=SC2031
   sshSettings=$(ssh "${sshArgs[@]}" -G "${sshConnection}")
   sshUser=$(echo "$sshSettings" | awk '/^user / { print $2 }')
   sshHost="${sshConnection//*@/}"
@@ -1017,7 +1038,11 @@ main() {
   # Before we do not have a valid hardware configuration we don't know the machine system
   if [[ ${buildOn} == "auto" ]]; then
     local remoteSystem
-    remoteSystem=$(runSshNoTty -o ConnectTimeout=10 nix --extra-experimental-features nix-command config show system)
+    # shellcheck disable=SC2030,SC2031
+    remoteSystem=$(
+      sshArgs+=("-o" "ConnectTimeout=10")
+      runSshNoTty nix --extra-experimental-features nix-command config show system
+    )
     checkBuildLocally "${remoteSystem}"
     # if we cannot figure it out at this point, we will build on the remote host
     if [[ ${buildOn} == "auto" ]]; then
