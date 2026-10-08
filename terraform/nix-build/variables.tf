@@ -26,3 +26,27 @@ variable "debug_logging" {
   default     = false
   description = "Enable debug logging"
 }
+
+variable "target_host" {
+  type        = string
+  default     = null
+  description = "Target host to potentially use as remote builder"
+}
+
+variable "target_user" {
+  type        = string
+  default     = "root"
+  description = "SSH user for target host"
+}
+
+variable "target_port" {
+  type        = number
+  default     = 22
+  description = "SSH port for target host"
+}
+
+variable "use_target_as_builder" {
+  type        = bool
+  default     = false
+  description = "Use target host as remote nix builder if it has nix available"
+}
