@@ -23,6 +23,8 @@ nixOptions=(
 )
 SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY-}
 machineSubstituters="y"
+kexecZramSize=""
+kexecZramLimit=""
 
 declare -A phases
 phases[kexec]=1
@@ -203,6 +205,14 @@ Options:
   auto: tries to figure out, if the build is possible on the local host, if not falls back gracefully to remote build
   local: will build on the local host
   remote: will build on the remote host
+* --kexec-zram-size <size>
+  enable zram swap in the kexec environment with the given disk size.
+Size can be a fixed value in MiB (e.g. 2048) or a multiplier of total
+RAM (e.g. 1x, 2x).
+* --kexec-zram-limit <limit>
+  limit the amount of physical RAM zram can consume in the kexec
+environment. Only meaningful when '--kexec-zram-size' is set. Accepts
+the same format as --kexec-zram-size.
 USAGE
 }
 
@@ -404,6 +414,14 @@ parseArgs() {
       ;;
     --vm-test)
       vmTest=y
+      ;;
+    --kexec-zram-size)
+      kexecZramSize=$2
+      shift
+      ;;
+    --kexec-zram-limit)
+      kexecZramLimit=$2
+      shift
       ;;
     *)
       if [[ -z ${sshConnection} ]]; then
@@ -934,6 +952,44 @@ SSH
   while runSshTimeout -- exit 0; do sleep 1; done
 }
 
+setupZram() {
+  [[ -z ${kexecZramSize} ]] && return
+  step "Setting up zram swap"
+  runSsh env ZRAM_SIZE="${kexecZramSize}" ZRAM_LIMIT="${kexecZramLimit}" sh <<'ZRAM'
+    set -eu
+    parseSize() {
+      raw=$1
+      mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+      case "$raw" in
+        *x)
+          mult=${raw%x}
+          awk "BEGIN { printf \"%d\", $mem_kb * 1024 * $mult }"
+          ;;
+        *)
+          awk "BEGIN { printf \"%d\", $raw * 1024 * 1024 }"
+          ;;
+      esac
+    }
+    if grep -q zram /proc/swaps; then
+      echo "WARNING: zram is already active, skipping"
+      exit 0
+    fi
+    modprobe zram 2>/dev/null || true
+    if [ ! -b /dev/zram0 ]; then
+      echo "WARNING: zram module not available, skipping"
+      exit 0
+    fi
+    echo zstd > /sys/block/zram0/comp_algorithm 2>/dev/null || true
+    echo $(parseSize "$ZRAM_SIZE") > /sys/block/zram0/disksize
+    if [ -n "$ZRAM_LIMIT" ]; then
+      echo $(parseSize "$ZRAM_LIMIT") > /sys/block/zram0/mem_limit
+    fi
+    mkswap /dev/zram0
+    swapon /dev/zram0
+    echo "zram swap enabled: $(swapon --show | grep zram)"
+ZRAM
+}
+
 main() {
   parseArgs "$@"
 
@@ -1008,6 +1064,7 @@ main() {
 
   if [[ ${phases[kexec]} == 1 ]]; then
     runKexec
+    setupZram
   fi
 
   if [[ ${hardwareConfigBackend} != "none" ]]; then
