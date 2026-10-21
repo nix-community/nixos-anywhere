@@ -47,7 +47,7 @@ to `nixos-anywhere`:
 
 ```bash
 # Write your disk encryption password to a file
-echo "my-super-safe-password" > /tmp/disk-1.key
+printf '%s' "my-super-safe-password" > /tmp/disk-1.key
 
 # Call nixos-anywhere with disk encryption keys
 nixos-anywhere \
