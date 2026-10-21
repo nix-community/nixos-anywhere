@@ -7,7 +7,10 @@
       ];
       environment.systemPackages = [ pkgs.jq ];
     };
-    installed = ./modules/target-base.nix;
+    installed = {
+      imports = [ ./modules/target-base.nix ];
+      virtualisation.useEFIBoot = true;
+    };
   };
   testScript = ''
     start_all()
@@ -57,6 +60,8 @@
 
     installer.succeed("cat /tmp/hw/config.json >&2")
     installer.succeed("jq < /tmp/hw/config.json")
+    installer.succeed("jq -e '.uefi.supported == true' /tmp/hw/config.json")
+    installer.succeed("jq -e '.hardware.disk | length > 0' /tmp/hw/config.json")
 
     assert "disk-1.key: 'super-secret'" in output, f"output does not contain expected values: {output}"
     assert "disk-2.key: 'another-secret'" in output, f"output does not contain expected values: {output}"
