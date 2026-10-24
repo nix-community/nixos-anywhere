@@ -18,15 +18,41 @@ If an installer is detected, `nixos-anywhere` will not attempt to `kexec` into
 its own image. This is particularly useful for targets that don't have enough
 RAM for `kexec` or don't support `kexec`.
 
+Often you will need some kind of network connectivity before installing NixOS.
+Use the live system to connect to some network.
+
 NixOS starts an SSH server on the installer by default, but you need to set a
 password in order to access it. To set a password for the `nixos` user, run the
 following command in a terminal on the NixOS machine:
 
-```
+```shell
 passwd
 ```
 
-If you don't know the IP address of the installer on your network, you can find
+## Local installation
+
+If your source and target machines are the same (the one booted from USB), you
+can install NixOS by running `nixos-anywhere` like this:
+
+```shell
+# Set your flake URL
+flake='github:nix-community/nixos-anywhere-examples#generic'
+
+# Install it
+nix --extra-experimental-features 'nix-command flakes' run github:nix-community/nixos-anywhere -- --flake "$flake" --target-host nixos@localhost --build-on remote
+```
+
+In this kind of installation, the flag `--build-on remote` makes sure the build
+is done after partitioning and mounting `/nix`. Otherwise, it would be prebuilt
+in the live system, which could then run out of space quickly.
+
+## Remote installation
+
+If your source and target machines are different (for example, you want to
+install a new laptop, but the flake is in another laptop), both will have to
+connect. This is commonly done by connecting both to the same local network.
+
+If you don't know the IP address of the target machine on your network, you can find
 it by running the following command:
 
 ```
@@ -57,13 +83,13 @@ installer's IP addresses are `10.0.2.15`, `fec0::5054:ff:fe12:3456`, and
 To test if you can connect and your password works, you can use the following
 SSH command (replace the IP address with your own):
 
-```
+```shell
 ssh -v nixos@fec0::5054:ff:fe12:3456
 ```
 
 You can then use the IP address to run `nixos-anywhere` like this:
 
-```
+```shell
 nix run github:nix-community/nixos-anywhere -- --flake '.#myconfig' --target-host nixos@fec0::5054:ff:fe12:3456
 ```
 
