@@ -24,9 +24,10 @@ if [[ ${input[build_on_remote]} == "true" ]]; then
 fi
 if [[ -n ${input[flake]} ]]; then
   args+=("--flake" "${input[flake]}")
-else
+elif [[ -n ${input[nixos_partitioner]} ]] && [[ -n ${input[nixos_system]} ]]; then
   args+=("--store-paths" "${input[nixos_partitioner]}" "${input[nixos_system]}")
 fi
+# Note: for kexec-only phase, neither flake nor store-paths are needed
 if [[ -n ${input[nixos_generate_config_path]} ]]; then
   if [[ -n ${input[nixos_facter_path]} ]]; then
     echo "cannot set both variables 'nixos_generate_config_path' and 'nixos_facter_path'!" >&2
