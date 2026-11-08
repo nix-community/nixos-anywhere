@@ -47,8 +47,11 @@
           --store-paths /etc/nixos-anywhere/disko /etc/nixos-anywhere/system-to-install \
           --chown /home/user 1000:100 \
           --copy-host-keys \
+          --ssh-option UserKnownHostsFile=/root/nixos-anywhere-known-hosts \
           root@installed >&2
       """)
+      # --ssh-option must override the default UserKnownHostsFile=/dev/null
+      installer.succeed("ssh-keygen -F installed -f /root/nixos-anywhere-known-hosts")
       try:
         installed.shutdown()
       except BrokenPipeError:

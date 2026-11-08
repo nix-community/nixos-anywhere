@@ -67,6 +67,7 @@ mkdir -p "$tempDir"
 declare -A diskEncryptionKeys=()
 declare -A extraFilesOwnership=()
 declare -a nixCopyOptions=()
+declare -a userSshOptions=()
 declare -a sshArgs=("-o" "IdentitiesOnly=yes" "-i" "$tempDir/nixos-anywhere" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no")
 
 breakpoint() {
@@ -238,7 +239,7 @@ parseArgs() {
       shift
       ;;
     --ssh-option)
-      sshArgs+=("-o" "$2")
+      userSshOptions+=("-o" "$2")
       shift
       ;;
     -L | --print-build-logs)
@@ -416,6 +417,10 @@ parseArgs() {
     esac
     shift
   done
+
+  # OpenSSH uses the first value it sees for an option, so user options must
+  # come before our defaults to override them.
+  sshArgs=("${userSshOptions[@]}" "${sshArgs[@]}")
 
   if [[ ${diskoMode} != "" ]]; then
     if [[ ${diskoScript} != "" ]]; then
