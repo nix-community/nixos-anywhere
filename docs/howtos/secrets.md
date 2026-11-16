@@ -57,9 +57,13 @@ nixos-anywhere \
   root@yourip
 ```
 
-In the above example, replace `"my-super-safe-password"` with your actual
-encryption password, and `my-disk-encryption-password` with the relevant entry
-in your pass password store. Also, ensure to replace `'.#your-host'` and
+In the above example, replace the following:
+- `"my-super-safe-password"` with your actual encryption password
+- `/tmp/disk-1.key` with the path to the `passwordFile` as defined in your Disko
+  disk configuration file (same for `disk-2.key` if using)
+- `my-disk-encryption-password` with the relevant entry in your pass password store.
+
+Also, ensure to replace `'.#your-host'` and
 `root@yourip` with your actual flake and IP address, respectively.
 
 ## Example: Using existing SSH host keys
