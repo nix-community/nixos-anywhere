@@ -10,6 +10,18 @@ and `aarch64`, since they don't have a pre-build image.
 To do this, use the `--kexec` command line switch followed by the path to your
 image file. The image will be uploaded prior to execution.
 
+## Resumable uploads
+
+Uploads of a local `--kexec` tarball are resumable. If `rsync` is present on
+both sides it is used with `--partial --inplace --append-verify`; otherwise the
+missing byte range is appended over `ssh` and the result verified by size and,
+where available, `sha256sum`. An already-complete tarball from a previous run is
+detected and reused.
+
+On failure the upload is retried `--kexec-upload-retries` times (default 5),
+waiting up to `--kexec-upload-wait` seconds (default 300) for ssh to come back
+between attempts. Pass `--kexec-no-resume` to always upload from scratch.
+
 Here's an example command that demonstrates how to use a custom kexec image with
 `nixos-anywhere`:
 

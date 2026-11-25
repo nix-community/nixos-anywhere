@@ -20,4 +20,5 @@ hasWget=$(has wget)
 hasCurl=$(has curl)
 hasSetsid=$(if [ "$(has setsid)" = "y" ] && setsid --wait true 2>/dev/null; then echo "y"; else echo "n"; fi)
 hasNixOSFacter=$(command -v nixos-facter >/dev/null && echo "y" || echo "n")
+hasRsync=$(has rsync)
 FACTS
