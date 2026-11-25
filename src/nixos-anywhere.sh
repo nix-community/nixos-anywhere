@@ -847,7 +847,7 @@ runDisko() {
     runSsh "umask 077; mkdir -p \"$(dirname "$path")\"; cat > $path" <"${diskEncryptionKeys[$path]}"
   done
   if [[ -n ${diskoScript} ]]; then
-    nixCopy --to "ssh://$sshConnection?$sshStoreSettings" "$diskoScript"
+    nixCopy --to "ssh-ng://$sshConnection?$sshStoreSettings" "$diskoScript"
   elif [[ ${buildOn} == "remote" ]]; then
     step Building disko script
     diskoScript=$(
@@ -864,7 +864,7 @@ nixosInstall() {
   local nixosSystem=$1
   if [[ -n ${nixosSystem} ]]; then
     step Uploading the system closure
-    nixCopy --to "ssh://$sshConnection?remote-store=local%3Froot=%2Fmnt&$sshStoreSettings" "$nixosSystem"
+    nixCopy --to "ssh-ng://$sshConnection?remote-store=local%3Froot=%2Fmnt&$sshStoreSettings" "$nixosSystem"
   elif [[ ${buildOn} == "remote" ]]; then
     step Building the system closure
     nixosSystem=$(
