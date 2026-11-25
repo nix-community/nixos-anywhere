@@ -155,3 +155,9 @@ variable "copy_host_keys" {
   description = "copy over existing /etc/ssh/ssh_host_* host keys to the installation"
   default     = false
 }
+
+variable "use_target_as_builder" {
+  type        = bool
+  description = "Use target host as remote nix builder if it has nix available. This speeds up builds significantly when deploying from macOS to Linux."
+  default     = false
+}
